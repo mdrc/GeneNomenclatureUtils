@@ -1,0 +1,160 @@
+### nomenclature
+
+                      GeneNomenclatureUtils Script Categories
+                      ---------------------------------------
+
+INTRODUCTION
+-------------
+
+IN: GeneNomenclatureUtils/scripts
+
+All of the scripts are documented with their particular mandatory and
+optional parameters. This is output automatically if an incorrect or
+insufficient set of parameters are specified, enter:
+
+cd GeneNomenclatureUtils/scripts
+./script_name[CR] to view a script's documentation 
+
+
+
+NOMENCLATURE FILE DOWNLOAD
+--------------------------
+
+Use this script to automatically download all the
+nomenclature and other bioinformatic database files
+utilised by the GeneNomenclatureUtils package.
+
+    download_nomenclature_files
+
+
+
+GENE AND PROTEIN NOMENCLATURE UTILITIES
+---------------------------------------
+
+These scripts use the Entrez, HGNC, MGI, and UniProt
+resources to do identifier checking, by going from
+gene symbol to gene ID (or vice versa), or to fetch
+othologous gene IDs when going from mouse <-> human
+genomes.
+
+Approved names and synonyms can be added to files of
+gene symbols or IDs.
+
+Protein sequences and reported mouse alleles can be
+fetched for mouse genes.
+
+   
+Entrez Gene: http://www.ncbi.nlm.nih.gov/gene
+
+    check_entrez_gene_ids
+    extract_entrez_gene_info_by_tax_id
+    extract_from_ncbi_gene2_accession
+
+
+HGNC: http://www.genenames.org
+
+    add_hgnc_id_by_hgnc_symbol
+
+
+MGI: http://www.informatics.jax.org
+
+    add_approved_name_by_mgi_id
+    add_mgi_id_by_hgnc_id
+    add_mgi_id_by_mgi_symbol
+    add_mgi_symbol_by_mgi_id
+    add_ortho_gene_id_by_mgi_id
+    add_uniprot_acc_by_mgi_id
+    add_synonyms_by_mgi_id
+    combine_by_mgi_id_column
+    generate_interpro_report_from_mgi_id
+    get_mgi_alleles_by_mgi_id
+    get_prot_seqs_by_mgi_id
+
+
+UniProt: http://www.uniprot.org
+
+    check_uniprot_ids
+    parse_uniprot_accs
+
+
+
+LIST COMPARISON
+---------------
+
+Allows an arbitrary number of lists of genes or
+symbols to be compared eaily using a configuation
+file system so that 10s or 100s of lists can be 
+managed easily.
+
+    list_comparator
+
+
+
+MEDLINE CACHE
+-------------
+
+A system to locally cache MEDLINE records,
+automatically fetched from PubMed, using a MySQL
+database to both coordinate the requests for the
+MEDLINE records, and subsequently supply them.
+
+A simple object-orientated interface to the
+database is provided to utilise the cache:
+package MedlineCacheDB;
+
+    medline_cache_create_db_tables
+    medline_cache_dump
+    medline_cache_pubmed_fetcher
+    medline_cache_requester
+
+
+
+OMIM DISEASE - http://www.omim.org
+------------
+
+Used to add OMIM IDs and OMIM entry titles to a file
+of human genes specified by Entrez Gene ID. The
+various 'gene' and/or 'phenotype' records can be
+added. 
+ 
+    add_omim_by_entrez_gene_id
+
+
+
+PubMed
+------
+
+Uses the orthologous gene identifiers assembled in a
+file to combine the synonyms and human mutation terms 
+to generate a PubMed URL search, to look for reports
+of association to disease of human gene mutations 
+
+   generate_pubmed_disease_searches_from_gene_nomenclature_ids
+
+
+
+TAB-DELIMITED FILE MANIPULATION
+-------------------------------
+
+A comprehensive set of utilities to manipulate tab-
+delimited text files.
+
+    add_row_numbers
+    categorise_by_column
+    compare_columns_output_differences
+    count_column_occurrences
+    count_distinct_values_in_column
+    count_row_occurrences
+    count_rows_and_columns
+    dump_column_as_unique
+    extract_from_file_by_id_column
+    extract_from_file_by_column_numerical_range
+    filter_by_column
+    pad_tabs_to_column_width
+    rearrange_and_cut_columns
+    remove_trailing_whitespace
+    sort_file_by_column
+    txt_file_format_sniffer
+    write_spreadsheet
+
+

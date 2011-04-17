@@ -65,3 +65,10 @@ to remove files you find you do not require for your analyses
     
 8) Try the examples in GeneNomenclatureUtils/docs/getting_started.txt
 
+9) See GeneNomenclatureUtils/docs/script_categories.txt to get an
+   idea of what the package can do.
+
+A) See GeneNomenclatureUtils/docs/command_line_parameters.txt to get an
+   overiew of the scripts' command line parameters do.
+
+
