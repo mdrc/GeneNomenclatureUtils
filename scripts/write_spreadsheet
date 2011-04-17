@@ -49,7 +49,7 @@ use Getopt::Long;
     
     GetOptions(
         'file=s' => \$file,
-    );
+    ) or show_perldoc();
     unless ($file) {
         show_perldoc("Must specify --file");
     }

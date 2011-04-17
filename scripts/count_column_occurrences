@@ -27,6 +27,9 @@ occurrence.
 use strict;
 use warnings;
 use Carp;
+use DPStore::Utils qw(
+    show_perldoc
+);
 use DPStore::Utils::TabFileParser qw(
     clean_array_elements_of_whitespace
     clean_line_of_trailing_whitespace
@@ -57,10 +60,10 @@ use Getopt::Long;
         "file=s"       => \$file,
         "column=i"     => \$column_num,
         "skip_title"   => \$skip_titles
-    );
-    confess "Must set --file" unless $file;
+    ) or show_perldoc();
+    show_perldoc("Must set --file") unless $file;
     unless (defined($column_num) and $column_num >= 1) {
-        confess "Must set --column (>=1)";
+        show_perldoc("Must set --column (>=1)");
     }
 
     my $data = parse_tab_delimited_file_to_array($file, 'clean');

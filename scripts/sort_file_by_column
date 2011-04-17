@@ -30,6 +30,9 @@ search, ascending or descending, and optionally case-insensitive.
 use strict;
 use warnings;
 use Carp;
+use DPStore::Utils qw(
+    show_perldoc
+);
 use DPStore::Utils::TabFileParser qw(
     clean_array_elements_of_whitespace
     clean_line_of_trailing_whitespace
@@ -65,17 +68,17 @@ use Getopt::Long;
         "mode=s"      => \$mode,
         "ignore_case" => \$case_insensitive,
         "skip_title"  => \$skip_title
-    ) or confess "Error with options";
+    ) or show_perldoc();
     
-    confess "Must set --file" unless $file;
+    show_perldoc("Must set --file") unless $file;
     unless ($column and $column > 0) {
-        confess "Must set --column >= 0";
+        show_perldoc("Must set --column >= 0");
     }
     unless ($up or $down) {
-        confess "Must set one of --ascending or --descending";
+        show_perldoc("Must set one of --ascending or --descending");
     }
     if ($up and $down) {
-        confess "Must set only ONE of --ascending and --descending";
+        show_perldoc("Must set only ONE of --ascending and --descending");
     }
     my $ascending = 0;
     if ($up) {

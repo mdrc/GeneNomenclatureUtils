@@ -31,6 +31,9 @@ these with relevenat MESH terms for mutations and disease.
 use strict;
 use warnings;
 use Carp;
+use DPStore::Utils qw(
+    show_perldoc
+);
 use DPStore::Utils::TabFileParser qw(
     clean_array_elements_of_whitespace
     clean_line_of_trailing_whitespace
@@ -81,21 +84,21 @@ use Data::Dumper;
         "hgnc_id_column=i"          => \$hgnc_column,
         "mode=s"                    => \$mode,
         "skip_title"                => \$skip_title,
-    );
-    confess "Must set --file" unless $file;
+    ) or show_perldoc();
+    show_perldoc("Must set --file") unless $file;
     
     if (defined($mgi_column) and $mgi_column < 1) {
-        confess "--mgi_column must be >= 1";
+        show_perldoc("--mgi_column must be >= 1");
     } 
     if (defined($entrez_column) and $entrez_column < 1) {
-        confess "--entrez_column must be >= 1";
+        show_perldoc("--entrez_column must be >= 1");
     } 
     if (defined($hgnc_column) and $hgnc_column < 1) {
-        confess "--hgnc_column must be >= 1";
+        show_perldoc("--hgnc_column must be >= 1");
     }
     
     unless ($mgi_column or $entrez_column or $hgnc_column) {
-        confess "Must specify at least one of [mgi|entrez|hgnc]_column";
+        show_perldoc("Must specify at least one of [mgi|entrez|hgnc]_column");
     }
     
     confess "Must set --mode" unless $mode;
@@ -138,6 +141,7 @@ sub do_file {
             , $approved_name_by_mgi_id
             , $mgi_synonyms_by_mgi_id
         );
+        next unless $mouse_terms;
         
         ### EntrezGene (directly of via MGI ID)
         my $entrez_gene_human;

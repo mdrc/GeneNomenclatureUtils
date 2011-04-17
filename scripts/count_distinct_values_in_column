@@ -23,6 +23,9 @@ file, are reports counts of any duplicates.
 use strict;
 use warnings;
 use Carp;
+use DPStore::Utils qw(
+    show_perldoc
+);
 use DPStore::Utils::TabFileParser qw(
     clean_array_elements_of_whitespace
     clean_line_of_trailing_whitespace
@@ -52,10 +55,10 @@ use Getopt::Long;
     GetOptions(
         "file=s"       => \$file,
         "column=i"     => \$column_num
-    );
-    confess "Must set --file" unless $file;
+    ) or show_perldoc();
+    show_perldoc("Must set --file") unless $file;
     unless (defined($column_num) and $column_num >= 1) {
-        confess "Must set --column (>=1)";
+        show_perldoc("Must set --column (>=1)");
     }
     print STDERR "Assumes a column title line\n";
     sleep 2;
@@ -85,7 +88,7 @@ use Getopt::Long;
     my $duplicate_count = 0;
     foreach my $key (keys(%$contents)) {
         if ($contents->{$key} > 1) {
-            print $key, ' ' x (10 - length($key));
+            print $key, ' ' x (20 - length($key)), ' - ';
             print $contents->{$key}, "\n"; 
             
             $duplicate_count++;

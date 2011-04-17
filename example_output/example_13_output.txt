@@ -1,0 +1,27 @@
+IPR016040	4/12	NAD(P)-binding domain
+IPR002347	3/12	Glucose/ribitol dehydrogenase
+IPR002198	3/12	Short-chain dehydrogenase/reductase SDR
+IPR002123	3/12	Phospholipid/glycerol acyltransferase
+IPR006236	1/12	D-3-phosphoglycerate dehydrogenase
+IPR017441	1/12	Protein kinase, ATP binding site
+IPR006140	1/12	D-isomer specific 2-hydroxyacid dehydrogenase, NAD-binding
+IPR002290	1/12	Serine/threonine-protein kinase domain
+IPR020904	1/12	Short-chain dehydrogenase/reductase, conserved site
+IPR012791	1/12	3-oxoacid CoA-transferase, subunit B
+IPR008271	1/12	Serine/threonine-protein kinase, active site
+IPR011009	1/12	Protein kinase-like domain
+IPR006139	1/12	D-isomer specific 2-hydroxyacid dehydrogenase, catalytic domain
+IPR004163	1/12	Coenzyme A transferase binding site
+IPR000719	1/12	Protein kinase, catalytic domain
+IPR011993	1/12	Pleckstrin homology-type
+IPR012577	1/12	NIPSNAP
+IPR011008	1/12	Dimeric alpha-beta barrel
+IPR014388	1/12	3-oxoacid CoA-transferase
+IPR012792	1/12	3-oxoacid CoA-transferase, subunit A
+IPR004164	1/12	Coenzyme A transferase active site
+IPR017442	1/12	Serine/threonine-protein kinase-like domain
+IPR009097	1/12	RNA ligase/cyclic nucleotide phosphodiesterase
+IPR000308	1/12	14-3-3 protein
+IPR010488	1/12	Zeta toxin, P-loop nucleoside triphosphate hydrolase
+IPR004165	1/12	Coenzyme A transferase
+IPR008431	1/12	Cyclic nucleotide phosphodiesterase

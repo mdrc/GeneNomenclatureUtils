@@ -76,7 +76,7 @@ my $counts;
         "file=s"          => \$file,
         "mgi_id_column=i" => \$mgi_column,
         "skip_title"      => \$skip_title,
-    );
+    ) or show_perldoc();
     unless ($file) {
         show_perldoc('Must set --file');
     }

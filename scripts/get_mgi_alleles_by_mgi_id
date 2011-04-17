@@ -31,6 +31,9 @@ type and MPO term count
 use strict;
 use warnings;
 use Carp;
+use DPStore::Utils qw(
+    show_perldoc
+);
 use DPStore::Utils::TabFileParser qw(
     clean_array_elements_of_whitespace
     clean_line_of_trailing_whitespace

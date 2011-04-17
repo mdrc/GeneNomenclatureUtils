@@ -64,7 +64,7 @@ my $failed_decompress = {};
     GetOptions(
         "dir=s"       => \$dir,
         "file_list=s" => \$file_list
-    );
+    ) or show_perldoc();
     unless ($dir) {
         show_perldoc("Must set --dir");
     }

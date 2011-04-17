@@ -69,7 +69,7 @@ use Getopt::Long;
         "file2_column=i" => \$file_column2,
         "mode=s"         => \$mode,
         "allow_dups"     => \$allow_dups
-    );
+    ) or show_perldoc();
     show_perldoc("Must set --file1") unless $file1;
     show_perldoc("Must set --file2") unless $file2;
     

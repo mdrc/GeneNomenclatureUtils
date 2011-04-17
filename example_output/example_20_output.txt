@@ -1,0 +1,441 @@
+PMID- 21170055
+OWN - NLM
+STAT- MEDLINE
+DA  - 20101228
+DCOM- 20110203
+LR  - 20110218
+IS  - 1546-1726 (Electronic)
+IS  - 1097-6256 (Linking)
+VI  - 14
+IP  - 1
+DP  - 2011 Jan
+TI  - Characterization of the proteome, diseases and evolution of the human
+      postsynaptic density.
+PG  - 19-21
+AB  - We isolated the postsynaptic density from human neocortex (hPSD) and
+      identified 1,461 proteins. hPSD mutations cause 133 neurological and
+      psychiatric diseases and were enriched in cognitive, affective and motor
+      phenotypes underpinned by sets of genes. Strong protein sequence
+      conservation in mammalian lineages, particularly in hub proteins,
+      indicates conserved function and organization in primate and rodent
+      models. The hPSD is an important structure for nervous system disease and
+      behavior.
+AD  - Genes to Cognition Programme, Wellcome Trust Sanger Institute, Genome
+      Campus, Hinxton, Cambridgeshire, UK.
+FAU - Bayes, Alex
+AU  - Bayes A
+FAU - van de Lagemaat, Louie N
+AU  - van de Lagemaat LN
+FAU - Collins, Mark O
+AU  - Collins MO
+FAU - Croning, Mike D R
+AU  - Croning MD
+FAU - Whittle, Ian R
+AU  - Whittle IR
+FAU - Choudhary, Jyoti S
+AU  - Choudhary JS
+FAU - Grant, Seth G N
+AU  - Grant SG
+LA  - eng
+GR  - Medical Research Council/United Kingdom
+GR  - Wellcome Trust/United Kingdom
+PT  - Journal Article
+PT  - Research Support, N.I.H., Extramural
+PT  - Research Support, Non-U.S. Gov't
+DEP - 20101219
+PL  - United States
+TA  - Nat Neurosci
+JT  - Nature neuroscience
+JID - 9809671
+RN  - 0 (Nerve Tissue Proteins)
+RN  - 0 (Proteome)
+SB  - IM
+MH  - Animals
+MH  - Central Nervous System Diseases/*genetics
+MH  - *Evolution, Molecular
+MH  - Humans
+MH  - Macaca
+MH  - Mice
+MH  - Mutation
+MH  - Neocortex/*metabolism
+MH  - Nerve Tissue Proteins/*genetics
+MH  - Pan troglodytes
+MH  - Post-Synaptic Density/*genetics
+MH  - Proteome/*genetics
+MH  - Rats
+MH  - Species Specificity
+PMC - PMC3040565
+MID - UKMS33579
+OID - NLM: PMC3040565 [Available on 07/01/11]
+OID - NLM: UKMS33579 [Available on 07/01/11]
+EDAT- 2010/12/21 06:00
+MHDA- 2011/02/04 06:00
+CRDT- 2010/12/21 06:00
+PMCR- 2011/07/01
+PHST- 2010/06/23 [received]
+PHST- 2010/11/12 [accepted]
+PHST- 2010/12/19 [aheadofprint]
+AID - nn.2719 [pii]
+AID - 10.1038/nn.2719 [doi]
+PST - ppublish
+SO  - Nat Neurosci. 2011 Jan;14(1):19-21. Epub 2010 Dec 19.PMID- 19455133
+OWN - NLM
+STAT- MEDLINE
+DA  - 20090520
+DCOM- 20090714
+LR  - 20091118
+IS  - 1744-4292 (Electronic)
+IS  - 1744-4292 (Linking)
+VI  - 5
+DP  - 2009
+TI  - Targeted tandem affinity purification of PSD-95 recovers core postsynaptic
+      complexes and schizophrenia susceptibility proteins.
+PG  - 269
+AB  - The molecular complexity of mammalian proteomes demands new methods for
+      mapping the organization of multiprotein complexes. Here, we combine mouse
+      genetics and proteomics to characterize synapse protein complexes and
+      interaction networks. New tandem affinity purification (TAP) tags were
+      fused to the carboxyl terminus of PSD-95 using gene targeting in mice.
+      Homozygous mice showed no detectable abnormalities in PSD-95 expression,
+      subcellular localization or synaptic electrophysiological function.
+      Analysis of multiprotein complexes purified under native conditions by
+      mass spectrometry defined known and new interactors: 118 proteins
+      comprising crucial functional components of synapses, including glutamate
+      receptors, K+ channels, scaffolding and signaling proteins, were
+      recovered. Network clustering of protein interactions generated five
+      connected clusters, with two clusters containing all the major ionotropic
+      glutamate receptors and one cluster with voltage-dependent K+ channels.
+      Annotation of clusters with human disease associations revealed that
+      multiple disorders map to the network, with a significant correlation of
+      schizophrenia within the glutamate receptor clusters. This targeted TAP
+      tagging strategy is generally applicable to mammalian proteomics and
+      systems biology approaches to disease.
+AD  - Genes to Cognition Programme, The Wellcome Trust Sanger Institute,
+      Cambridge, UK.
+FAU - Fernandez, Esperanza
+AU  - Fernandez E
+FAU - Collins, Mark O
+AU  - Collins MO
+FAU - Uren, Rachel T
+AU  - Uren RT
+FAU - Kopanitsa, Maksym V
+AU  - Kopanitsa MV
+FAU - Komiyama, Noboru H
+AU  - Komiyama NH
+FAU - Croning, Mike D R
+AU  - Croning MD
+FAU - Zografos, Lysimachos
+AU  - Zografos L
+FAU - Armstrong, J Douglas
+AU  - Armstrong JD
+FAU - Choudhary, Jyoti S
+AU  - Choudhary JS
+FAU - Grant, Seth G N
+AU  - Grant SG
+LA  - eng
+GR  - Wellcome Trust/United Kingdom
+PT  - Journal Article
+PT  - Research Support, Non-U.S. Gov't
+DEP - 20090519
+PL  - England
+TA  - Mol Syst Biol
+JT  - Molecular systems biology
+JID - 101235389
+RN  - 0 (Dlgh4 protein, mouse)
+RN  - 0 (Intracellular Signaling Peptides and Proteins)
+RN  - 0 (Membrane Proteins)
+RN  - 0 (Multiprotein Complexes)
+RN  - 0 (Nerve Tissue Proteins)
+RN  - 0 (Recombinant Fusion Proteins)
+SB  - IM
+MH  - Animals
+MH  - Brain/metabolism
+MH  - Chromatography, Affinity
+MH  - Gene Expression
+MH  - Gene Targeting/*methods
+MH  - Humans
+MH  - Immunohistochemistry
+MH  - *Intracellular Signaling Peptides and Proteins/genetics/isolation &
+      purification/metabolism
+MH  - *Membrane Proteins/genetics/isolation & purification/metabolism
+MH  - Mice
+MH  - Multiprotein Complexes/*isolation & purification/metabolism
+MH  - Nerve Tissue Proteins/*isolation & purification/metabolism
+MH  - Neuronal Plasticity
+MH  - Protein Interaction Mapping/methods
+MH  - Recombinant Fusion Proteins/genetics/isolation & purification/metabolism
+MH  - Schizophrenia/*metabolism
+MH  - Synapses/metabolism
+MH  - Synaptic Potentials
+MH  - Tandem Mass Spectrometry
+PMC - PMC2694677
+OID - NLM: PMC2694677
+EDAT- 2009/05/21 09:00
+MHDA- 2009/07/15 09:00
+CRDT- 2009/05/21 09:00
+PHST- 2008/12/01 [received]
+PHST- 2009/04/01 [accepted]
+PHST- 2009/05/19 [epublish]
+AID - msb200927 [pii]
+AID - 10.1038/msb.2009.27 [doi]
+PST - ppublish
+SO  - Mol Syst Biol. 2009;5:269. Epub 2009 May 19.PMID- 20113467
+OWN - NLM
+STAT- MEDLINE
+DA  - 20100303
+DCOM- 20100503
+LR  - 20100928
+IS  - 1471-2164 (Electronic)
+IS  - 1471-2164 (Linking)
+VI  - 11
+DP  - 2010
+TI  - Automated design of genomic Southern blot probes.
+PG  - 74
+AB  - BACKGROUND: Sothern blotting is a DNA analysis technique that has found
+      widespread application in molecular biology. It has been used for gene
+      discovery and mapping and has diagnostic and forensic applications,
+      including mutation detection in patient samples and DNA fingerprinting in
+      criminal investigations. Southern blotting has been employed as the
+      definitive method for detecting transgene integration, and successful
+      homologous recombination in gene targeting experiments.The technique
+      employs a labeled DNA probe to detect a specific DNA sequence in a complex
+      DNA sample that has been separated by restriction-digest and gel
+      electrophoresis. Critically for the technique to succeed the probe must be
+      unique to the target locus so as not to cross-hybridize to other
+      endogenous DNA within the sample.Investigators routinely employ a manual
+      approach to probe design. A genome browser is used to extract DNA sequence
+      from the locus of interest, which is searched against the target genome
+      using a BLAST-like tool. Ideally a single perfect match is obtained to the
+      target, with little cross-reactivity caused by homologous DNA sequence
+      present in the genome and/or repetitive and low-complexity elements in the
+      candidate probe. This is a labor intensive process often requiring several
+      attempts to find a suitable probe for laboratory testing. RESULTS: We have
+      written an informatic pipeline to automatically design genomic Sothern
+      blot probes that specifically attempts to optimize the resultant probe,
+      employing a brute-force strategy of generating many candidate probes of
+      acceptable length in the user-specified design window, searching all
+      against the target genome, then scoring and ranking the candidates by
+      uniqueness and repetitive DNA element content. Using these in silico
+      measures we can automatically design probes that we predict to perform as
+      well, or better, than our previous manual designs, while considerably
+      reducing design time.We went on to experimentally validate a number of
+      these automated designs by Southern blotting. The majority of probes we
+      tested performed well confirming our in silico prediction methodology and
+      the general usefulness of the software for automated genomic Southern
+      probe design. CONCLUSIONS: Software and supplementary information are
+      freely available at:
+      http://www.genes2cognition.org/software/southern_blot.
+AD  - Genes to Cognition Programme, The Wellcome Trust Sanger Institute,
+      Hinxton, Cambridge CB101SA, UK.
+FAU - Croning, Mike D R
+AU  - Croning MD
+FAU - Fricker, David G
+AU  - Fricker DG
+FAU - Komiyama, Noboru H
+AU  - Komiyama NH
+FAU - Grant, Seth G N
+AU  - Grant SG
+LA  - eng
+GR  - Wellcome Trust/United Kingdom
+PT  - Journal Article
+PT  - Research Support, Non-U.S. Gov't
+PT  - Validation Studies
+DEP - 20100129
+PL  - England
+TA  - BMC Genomics
+JT  - BMC genomics
+JID - 100965258
+RN  - 0 (DNA Probes)
+SB  - IM
+MH  - Animals
+MH  - Automation
+MH  - Blotting, Southern/*methods
+MH  - Computational Biology/*methods
+MH  - DNA Probes/*chemical synthesis
+MH  - Mice
+MH  - Software
+PMC - PMC2830989
+OID - NLM: PMC2830989
+EDAT- 2010/02/02 06:00
+MHDA- 2010/05/04 06:00
+CRDT- 2010/02/02 06:00
+PHST- 2009/10/28 [received]
+PHST- 2010/01/29 [accepted]
+PHST- 2010/01/29 [aheadofprint]
+AID - 1471-2164-11-74 [pii]
+AID - 10.1186/1471-2164-11-74 [doi]
+PST - epublish
+SO  - BMC Genomics. 2010 Jan 29;11:74.PMID- 20298200
+OWN - NLM
+STAT- MEDLINE
+DA  - 20100319
+DCOM- 20100611
+LR  - 20100701
+IS  - 1470-8752 (Electronic)
+IS  - 0300-5127 (Linking)
+VI  - 38
+IP  - 2
+DP  - 2010 Apr
+TI  - Confirmed rare copy number variants implicate novel genes in
+      schizophrenia.
+PG  - 445-51
+AB  - Understanding how cognitive processes including learning, memory, decision
+      making and ideation are encoded by the genome is a key question in
+      biology. Identification of sets of genes underlying human mental disorders
+      is a path towards this objective. Schizophrenia is a common disease with
+      cognitive symptoms, high heritability and complex genetics. We have
+      identified genes involved with schizophrenia by measuring differences in
+      DNA copy number across the entire genome in 91 schizophrenia cases and 92
+      controls in the Scottish population. Our data reproduce rare and common
+      variants observed in public domain data from >3000 schizophrenia cases,
+      confirming known disease loci as well as identifying novel loci. We found
+      copy number variants in PDE10A (phosphodiesterase 10A), CYFIP1
+      [cytoplasmic FMR1 (Fragile X mental retardation 1)-interacting protein 1],
+      K(+) channel genes KCNE1 and KCNE2, the Down's syndrome critical region 1
+      gene RCAN1 (regulator of calcineurin 1), cell-recognition protein CHL1
+      (cell adhesion molecule with homology with L1CAM), the transcription
+      factor SP4 (specificity protein 4) and histone deacetylase HDAC9, among
+      others (see http://www.genes2cognition.org/SCZ-CNV). Integrating the
+      function of these many genes into a coherent model of schizophrenia and
+      cognition is a major unanswered challenge.
+AD  - Wellcome Trust Sanger Institute, Wellcome Trust Genome Campus, Hinxton,
+      Cambridge CB10 1SA, UK.
+FAU - Tam, Gloria W C
+AU  - Tam GW
+FAU - van de Lagemaat, Louie N
+AU  - van de Lagemaat LN
+FAU - Redon, Richard
+AU  - Redon R
+FAU - Strathdee, Karen E
+AU  - Strathdee KE
+FAU - Croning, Mike D R
+AU  - Croning MD
+FAU - Malloy, Mary P
+AU  - Malloy MP
+FAU - Muir, Walter J
+AU  - Muir WJ
+FAU - Pickard, Ben S
+AU  - Pickard BS
+FAU - Deary, Ian J
+AU  - Deary IJ
+FAU - Blackwood, Douglas H R
+AU  - Blackwood DH
+FAU - Carter, Nigel P
+AU  - Carter NP
+FAU - Grant, Seth G N
+AU  - Grant SG
+LA  - eng
+GR  - 066717/Wellcome Trust/United Kingdom
+GR  - WT077008/Wellcome Trust/United Kingdom
+PT  - Journal Article
+PT  - Research Support, Non-U.S. Gov't
+PL  - England
+TA  - Biochem Soc Trans
+JT  - Biochemical Society transactions
+JID - 7506897
+SB  - IM
+MH  - Case-Control Studies
+MH  - Cognition/physiology
+MH  - *DNA Copy Number Variations/physiology
+MH  - DNA Mutational Analysis
+MH  - *Genes/physiology
+MH  - Genome-Wide Association Study
+MH  - Humans
+MH  - Schizophrenia/*genetics
+MH  - Validation Studies as Topic
+EDAT- 2010/03/20 06:00
+MHDA- 2010/06/12 06:00
+CRDT- 2010/03/20 06:00
+AID - BST0380445 [pii]
+AID - 10.1042/BST0380445 [doi]
+PST - ppublish
+SO  - Biochem Soc Trans. 2010 Apr;38(2):445-51.PMID- 19401593
+OWN - NLM
+STAT- MEDLINE
+DA  - 20090429
+DCOM- 20090925
+IS  - 1937-9145 (Electronic)
+VI  - 2
+IP  - 68
+DP  - 2009
+TI  - Neurotransmitters drive combinatorial multistate postsynaptic density
+      networks.
+PG  - ra19
+AB  - The mammalian postsynaptic density (PSD) comprises a complex collection of
+      approximately 1100 proteins. Despite extensive knowledge of individual
+      proteins, the overall organization of the PSD is poorly understood. Here,
+      we define maps of molecular circuitry within the PSD based on
+      phosphorylation of postsynaptic proteins. Activation of a single
+      neurotransmitter receptor, the N-methyl-D-aspartate receptor (NMDAR),
+      changed the phosphorylation status of 127 proteins. Stimulation of
+      ionotropic and metabotropic glutamate receptors and dopamine receptors
+      activated overlapping networks with distinct combinatorial phosphorylation
+      signatures. Using peptide array technology, we identified specific
+      phosphorylation motifs and switching mechanisms responsible for the
+      integration of neurotransmitter receptor pathways and their coordination
+      of multiple substrates in these networks. These combinatorial networks
+      confer high information-processing capacity and functional diversity on
+      synapses, and their elucidation may provide new insights into disease
+      mechanisms and new opportunities for drug discovery.
+AD  - Genes to Cognition, Wellcome Trust Sanger Institute, Cambridgeshire, UK.
+FAU - Coba, Marcelo P
+AU  - Coba MP
+FAU - Pocklington, Andrew J
+AU  - Pocklington AJ
+FAU - Collins, Mark O
+AU  - Collins MO
+FAU - Kopanitsa, Maksym V
+AU  - Kopanitsa MV
+FAU - Uren, Rachel T
+AU  - Uren RT
+FAU - Swamy, Sajani
+AU  - Swamy S
+FAU - Croning, Mike D R
+AU  - Croning MD
+FAU - Choudhary, Jyoti S
+AU  - Choudhary JS
+FAU - Grant, Seth G N
+AU  - Grant SG
+LA  - eng
+PT  - In Vitro
+PT  - Journal Article
+DEP - 20090428
+PL  - United States
+TA  - Sci Signal
+JT  - Science signaling
+JID - 101465400
+RN  - 0 (Excitatory Amino Acid Agonists)
+RN  - 0 (Phosphoproteins)
+RN  - 0 (Proteome)
+RN  - 0 (Receptors, Neurotransmitter)
+RN  - 6384-92-5 (N-Methylaspartate)
+SB  - IM
+MH  - Amino Acid Sequence
+MH  - Animals
+MH  - Binding Sites
+MH  - Chromatography, Liquid
+MH  - Excitatory Amino Acid Agonists/pharmacology
+MH  - Hippocampus/drug effects/*metabolism
+MH  - Immunoblotting
+MH  - Mass Spectrometry
+MH  - Mice
+MH  - Mice, Inbred Strains
+MH  - Molecular Sequence Data
+MH  - N-Methylaspartate/pharmacology
+MH  - Phosphoproteins/metabolism
+MH  - Phosphorylation/drug effects
+MH  - Protein Array Analysis
+MH  - Protein Binding
+MH  - Proteome/*metabolism
+MH  - Proteomics/methods
+MH  - Receptors, Neurotransmitter/*metabolism
+MH  - Signal Transduction/drug effects
+MH  - Synapses/*metabolism
+MH  - Synaptic Transmission/drug effects
+EDAT- 2009/04/30 09:00
+MHDA- 2009/09/26 06:00
+CRDT- 2009/04/30 09:00
+AID - 2/68/ra19 [pii]
+AID - 10.1126/scisignal.2000102 [doi]
+PST - epublish
+SO  - Sci Signal. 2009 Apr 28;2(68):ra19.

@@ -1,0 +1,228 @@
+### nomenclature
+
+                      GeneNomenclatureUtils Example Usage
+                      -----------------------------------
+
+1) Install the package as described in:
+   GeneNomenclatureUtils/docs/package_installation.txt
+
+2) Review the remaining documentation
+
+3) cd GeneNomenclatureUtils/scripts
+
+------------
+
+Example 1 - add MGI IDs to the of mouse gene symbols, in the process checking the symbols
+
+COMMAND: ./add_mgi_id_by_mgi_symbol --file=../data/my_list_of_genes_1.txt --mgi_symbol_column=1 --output_column=2 --skip_title > ../example_output/example_1_output.txt
+COMMENT: Note at least two 'NOT_FOUND' in the output file, for gene 'Agpat7', 'Lpaat-alpha'
+
+------------
+
+EXAMPLE 2 - add orthologous human HGNC IDs to the results of example 1
+
+COMMAND: ./add_ortho_gene_id_by_mgi_id --file=../example_output/example_1_output.txt --mgi_id_column=2 --output_column=3 --skip_title --output_attrib=human_hgnc_id > ../example_output/example_2_output.txt
+COMMENT: Inspect the output file, a number of HGNC IDs have been added
+
+------------
+
+EXAMPLE 3 - add Human gene symbols to the results of example 2
+
+COMMAND: ./add_ortho_gene_id_by_mgi_id --file=../example_output/example_2_output.txt --mgi_id_column=2 --output_column=4 --skip_title --output_attrib=human_gene_symbol > ../example_output/example_3_output.txt
+COMMENT: Inspect the output file, note mouse and human gene symbols are generally the same except human are capitalised 
+
+------------
+
+EXAMPLE 4 - add approved names to the results of example 3 
+
+COMMAND: ./add_approved_name_by_mgi_id --file=../example_output/example_3_output.txt --mgi_id_column=2 --output_column=5 --skip_title > ../example_output/example_4_output.txt
+COMMENT: Inspect file, not names have been added
+
+------------
+
+EXAMPLE 5 - sort the results of example 4 by the added human gene symbols
+
+COMMAND: ./sort_file_by_column --file=../example_output/example_4_output.txt --column=4 --mode=string --ascending --skip_title > ../example_output/example_5_output.txt
+COMMENT: Inspect file, note it has been sorted
+
+------------
+
+EXAMPLE 6 - Look for duplicates in the MGI IDs present in results of example 5.
+
+COMMAND: ./count_distinct_values_in_column --file=../example_output/example_5_output.txt --column=2
+COMMENT: Compare to output below:
+
+    ./count_distinct_values_in_column
+    =================================
+
+    Assumes a column title line
+
+    Column number: 2
+    Column title : 'MGI ID'
+
+    Distinct values: 13
+
+    Duplicates
+    MGI:1336186          - 2
+    MGI:1355330          - 2
+    MGI:88437            - 2
+    NOT_FOUND            - 2
+
+    Total number of duplicates: 4
+
+------------
+
+EXAMPLE 7 - Make a unique list of MGI IDs from the results of example 5 
+
+COMMAND: ./dump_column_as_unique --file=../example_output/example_5_output.txt --column=2 --skip_title > ../example_output/example_7_output.txt
+COMMENT: Inspect file, note it still contains a single 'NOT_FOUND'
+
+-----------
+
+EXAMPLE 8 - Add orthologous human Entrez Gene IDs to the results of example 7 
+
+COMMAND: ./add_ortho_gene_id_by_mgi_id --file=../example_output/example_7_output.txt --mgi_id_column=1 --output_column=2 --skip_title --output_attrib=human_entrez_gene_id
+COMMENT: Inspect file, note the numerical IDs added 
+
+------------
+
+EXAMPLE 9 - Using the result of Example 8 search OMIM for human disease phenotypes
+
+COMMAND: ./add_omim_by_entrez_gene_id --file=../example_output/example_8_output.txt --entrez_gene_id_column=2 --skip_title --mode=phenotitle --output_column=3 > ../example_output/example_9_output.txt
+COMMENT: Note at least two of the genes have OMIM entries, for enzymatic deficiencies 
+
+-----------
+
+EXAMPLE 10 - Get synonyms for the genes specified by MGI in the results of example 7
+
+COMMAND: ./add_synonyms_by_mgi_id --file=../example_output/example_7_output.txt --mgi_id_column=1 --output_column=2 --skip_title > ../example_output/example_10_output.txt
+COMMENT: Inspect the output file, note not all genes have synonyms
+
+------------
+
+EXAMPLE 11 - Check the txt file format of the first example file 
+
+COMMAND: ./txt_file_format_sniffer --file=../data/my_list_of_genes_1.txt
+COMMENT: Depending how you obtained the package from Github the results could vary, example output below:
+
+    ./txt_file_format_sniffer
+    =========================
+
+    File : ../data/my_list_of_genes_1.txt
+    Lines: 18
+
+    Unix/Linux  - YES: Containing: \w\n\w
+    DOS/Windows - NO : Containing: \w\r\n\w|\w\n\r\w
+    MAC         - NO : Containing: \w\r\w
+
+------------
+
+EXAMPLE 12 - Rearrange the order of the columns in the example 5 output, to place the MGI IDs first
+
+COMMAND: ./rearrange_and_cut_columns --file=../example_output/example_5_output.txt --columns=2,1,3,4,5 > ../example_output/example_12_output.txt
+COMMENT: Inspect file, note rearrangement
+
+------------
+
+EXAMPLE 13 - Find the InterPro domains (and their frequency) in the mouse genes specified in the results example 12 
+
+COMMAND: ./generate_interpro_report_from_mgi_id --file=../example_output/example_12_output.txt --mgi_id_column=1 --skip_title --output_mode=by_abundance > ../example_output/example_13_output.txt
+COMMENT: Inspect the output file, note the most frequently occurring InterPro
+         family/domain is IPR016040, NAD(P)-binding domain
+
+------------
+
+EXAMPLE 14 - Find mice alleles for the genes specified in the results of example 7 
+
+COMMAND: ./get_mgi_alleles_by_mgi_id --file=../example_output/example_7_output.txt --mgi_id_column=1 --skip_title > ../example_output/example_14_output.txt
+COMMENT: Notice from the STDERR output that (at least) 7 of the genes have reported alleles,
+         and from the Pdpk1 has the most 
+
+------------
+
+EXAMPLE 15 - Convert the results of example 14 into a Microsoft Excel format spreadsheet
+
+COMMAND: ./write_spreadsheet --file=../example_output/example_14_output.txt
+COMMENT: Note from the output to screen that 14 rows were written to a file called example_14_output.xls
+
+------------
+
+EXAMPLE 16 - Generate URLS to search PubMed for human disease association of the genes from example 5
+
+COMMAND: ./generate_pubmed_disease_searches_from_gene_nomenclature_ids --file=../example_output/example_5_output.txt --mgi_id_column=2 --hgnc_id_column=3 --mode=disease --skip_title > ../example_output/example_16_output.txt
+COMMENT: You may see warnings from the programme, these are non-fatal, examine the output file and cut and
+         paste the search for Decr2 into http://www.ncbi.nlm.nih.gov/sites/entrez?db=PubMed
+
+------------
+
+EXAMPLE 17 - Setup the MySQL database for the MEDLINE cache
+
+COMMAND: ./medline_cache_create_db_tables --config_file=medline_cache_db.ini
+COMMENT: Assuming you have created an empty database on your MySQL server, and set the connection
+         parameters in GeneNomenclatureUtils/conf/medline_cache_db.ini, two tables will be created
+         'medline' and 'request'
+
+------------
+
+EXAMPLE 18 - Load some PubMed IDs requests into the MEDLINE cache db
+
+COMMAND: ./medline_cache_requester --config_file=medline_cache_db.ini --file=../data/my_list_of_pubmed_ids.txt --pubmed_id_column=1
+COMMENT: 5 PubMed IDs should be parsed from the file:
+
+    ./medline_cache_requester
+    =========================
+
+    IDs parsed: 5
+
+    medline_entries_fetched : 0
+    pmids_already_available : 0
+    pmids_already_requested : 0
+    pmids_stored            : 5
+    pmids_with_error        : 0
+    total_pmids_parsed      : 0
+
+------------
+
+EXAMPLE 19 - Fetch outstanding MEDLINE records
+
+COMMAND: ./medline_cache_pubmed_fetcher  --config_file=medline_cache_db.ini
+COMMENT: If the fetch is successful you should get the following output:
+
+    ./medline_cache_pubmed_fetcher
+    ==============================
+
+    Total entries to fetch: 5
+    URL Request size      : 2
+
+    ..
+
+    pmids_cached    : 5
+    pmids_remaining : 0
+    pmids_requested : 5
+
+------------
+
+EXAMPLE 20 - Dump the fetched MEDLINE records to a text file
+
+COMMAND: ./medline_cache_dump --config_file=medline_cache_db.ini --file=../data/my_list_of_pubmed_ids.txt --pubmed_id_column=1 > ../example_output/example_20_output.txt
+COMMENT: Inspect the output file it should contain 5 MEDLINE records
+
+------------
+
+EXAMPLE 21 - Compare two lists of gene identifiers
+
+COMMAND: ./list_comparator --config_file=example_list_config.ini --include_all > ../example_output/example_21_output.txt
+COMMENT: Inspect the output file, once should see two files were parsed and
+         compared, and the comparision starts thus:
+         
+      Comparison: MY-LIST-2 (11)
+
+    UNION OF ALL SETS: 20
+
+    Gene    MY-LIST-1       MY-LIST-2
+    MGI:1915512     YES     NO
+    MGI:1196345     YES     NO
+    MGI:1914291     YES     NO
+    MGI:107436      NO      YES
+    MGI:106672      NO      YES
+    MGI:108109      YES     NO

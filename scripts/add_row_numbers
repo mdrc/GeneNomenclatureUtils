@@ -63,7 +63,7 @@ use Data::Dumper;
         "file=s"            => \$file,
         "output_column=i"   => \$output_column,
         "skip_title"        => \$skip_title,
-    );
+    ) or show_perldoc();
     
     unless ($file) {
         show_perldoc('Must set --file');

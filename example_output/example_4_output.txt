@@ -1,0 +1,18 @@
+MGI Symbol	MGI ID	human_hgnc_id	human_gene_symbol	Appr. Name
+Lpaat-alpha	NOT_FOUND	NOT_FOUND	NOT_FOUND	NOT_FOUND
+Phgdh	MGI:1355330	HGNC:8923	PHGDH	3-phosphoglycerate dehydrogenase
+Agpat4	MGI:1915512	HGNC:20885	AGPAT4	1-acylglycerol-3-phosphate O-acyltransferase 4 (lysophosphatidic acid acyltransferase, delta)
+Agpat7	NOT_FOUND	NOT_FOUND	NOT_FOUND	NOT_FOUND
+Cnp	MGI:88437	HGNC:2158	CNP	2',3'-cyclic nucleotide 3' phosphodiesterase
+Cnp	MGI:88437	HGNC:2158	CNP	2',3'-cyclic nucleotide 3' phosphodiesterase
+Decr2	MGI:1347059	HGNC:2754	DECR2	2-4-dienoyl-Coenzyme A reductase 2, peroxisomal
+Bdh1	MGI:1919161	HGNC:1027	BDH1	3-hydroxybutyrate dehydrogenase, type 1
+Ywhag	MGI:108109	HGNC:12852	YWHAG	tyrosine 3-monooxygenase/tryptophan 5-monooxygenase activation protein, gamma polypeptide
+Oxct1	MGI:1914291	HGNC:8527	OXCT1	3-oxoacid CoA transferase 1
+Phgdh	MGI:1355330	HGNC:8923	PHGDH	3-phosphoglycerate dehydrogenase
+Pdpk1	MGI:1338068	HGNC:8816	PDPK1	3-phosphoinositide dependent protein kinase 1
+Nipsnap1	MGI:1278344	HGNC:7827	NIPSNAP1	4-nitrophenylphosphatase domain and non-neuronal SNAP25-like protein homolog 1 (C. elegans)
+Agpat5	MGI:1196345	HGNC:20886	AGPAT5	1-acylglycerol-3-phosphate O-acyltransferase 5 (lysophosphatidic acid acyltransferase, epsilon)
+Agpat3	MGI:1336186	HGNC:326	AGPAT3	1-acylglycerol-3-phosphate O-acyltransferase 3
+Agpat3	MGI:1336186	HGNC:326	AGPAT3	1-acylglycerol-3-phosphate O-acyltransferase 3
+Decr1	MGI:1914710	HGNC:2753	DECR1	2,4-dienoyl CoA reductase 1, mitochondrial

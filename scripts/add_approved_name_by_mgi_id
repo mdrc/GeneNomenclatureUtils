@@ -32,6 +32,9 @@ Which is called 'glutamate receptor, ionotropic, NMDA1 (zeta 1)'
 use strict;
 use warnings;
 use Carp;
+use DPStore::Utils qw(
+    show_perldoc
+);
 use DPStore::Utils::TabFileParser qw(
     clean_array_elements_of_whitespace
     clean_line_of_trailing_whitespace
@@ -68,14 +71,14 @@ use Getopt::Long;
         "mgi_id_column=i" => \$mgi_column,
         "output_column=i"     => \$output_column,
         "skip_title"          => \$skip_title,
-    );
-    confess "Must set --file" unless $file;
+    ) or show_perldoc();
+    show_perldoc("Must set --file") unless $file;
     unless ($mgi_column and $mgi_column >= 1) {
-        confess "Must set --mgi_id_column >= 1"
+        show_perldoc("Must set --mgi_id_column >= 1");
     }
     
     unless ($output_column and $output_column >= 1) {
-        confess "Must set --output_column >= 1";
+        show_perldoc("Must set --output_column >= 1");
     }
     
     do_file($file, $mgi_column, $output_column, $skip_title);

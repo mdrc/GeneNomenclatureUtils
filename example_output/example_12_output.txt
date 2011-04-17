@@ -1,0 +1,18 @@
+MGI ID	MGI Symbol	human_hgnc_id	human_gene_symbol	Appr. Name
+MGI:1336186	Agpat3	HGNC:326	AGPAT3	1-acylglycerol-3-phosphate O-acyltransferase 3
+MGI:1336186	Agpat3	HGNC:326	AGPAT3	1-acylglycerol-3-phosphate O-acyltransferase 3
+MGI:1915512	Agpat4	HGNC:20885	AGPAT4	1-acylglycerol-3-phosphate O-acyltransferase 4 (lysophosphatidic acid acyltransferase, delta)
+MGI:1196345	Agpat5	HGNC:20886	AGPAT5	1-acylglycerol-3-phosphate O-acyltransferase 5 (lysophosphatidic acid acyltransferase, epsilon)
+MGI:1919161	Bdh1	HGNC:1027	BDH1	3-hydroxybutyrate dehydrogenase, type 1
+MGI:88437	Cnp	HGNC:2158	CNP	2',3'-cyclic nucleotide 3' phosphodiesterase
+MGI:88437	Cnp	HGNC:2158	CNP	2',3'-cyclic nucleotide 3' phosphodiesterase
+MGI:1914710	Decr1	HGNC:2753	DECR1	2,4-dienoyl CoA reductase 1, mitochondrial
+MGI:1347059	Decr2	HGNC:2754	DECR2	2-4-dienoyl-Coenzyme A reductase 2, peroxisomal
+MGI:1278344	Nipsnap1	HGNC:7827	NIPSNAP1	4-nitrophenylphosphatase domain and non-neuronal SNAP25-like protein homolog 1 (C. elegans)
+NOT_FOUND	Lpaat-alpha	NOT_FOUND	NOT_FOUND	NOT_FOUND
+NOT_FOUND	Agpat7	NOT_FOUND	NOT_FOUND	NOT_FOUND
+MGI:1914291	Oxct1	HGNC:8527	OXCT1	3-oxoacid CoA transferase 1
+MGI:1338068	Pdpk1	HGNC:8816	PDPK1	3-phosphoinositide dependent protein kinase 1
+MGI:1355330	Phgdh	HGNC:8923	PHGDH	3-phosphoglycerate dehydrogenase
+MGI:1355330	Phgdh	HGNC:8923	PHGDH	3-phosphoglycerate dehydrogenase
+MGI:108109	Ywhag	HGNC:12852	YWHAG	tyrosine 3-monooxygenase/tryptophan 5-monooxygenase activation protein, gamma polypeptide

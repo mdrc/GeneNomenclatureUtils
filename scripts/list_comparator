@@ -155,7 +155,7 @@ use Getopt::Long;
         'include_all'   => \$include_all,
         'quiet'         => \$quiet,
         'filter_by=s'   => \$filter_by
-    );
+    ) or show_perldoc();
     unless (@config_files) {
         show_perldoc("Must specify at least one --config_file");
     }

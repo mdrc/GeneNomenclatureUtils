@@ -63,14 +63,14 @@ use Getopt::Long;
         "mgi_id_column=i"    => \$column_num,
         "skip_title"         => \$skip_title,
         "output_column=i"    => \$output_column,
-    );
-    confess "Must set --file" unless $file;
+    ) or show_perldoc();
+    show_perldoc("Must set --file") unless $file;
 
     unless (defined($column_num) and $column_num >= 1) {
-        confess "Must set --mgi_id_column (>=1)";
+        show_perldoc("Must set --mgi_id_column (>=1)");
     }
     unless ($output_column and $output_column >= 1) {
-        confess "Must set --output_column";
+        show_perldoc("Must set --output_column");
     }
 
     my ($mgi_swiss, $mgi_trembl) = parse_mgi_swissprot_trembl();

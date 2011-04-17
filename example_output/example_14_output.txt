@@ -1,0 +1,18 @@
+MGI ID	PubMed ID	MGI Allele ID	Name	Source	Type	MPO term count
+MGI:1196345		MGI:3529976	Agpat5<Gt(OST62319)Lex>	gene trap OST62319, Lexicon Genetics	Gene trapped	1
+MGI:108109	15684385	MGI:3530054	Ywhag<tm1Otto>	targeted mutation 1, Markus Otto	Targeted (knock-out)	1
+MGI:1355330	14645240	MGI:3769591	Phgdh<tm1.1Shfu>	targeted mutation 1.1, Shigeki Furuya	Targeted (knock-out)	5
+MGI:1355330	20966073	MGI:4881750	Phgdh<tm1.2Shfu>	targeted mutation 1.2, Shigeki Furuya	Targeted (Floxed/Frt)	3
+MGI:88437	12590258	MGI:3051635	Cnp<tm1(cre)Kan>	targeted mutation 1, Klaus-Armin Nave	Targeted (knock-in)	13
+MGI:1338068		MGI:3530735	Pdpk1<Gt(OST82857)Lex>	gene trap OST82857, Lexicon Genetics	Gene trapped	1
+MGI:1338068	20944007	MGI:4838167	Pdpk1<tm1.1Daca>	targeted mutation 1.1, Doreen A Cantrell	Targeted (knock-in)	3
+MGI:1338068	12110585	MGI:2677461	Pdpk1<tm1.1Mlw>	targeted mutation 1.1, Margaret A Lawlor	Targeted (Floxed/Frt)	5
+MGI:1338068	12110585	MGI:2677462	Pdpk1<tm1.2Mlw>	targeted mutation 1.2, Margaret A Lawlor	Targeted (knock-out)	5
+MGI:1338068	16219676	MGI:3608995	Pdpk1<tm1Bcol>	targeted mutation 1, Barry J Collins	Targeted (knock-in)	8
+MGI:1338068	15116068	MGI:3043781	Pdpk1<tm1Ejm>	targeted mutation 1, Edward J McManus	Targeted (knock-in)	6
+MGI:1338068	18396135	MGI:3790718	Pdpk1<tm1Jcbr>	targeted mutation 1, Jens Bruning	Targeted (Floxed/Frt)	6
+MGI:1338068	16581004	MGI:3628819	Pdpk1<tm1Maka>	targeted mutation 1, Masato Kasuga	Targeted (Floxed/Frt)	8
+MGI:1338068	12110585	MGI:2677460	Pdpk1<tm1Mlw>	targeted mutation 1, Margaret A Lawlor	Targeted (Floxed/Frt)	4
+MGI:1338068	15116068	MGI:3043785	Pdpk1<tm2Ejm>	targeted mutation 2, Edward J McManus	Targeted (knock-in)	5
+MGI:1347059		MGI:3528567	Decr2<tm1Lex>	targeted mutation 1, Lexicon Genetics	Targeted (knock-out)	0
+MGI:1914710	19578400	MGI:4355415	Decr1<tm1Jkh>	targeted mutation 1, J Kalervo Hiltunen	Targeted (knock-out)	3

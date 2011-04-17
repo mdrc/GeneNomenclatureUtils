@@ -6,8 +6,11 @@
                         
 1) Download package from:
 
-www.genes2cognition.org/software/GeneNomenclatureUtils
-
+master:
+    https://github.com/mdrc/GeneNomenclatureUtils
+    
+last static freeze:    
+    www.genes2cognition.org/software/GeneNomenclatureUtils
 
 2) tar -zxvf GeneNomenclatureUtils.package.tar.gz
 

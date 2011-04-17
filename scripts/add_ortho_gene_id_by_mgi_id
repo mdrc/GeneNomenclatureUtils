@@ -79,7 +79,7 @@ use Data::Dumper;
         "skip_title"        => \$skip_title,
         "test"              => \$test,
         "output_attrib=s"   => \$output_attrib
-    );
+    ) or show_perldoc();
     unless ($file) {
         show_perldoc('Must set --file');
     }    

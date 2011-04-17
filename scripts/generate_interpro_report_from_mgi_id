@@ -28,6 +28,9 @@ matches, either 'by_gene' or 'by_abundance'
 use strict;
 use warnings;
 use Carp;
+use DPStore::Utils qw(
+    show_perldoc
+);
 use DPStore::Utils::TabFileParser qw(
     clean_array_elements_of_whitespace
     clean_line_of_trailing_whitespace
@@ -79,16 +82,16 @@ use Data::Dumper;
         "mgi_id_column=i" => \$mgi_column,
         "skip_title"      => \$skip_title,
         "output_mode=s"   => \$output_mode,
-    );
-    confess "Must set --file" unless $file;
+    ) or show_perldoc();
+    show_perldoc("Must set --file") unless $file;
     unless (defined($mgi_column) and $mgi_column >= 1) {
-        confess "--mgi_column must be >= 1";
+        show_perldoc("--mgi_column must be >= 1");
     }
     unless ($output_mode) {
-        confess "Must set --output_mode\n";
+        show_perldoc("Must set --output_mode\n");
     }
     unless ($output_mode =~ /^by_gene$|^by_abundance$/) {
-        confess "Must set --output_mode to 'by_abundance' or 'by_gene'";
+        show_perldoc("Must set --output_mode to 'by_abundance' or 'by_gene'");
     } 
     
     do_file($file, $mgi_column, $skip_title, $output_mode);
@@ -189,7 +192,11 @@ sub do_file {
     
     foreach my $mgi_id (keys(%$genes_seen_without_matches)) {
     
-        my $symbol = $parsed_by_mgi_id->{$mgi_id} or confess "Error";
-        print STDERR "  $symbol\t$mgi_id\n" 
+        my $symbol = $parsed_by_mgi_id->{$mgi_id};
+        if ($symbol) {
+            print STDERR "  $symbol\t$mgi_id\n";
+        } else {
+            print STDERR "Error with '$mgi_id'\n";
+        }
     }
 }

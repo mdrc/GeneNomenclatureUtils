@@ -33,6 +33,9 @@ Skips column cells with values, 'MGI ID' or 'NOT_FOUND'
 use strict;
 use warnings;
 use Carp;
+use DPStore::Utils qw(
+    show_perldoc
+);
 use DPStore::Utils::TabFileParser qw(
     clean_array_elements_of_whitespace
     clean_line_of_trailing_whitespace
@@ -64,13 +67,13 @@ use Data::Dumper;
         "file=s"            => \@files,
         "mgi_id_column=i"   => \$column,
         "output_ids"        => \$full_output,
-    );
+    ) or show_perldoc();
     unless ($column and $column >= 1) {
-        confess "Must set --column to >= 1";
+        show_perldoc("Must set --column to >= 1");
     }
     
     unless (@files) {
-        confess "Must specify at least one --file";
+        show_perldoc("Must specify at least one --file");
     }
     
     foreach my $file (@files) {

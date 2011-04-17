@@ -28,6 +28,9 @@ Adds gene/protein synonyms to a tab-delimited file by MGI ID.
 use strict;
 use warnings;
 use Carp;
+use DPStore::Utils qw(
+    show_perldoc
+);
 use DPStore::Utils::TabFileParser qw(
     clean_array_elements_of_whitespace
     clean_line_of_trailing_whitespace
@@ -65,14 +68,14 @@ use Data::Dumper;
         "output_column=i"   => \$output_column,
         "skip_title"        => \$skip_title,
         "test"              => \$test,
-    );
-    confess "Must set --file" unless $file;
+    ) or show_perldoc();
+    show_perldoc("Must set --file") unless $file;
     unless ($mgi_id_column and $mgi_id_column >= 1) {
-        confess "Must set --mgi_symbol_column >= 1"
+        show_perldoc("Must set --mgi_symbol_column >= 1");
     }
     
     unless ($output_column and $output_column >= 1) {
-        confess "Must set --output_column >= 1";
+        show_perldoc("Must set --output_column >= 1");
     }
     
     do_file($file, $mgi_id_column, $output_column, $skip_title

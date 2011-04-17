@@ -35,11 +35,14 @@ became secondary.
 use strict;
 use warnings;
 use Carp;
+use DPStore::Utils qw(
+    show_perldoc
+);
 
 {
     print STDERR "\n$0\n", '=' x length($0), "\n\n";
     unless ($ENV{SWISS_dir}) {
-        confess "Must set \$ENV{SWISS_dir}\n";
+        show_perldoc("Must set \$ENV{SWISS_dir}\n");
     }
     
     parse_swissprot_file($ENV{SWISS_dir} . '/uniprot_sprot.dat');
