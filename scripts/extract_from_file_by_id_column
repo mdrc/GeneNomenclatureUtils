@@ -1,0 +1,142 @@
+#!/software/bin/perl
+### nomenclature
+
+=pod
+
+=head1 NAME - extract_from_file_by_id_column
+
+=head1 COMMAND LINE PARAMETERS 
+
+Required parameters
+    --data_file                 data file from which to extract
+    --data_file_id_column       data file column with ids (>=1)
+    --ids_file                  file holding IDs (>=1)
+    --ids_file_column           column to with ids (>=1)
+  
+Optional parameters
+  --skip_title                  skip first (title) row
+
+=head1 DESCRIPTION
+
+Extracts lines from a tab-delimited data file, by comparing the
+specified column against another column in second 'ids_file'
+
+=head1 AUTHOR - mike_croning@hotmail.com
+
+=cut
+
+use strict;
+use warnings;
+use Carp;
+use DBI;
+use Data::Dumper;
+use DPStore::Utils::TabFileParser qw(
+    clean_array_elements_of_whitespace
+    clean_line_of_trailing_whitespace
+    clean_tab_delimited_file
+    close_data_files
+    close_output_files
+    confirm_keys_are_present
+    open_data_file
+    open_output_file
+    output_array_of_arrays
+    output_hash_of_arrays
+    output_tab_delimited_txt_from_hash_of_arrays
+    parse_tab_delimited_file_to_array
+    parse_tab_delimited_file_to_hash_keyed_by_column
+    read_next_line_from_data_file 
+    set_tabfileparser_clobber
+    set_tabfile_parser_path_root
+    write_line_to_output_file
+    write_lines_to_output_file
+);   
+use DPStore::Utils qw(
+    show_perldoc
+);
+
+use Getopt::Long;
+
+{
+    print STDERR "\n$0\n", '=' x length($0), "\n\n";
+    my ( $data_file, $ids_file, $filter_column_num
+        , $data_column_num, $skip_title ) = @_;
+    GetOptions(
+        "data_file=s"           => \$data_file,
+        "data_file_id_column=i" => \$data_column_num,
+        "ids_file=s"            => \$ids_file,
+        "ids_file_column=i"     => \$filter_column_num,
+        "skip_title"            => \$skip_title
+    ) or show_perldoc();
+    
+    unless ($data_file) {
+        show_perldoc("Must specify --data_file");
+    }
+    unless ($ids_file) {
+        show_perldoc("Must specify --ids_file");
+    }
+    if ($data_file eq $ids_file) {
+        show_perldoc("--data_file cannot be same as --ids_file");
+    }
+    
+    unless ($filter_column_num and $filter_column_num >= 1) {
+        show_perldoc("Must specify --filter_id_column >= 1");
+    } 
+    unless ($data_column_num and $data_column_num >= 1) {
+        show_perldoc("Must specify --data_id_column >= 1");
+    } 
+
+    my $filter_ids = parse_filter_ids($ids_file, $filter_column_num);
+    sleep 2;
+    
+    extract_file_by_column_match($filter_ids, $data_file, $data_column_num, $skip_title);
+}
+
+sub extract_file_by_column_match {
+    my ( $filter_ids, $data_file, $data_column_num, $skip_title ) = @_;
+ 
+    local *FILE;
+    open (FILE, "<$data_file") or die "Could not open file: '$data_file' $!";
+    print STDERR "\nExtracting: $data_file\n";
+    
+    my $line_count = 0;
+    if ($skip_title) {
+        my $line = <FILE>;
+        print $line;
+        $line_count++;
+    }
+    
+    
+    my $emitted    = 0;
+    while (defined(my $line = <FILE>)) {
+
+        chomp($line);
+        $line_count++;
+        
+        my $line = clean_line_of_trailing_whitespace($line);
+        my @fields = split("\t", $line);
+        clean_array_elements_of_whitespace(\@fields);
+
+        my $rebuilt = join("\t", @fields);
+        my $id = $fields[$data_column_num - 1];
+        if ($id and $filter_ids->{$id}) {
+            print "$rebuilt\n";
+            $emitted++;
+        }
+    }
+    close (FILE);
+    
+    print STDERR "Lines parsed : $line_count\n";
+    print STDERR "Lined emitted: $emitted\n";
+}
+
+
+sub parse_filter_ids {
+    my ( $file, $column ) = @_;
+    
+    print STDERR "IDS file  : $file\n"; 
+    my $filter_ids = parse_tab_delimited_file_to_hash_keyed_by_column($file, $column);
+    print STDERR "Unique IDS: ", scalar(keys(%$filter_ids)), "\n\n";
+    
+    return $filter_ids;
+}
+

@@ -1,0 +1,130 @@
+	Command line parameters used by the GeneNomenclatureUtils package
+                    =================================================================
+
+INTRODUCTION
+------------
+
+Most of the scripts in the GeneNomenclatureUtils package take one Unix-formatted tab-delimited text file
+(use txt_file_format_sniffer to check your txt file format)  as input (specified by --file) and do
+something (look-up an equivalent ID, filter by, check, etc) the IDs or symbols specified in the column
+parameter(s) required by the individual scripts. 
+
+Columns are numbered from 1, that being the left-most column, and output is written to STDOUT by
+inserting a column in the lines of the file, as specified by --output_column, with existing columns
+being pushed to the right.
+
+All of the scripts are documented with their particular mandatory and optional parameters. This is output
+automatically if an incorrect or insufficient set of parameters are specified, enter:
+
+'./check_entrez_gene_id<cr>' to view the parameters of the script that checks Entrez Gene IDs, which
+will produce:
+
+NAME - check_entrez_gene_ids
+COMMAND LINE PARAMETERS
+       Required parameters
+         --file                         file to check
+         --entrez_gene_id_column        column containing IDs to check (>=1)
+         --tax_id                       tax_id
+         --output_column                column to output check results (>=1)
+
+       Optional parameters
+         --skip_title                   skip first (title) row
+         --help|h
+
+DESCRIPTION
+<SNIP>
+
+An example command line is usually included in the documentation, that uses the demonstration data and
+configuration files included in the package.
+
+
+
+
+THE MOST COMMON PARAMETERS
+--------------------------
+
+--file              The file to use, check, or process
+--skip_title        Skip the first line (row) of the tab-delimited file, as it contains titles, rather than data
+--output_column     Specify the output column, for the added data, existing columns are pushed rightword
+--tax_id            Specify a taxonomy ID e.g. 9606 (human)
+--column            Specify the column to check, or process	
+--columns           Specify a set of columns to check, or process e.g. --columns=1,2,3
+
+--value             Specify a single value to find, count, or filter by 
+--help|h            Output the documentation
+--dir               Specify directory to read or write from
+--file_list         Specify a file to read file names from
+--config_file       Specify configuration file. Details of the correct format are included in all scripts
+--mode              Used to select between the behaviours of scripts with more than one running mode
+--quiet             Produce less logging output
+
+
+
+GENE NOMENCLATURE, ID AND SYMBOL PARAMETERS
+-------------------------------------------
+
+This parameter group is used to specify gene symbols and IDs from nomenclature committees and databases
+including MGI, HGNC, and Entrez Gene
+
+
+
+--mgi_id_column                         Specify column containing MGI IDs  e.g. MGI:95819
+--hgnc_symbol_column                    Specify column containing HGNC symbols e.g. GRIN1
+--hgnc_id_column                        Specify column containing HGNC IDs e.g. HGNC:4584
+--mgi_symbol_column                     Specify column containing MGI IDs  e.g. Grin1
+--entrez_gene_id_column                 Specify column containing Entrez Gene IDs e.g. 2902 (human)
+
+All the above examples about are for the gene encding the NR1 subunit of the glutamate receptor, NMDA subtype
+
+See: http://www.informatics.jax.org/searches/accession_report.cgi?id=MGI:95819
+     http://www.gene.ucl.ac.uk/nomenclature/data/get_data.php?hgnc_id=HGNC:4584
+     http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids=2902
+
+
+
+PubMed
+------
+
+--pubmed_id_column                      Specify column containing PubMed IDs (PMIDs)
+
+
+
+OTHER PARAMETERS
+----------------
+
+--allow_dups                            Allow duplicates
+--ascending                             Sort or output in an asencding fashion (in string or numeric terms)
+--compare
+--data_file                             data file from which to extract
+--data_file_id_column                   data file column with ids
+--descending                            Sort or output in a descending fashion (in string or numeric terms)
+--file1                                 First  tab-delimited data file
+--file1_column                          Column to check or process from file1
+--file2                                 Second tab-delimited data file
+--file2_column                          Column to check or process from file2
+--filter_by
+--has_title
+--ids_file                              file holding IDs
+--ids_file_column                       column to use from IDs file
+--ignore_case                           Ignore case when sorting, processing a file
+--include_all
+--lower_bound
+--negative
+--output_attrib
+--output_ids
+--output_mode
+--output_unavailable
+--positive
+--suppress_title
+--transfer_column                       Specify additional columns to copy from the input file to output 
+--upper_bound
+--width
+
+
+
+TESTING AND DEBUGGING PARAMETERS
+--------------------------------
+
+--test                                  Switch on testing mode
+--debug                                 Switch on debugging mode
+

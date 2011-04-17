@@ -1,0 +1,182 @@
+#!/software/bin/perl
+### nomenclature
+
+=pod
+
+=head1 NAME - medline_cache_dump
+
+=head1 COMMAND LINE PARAMETERS
+
+Required parameters
+  --file                    file to be processed
+  --config_file             database connection config_file
+  --pubmed_id_column        column number with pubmed IDs (>= 1)
+
+Optional parameters
+  --skip_title
+  --output_unavailable      report just records not available
+
+head1 DESCRIPTION
+
+Takes a file containing PubMed IDs (PMIDs) for MEDLINE records and attempts
+to fetch them from the GeneNomenclatureUtils cache.
+
+Example command line
+
+./medline_cache_dump --config_file=medline_cache_db.ini
+  --file=../data/my_list_of_pubmed_ids.txt --pubmed_id_column=1 --skip_title
+
+Uses the files:
+GeneNomenclatureUtils/data/my_list_of_pubmed_ids.txt 
+GeneNomenclatureUtils/conf/medline_cache_db.in
+
+If the 
+=head1 AUTHOR - mike_croning@hotmail.com
+
+=cut
+
+use strict;
+use warnings;
+use Carp;
+use DBI;
+use DPStore::Utils qw(
+    show_perldoc
+);
+use DPStore::Utils::Config;
+use DPStore::Utils::Counts;
+use DPStore::Utils::TabFileParser qw(
+    clean_array_elements_of_whitespace
+    clean_line_of_trailing_whitespace
+    clean_tab_delimited_file
+    close_data_files
+    close_output_files
+    confirm_keys_are_present
+    open_data_file
+    open_output_file
+    output_array_of_arrays
+    output_hash_of_arrays
+    output_tab_delimited_txt_from_hash_of_arrays
+    parse_tab_delimited_file_to_array
+    parse_tab_delimited_file_to_hash_keyed_by_column
+    read_next_line_from_data_file 
+    set_tabfileparser_clobber
+    set_tabfile_parser_path_root
+    write_line_to_output_file
+    write_lines_to_output_file
+);
+use Getopt::Long;
+use Data::Dumper;
+use MedlineCacheDB;
+
+# GLOBALS
+my ($debug, $counts);
+
+{
+    print STDERR "\n$0\n", '=' x length($0), "\n\n";
+    my ( $file, $pmid_column, $skip_title, $config_file
+        , $output_unavailable ) = @_;
+    
+    GetOptions(
+        "file=s"             => \$file,
+        "pubmed_id_column=i" => \$pmid_column,
+        "skip_title"         => \$skip_title,
+        "config_file=s"      => \$config_file,
+        "output_unavailable" => \$output_unavailable
+    ) or show_perldoc();
+    
+    ### Check we have the correct parameters
+    unless ($file) {
+        show_perldoc('Must set --file');
+    }
+    unless ($pmid_column and $pmid_column >= 1) {
+        show_perldoc('Must set --pubmed_id_column >= 1');
+    }
+    unless ($config_file) {
+        show_perldoc("Must specify --config_file")
+    }
+    
+    my $dba = MedlineCacheDB->new($config_file);
+    
+    initialise_counts();
+
+    dump_from_cache($dba, $file, $pmid_column, $skip_title, $output_unavailable);
+
+    END {
+        $counts->display_counts(\*STDERR) if $counts;
+    }
+}
+
+sub initialise_counts {
+    my @counts = qw(
+        total_rows_parsed
+        unique_pmids_parsed
+        medline_records_dumped
+        pmids_not_available
+        cache_retrieval_failures
+    );
+    $counts = DPStore::Utils::Counts->new(@counts);
+}
+
+sub dump_from_cache {
+    my ( $dba, $file, $pmid_column, $skip_title, $output_unavailable ) = @_;
+    
+    my $entries = parse_tab_delimited_file_to_array($file, $pmid_column, 'allow_dups');
+    if ($skip_title) {
+        shift(@$entries);
+        print STDERR "Skipped title row\n";
+    }
+    
+    my $unique_pmids = {};
+    foreach my $entry (@$entries) {
+    
+        $counts->increment_total_rows_parsed;
+        my $line = join("\t", @$entry);
+        
+        my $pubmed_id = $entry->[$pmid_column - 1];
+        unless ($pubmed_id and $pubmed_id =~ /^\d+$/) {
+            confess "Error with pubmed_id on '$line'";    
+        }
+        $unique_pmids->{$pubmed_id}++;
+    }
+    $counts->unique_pmids_parsed(scalar(keys(%$unique_pmids)));
+    
+    ### See what we have cached
+    my $unavailable_pmids = {};
+    foreach my $pubmed_id (keys(%$unique_pmids)) {
+    
+        my ($medline_id, $status) = $dba->check_for_pubmed_id($pubmed_id);
+        if ($medline_id) {
+            if ($status eq 'available') {
+                output_from_cache($dba, $pubmed_id) unless $output_unavailable;
+            } else {
+                $counts->increment_pmids_not_available;
+                $unavailable_pmids->{$pubmed_id}++;
+            }
+        } else {
+            $counts->increment_pmids_not_available;
+            $unavailable_pmids->{$pubmed_id}++;
+        }
+    }
+    
+    if ($output_unavailable) {
+        print join (keys(%$unavailable_pmids), "\n");
+    }
+}
+
+sub output_from_cache {
+    my ( $dba, $pubmed_id ) = @_;
+    
+    unless ($pubmed_id and $pubmed_id =~ /^\d+$/) {
+        confess "Must pass a pubmed_id";
+    }
+    
+    my ( $fetched_id, $fetched_pubmed_id, $record ) = $dba->fetch($pubmed_id);
+    unless ($fetched_id and $fetched_pubmed_id and $record) {
+        $counts->increment_cache_retrieval_failures;
+        print STDERR "Failed to dump by pubmed_id: $pubmed_id\n";
+    } else {
+        print $record;
+        $counts->increment_medline_records_dumped;
+    }
+}
+

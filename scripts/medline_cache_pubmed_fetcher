@@ -1,0 +1,211 @@
+#!/software/bin/perl
+### nomenclature
+
+=pod
+
+=head1 NAME - medline_cache_pubmed_fetcher
+
+=head1 COMMAND LINE PARAMETERS
+
+Required parameters
+  --config_file         database connection config_file
+
+=head1 DESCRIPTION
+
+Fetches the outstanding requests for MEDLINE records in the
+GeneNomenclatureUtils MEDLINE cache database, using the NCBI Entrez
+eUtils (see: http://eutils.ncbi.nlm.nih.gov/)
+
+Example command line:
+
+./medline_cache_pubmed_fetcher --config_file=medline_cache_db.ini
+
+When using the example files, and the download proves successful, one
+sees:
+
+./medline_cache_pubmed_fetcher
+==============================
+
+Total entries to fetch: 4
+URL Request size      : 2
+
+..
+
+pmids_cached    : 4
+pmids_remaining : 0
+pmids_requested : 4
+
+
+Example command line
+
+=head1 AUTHOR - mike_croning@hotmail.com
+
+=cut
+
+use strict;
+use warnings;
+use Carp;
+use Data::Dumper;
+use DPStore::Utils qw(
+    show_perldoc
+);
+use DPStore::Utils::Counts;
+use Getopt::Long;
+use LWP::Simple;
+use MedlineCacheDB;
+
+# GLOBALS
+my ($debug, $counts);
+
+{
+    print STDERR "\n$0\n", '=' x length($0), "\n\n";
+    my $config_file;
+    
+    GetOptions(
+        "config_file=s"      => \$config_file
+    ) or show_perldoc();
+    unless ($config_file) {
+        show_perldoc("Must specify --config_file")
+    }
+
+    my $dba = MedlineCacheDB->new($config_file);
+
+    initialise_counts();
+    initialise_request_sizes();
+
+    do_pubmed_fetch($dba);
+
+    END {
+        $counts->display_counts(\*STDERR) if $counts;
+    }
+}
+
+sub initialise_counts {
+    my @counts = qw(
+        pmids_requested
+        pmids_cached
+        pmids_remaining
+    );
+    $counts = DPStore::Utils::Counts->new(@counts);
+}
+
+sub do_pubmed_fetch {
+    my ( $dba ) = @_;
+    
+    my $ids = $dba->get_pubmed_ids_by_status('requested');
+    die "Nothing to fetch" unless @$ids;
+    print STDERR "Total entries to fetch: ", scalar(@$ids), "\n";
+    my $request_size = get_request_size(scalar(@$ids));
+    print STDERR "URL Request size      : $request_size\n\n";
+    
+    my @request_ids  = ();
+ 
+    my $id_count       = 0;
+    my $id_chunk_count = 0;
+    my $chunk_count    = 0;
+    my $store_count    = 0;
+    
+    while (my $id = shift(@$ids)) {
+    
+        push (@request_ids, $id);
+        $id_count++;
+        $id_chunk_count++;
+        
+        if ($id_chunk_count >= $request_size) {
+            $store_count += fetch_pubmed($dba, \@request_ids);
+            @request_ids = ();
+            $id_chunk_count = 0;
+            $chunk_count++;
+            print STDERR '.';
+            
+            sleep 2;
+        } 
+    }    
+    $store_count += fetch_pubmed($dba, \@request_ids);
+    print STDERR "\n";
+    
+    my $remaining = $dba->get_pubmed_ids_by_status('requested');
+    $counts->pmids_remaining(scalar(@$remaining));
+}
+
+sub fetch_pubmed {
+    my ( $dba, $ids ) = @_;
+    
+    my $dbh = $dba->dbh;
+    
+    confess "Too many ids" if @$ids > 100;
+    print STDERR "fetch_pubmed called with: ", scalar(@$ids), "\n" if $debug;
+    
+    my $url = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=text&rettype=medline&id=';
+    foreach my $id (@$ids) {
+    
+        unless ($id and $id =~ /^\d+$/) {
+            confess "Bad ID: '$id'";
+        }
+
+        $url .= $id . ',';
+        $counts->increment_pmids_requested;
+    }
+    chop($url);
+    my $content = get($url);
+    my @text;
+    if ($content) {
+        @text = split("\n", $content) 
+    }
+    
+    my @record;
+    my $pmid;
+    my $record_count = 0;
+    while (my $line = shift(@text)) {
+        
+        if ($line =~ /^PMID-\s(\d+)/) {
+            $pmid = $1;
+            
+            @record = ();
+            push (@record, $line);
+            $record_count++;
+            next;
+        } elsif ($line =~ /^SO/) {
+            push (@record, $line);
+            shift (@text);
+            
+            my $entry = join("\n", @record);
+            $dba->store_medline($pmid, $entry);
+            $dba->update_request($pmid, 'available');
+            $counts->increment_pmids_cached;
+            
+        } else {
+            push (@record, $line);
+        }
+    }
+    return $record_count;
+}
+
+{
+    my $required;
+    my $request_size;
+
+    sub initialise_request_sizes {
+
+        $required     = [200, 500, 1000, 10000];
+        $request_size = [  2,  10,   20,   100];
+    }
+
+    sub get_request_size {
+        my ( $total_required ) = @_;
+        
+        my $selected_request_size;
+        for (my $i = 0; $i <= $#$required; $i++) {
+        
+            if ($total_required <= $required->[$i]) {
+                $selected_request_size = $request_size->[$i];
+                last;
+            }
+        }
+        unless ($selected_request_size) {
+            $selected_request_size = $request_size->[$#$request_size];
+        }
+        
+        return $selected_request_size;
+    }
+}

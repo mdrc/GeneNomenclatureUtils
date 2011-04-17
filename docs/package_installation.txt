@@ -1,0 +1,67 @@
+### nomeclature
+
+                        GeneNomenclatureUtils Package Installation
+                        ------------------------------------------
+                        
+                        
+1) Download package from:
+
+www.genes2cognition.org/software/GeneNomenclatureUtils
+
+
+2) tar -zxvf GeneNomenclatureUtils.package.tar.gz
+
+   This will create a set of directories similar to that described in
+   GeneNomenclatureUtils/docs/package_structure.txt
+
+
+3) Set PERL5LIB appropriately so that the package modules can be found
+   GeneNomenclatureUtils/modules
+
+
+4) Set environment variables
+
+    DPStoreConfDir
+
+        Directory to find configuration files, point this to the package
+        directory: GeneNomenclatureUtils/conf
+
+    http_proxy
+
+        Set if a web proxy needs to be used. The scripts:
+        download_nomenclature_files, medline_cache_pubmed_fetcher require
+        http access.
+
+ 
+5) Create a directory for the nomenclature file download
+
+    mkdir /MyPath/Nomenclature
+
+6) Download nomenclature files
+
+    cd GeneNomenclatureUtils/scripts/
+    
+    ./download_nomenclature_files --dir=/MyPath/Nomenclature
+
+This will download and uncompress all the nomenclature files used by the 
+package, and report any errors occurring. This will take a few minutes 
+with a fast internet connection.
+
+Edit GeneNomenclatureUtils/conf/GeneNomenclatureUtils_download_urls.txt
+to remove files you find you do not require for your analyses
+
+7) Set the enviroment variables allowing the other scripts to find the
+   downloaded nomenclature files
+
+    cd /MyPath/Nomenclature
+
+    setenv ENTREZ_dir  ${cwd}
+    setenv RGD_dir     ${cwd}
+    setenv HGNC_dir    ${cwd}
+    setenv MGI_dir     ${cwd}
+    setenv NCBI_dir    ${cwd}
+    setenv OMIM_dir    ${cwd}
+    setenv SWISS_dir   ${cwd}
+    
+8) Try the examples in GeneNomenclatureUtils/docs/getting_started.txt
+

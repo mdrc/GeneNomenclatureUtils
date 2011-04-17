@@ -1,0 +1,125 @@
+#!/usr/local/bin/perl
+### nomenclature
+
+=pod
+
+=head1 NAME - combine_by_mgi_id_column
+
+=head1 COMMAND LINE PARAMETERS 
+
+Required parameters
+  --file                    file(s) to cobmine MGI IDs
+  --mgi_id_column           column containing the MGI IDs (>=1)
+
+Optional parameters
+  --output_ids              output all IDs rather than count of
+                            unique IDs
+  
+=head1 DESCRIPTION
+
+Accepts a list of files, parses each one in turn, taking the specified
+column from each, verifies them as formatted an MGI ID, making a
+non redundant list. 
+
+If --output_ids is specified then the list is output to STDOUT, else
+just a count is emitted.
+ 
+Skips column cells with values, 'MGI ID' or 'NOT_FOUND'
+
+=head1 AUTHOR - mike_croning@hotmail.com
+
+=cut
+
+use strict;
+use warnings;
+use Carp;
+use DPStore::Utils::TabFileParser qw(
+    clean_array_elements_of_whitespace
+    clean_line_of_trailing_whitespace
+    clean_tab_delimited_file
+    close_data_files
+    close_output_files
+    confirm_keys_are_present
+    open_data_file
+    open_output_file
+    output_array_of_arrays
+    output_hash_of_arrays
+    output_tab_delimited_txt_from_hash_of_arrays
+    parse_tab_delimited_file_to_array
+    parse_tab_delimited_file_to_hash_keyed_by_column
+    read_next_line_from_data_file 
+    set_tabfileparser_clobber
+    set_tabfile_parser_path_root
+    write_line_to_output_file
+    write_lines_to_output_file
+);
+use Getopt::Long;
+use Data::Dumper;
+
+{
+    print STDERR "\n$0\n", '=' x length($0), "\n\n";
+    my (@files, $column, $full_output);
+        
+    GetOptions(
+        "file=s"            => \@files,
+        "mgi_id_column=i"   => \$column,
+        "output_ids"        => \$full_output,
+    );
+    unless ($column and $column >= 1) {
+        confess "Must set --column to >= 1";
+    }
+    
+    unless (@files) {
+        confess "Must specify at least one --file";
+    }
+    
+    foreach my $file (@files) {
+        do_file($file);
+    }
+
+    do_output() if $full_output;
+    output_total();
+}
+
+### Takes a list of files, parses each one in turn, takes the first column
+#   from each, checks them as an MGI ID. 
+#
+#   Skips title columns with '^MGI ID' or 'NOT_FOUND'
+
+{
+    my $hash;
+
+    sub do_file {
+        my ( $file ) = @_;
+
+        $hash ||= {};
+
+        my $progress_string = "Before : " . scalar(keys(%$hash)) . " After : ";
+        my $data = parse_tab_delimited_file_to_array($file, 'clean');
+        foreach my $entry (@$data) {
+            my $id = $entry->[0];
+            next if $id eq 'MGI ID';
+            next if $id eq 'NOT_FOUND';
+
+            unless ($id =~ /^MGI:\d+$/) {
+                confess "Error with: $id\n";
+            }
+            
+            $hash->{$id}++;        
+        }
+        
+        $progress_string .= scalar(keys(%$hash));
+        print STDERR "$progress_string : ";
+        print STDERR "$file\n";
+    }
+    
+    sub output_total {
+        print STDERR "\nFINAL TOTAL: ", scalar(keys(%$hash)), "\n";
+    }
+    
+    sub do_output {
+        foreach my $id (keys(%$hash)) {
+            print "$id\n";
+        }
+    }
+}

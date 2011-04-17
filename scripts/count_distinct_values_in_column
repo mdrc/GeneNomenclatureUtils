@@ -1,0 +1,97 @@
+#!/usr/local/bin/perl
+### nomenclature
+
+=pod
+
+=head1 NAME - count_distinct_values_in_column
+
+=head1 COMMAND LINE PARAMETERS 
+
+Required parameters
+  --file                    file to check
+  --column                  column to analyse (>=1)
+  
+=head1 DESCRIPTION
+
+Counts the distinct values in the specified column of the tab-delimited
+file, are reports counts of any duplicates.
+
+=head1 AUTHOR - mike_croning@hotmail.com
+
+=cut
+
+use strict;
+use warnings;
+use Carp;
+use DPStore::Utils::TabFileParser qw(
+    clean_array_elements_of_whitespace
+    clean_line_of_trailing_whitespace
+    clean_tab_delimited_file
+    close_data_files
+    close_output_files
+    confirm_keys_are_present
+    open_data_file
+    open_output_file
+    output_array_of_arrays
+    output_hash_of_arrays
+    output_tab_delimited_txt_from_hash_of_arrays
+    parse_tab_delimited_file_to_array
+    parse_tab_delimited_file_to_hash_keyed_by_column
+    read_next_line_from_data_file 
+    set_tabfileparser_clobber
+    set_tabfile_parser_path_root
+    write_line_to_output_file
+    write_lines_to_output_file
+);   
+use Data::Dumper;
+use Getopt::Long;
+
+{
+    print STDERR "\n$0\n", '=' x length($0), "\n\n";
+    my ($file, $column_num);
+    GetOptions(
+        "file=s"       => \$file,
+        "column=i"     => \$column_num
+    );
+    confess "Must set --file" unless $file;
+    unless (defined($column_num) and $column_num >= 1) {
+        confess "Must set --column (>=1)";
+    }
+    print STDERR "Assumes a column title line\n";
+    sleep 2;
+
+    my $data = parse_tab_delimited_file_to_array($file, 'clean');
+    my $titles = shift(@$data);
+
+    my $contents = {};
+    print "\n";
+    print "Column number: $column_num\n";
+    print "Column title : '", $titles->[$column_num-1], "'\n";
+    
+    foreach my $row (@$data) {
+        my $content = $row->[$column_num-1];
+        if (defined $content) {
+            $contents->{$content}++ if defined $content;
+        } else {
+            $contents->{'_UNDEF_'}++;
+        }
+    }
+    
+   
+    print "\nDistinct values: ", scalar(keys(%$contents)), "\n";
+    
+    print "\nDuplicates\n";
+    
+    my $duplicate_count = 0;
+    foreach my $key (keys(%$contents)) {
+        if ($contents->{$key} > 1) {
+            print $key, ' ' x (10 - length($key));
+            print $contents->{$key}, "\n"; 
+            
+            $duplicate_count++;
+        } 
+    }
+    
+    print "\nTotal number of duplicates: $duplicate_count\n";
+    
+} 

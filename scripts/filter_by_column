@@ -1,0 +1,116 @@
+#!/usr/local/bin/perl
+### nomenclature
+
+=pod
+
+=head1 NAME - filter_by_column
+
+=head1 COMMAND LINE PARAMETERS
+
+Required parameters
+  --file                 file to be processed                
+  --column               column to filter by (>=1)
+  --value                filter value
+
+Optional parameters
+  --skip_title          skip first (title) row
+  
+=head1 DESCRIPTION
+
+Utility to filter a tab delimited file by a specified value
+
+=head1 AUTHOR - mike_croning@hotmail.com
+
+=cut
+
+use strict;
+use warnings;
+use Carp;
+use DPStore::Utils qw(
+    show_perldoc
+);
+use DPStore::Utils::TabFileParser qw(
+    clean_array_elements_of_whitespace
+    clean_line_of_trailing_whitespace
+    clean_tab_delimited_file
+    close_data_files
+    close_output_files
+    confirm_keys_are_present
+    get_tab_file_geometry
+    open_data_file
+    open_output_file
+    output_array_of_arrays
+    output_hash_of_arrays
+    output_tab_delimited_txt_from_hash_of_arrays
+    parse_tab_delimited_file_to_array
+    parse_tab_delimited_file_to_hash_keyed_by_column
+    read_next_line_from_data_file 
+    set_tabfileparser_clobber
+    set_tabfile_parser_path_root
+    write_line_to_output_file
+    write_lines_to_output_file
+);
+use Data::Dumper;
+use Getopt::Long;
+
+{
+    print STDERR "\n$0\n", '=' x length($0), "\n\n";
+    my ($file, $column, $value, $skip_title);
+        
+    GetOptions(
+        "file=s"     => \$file,
+        "column=i"   => \$column,
+        "value=s"    => \$value,
+        "skip_title" => \$skip_title,
+    ) or show_perldoc();
+    
+    unless ($file and -e $file) {
+        show_perldoc('Must set --file to valid file');
+    }
+    unless ($value) {
+        show_perldoc('Must set --value');
+    }
+    unless ($column and $column >=1) {
+        show_perldoc('Must set --column >= 1');
+    }
+    
+    my $geometry = get_tab_file_geometry($file, $skip_title);
+    unless ($geometry->{rectangular}) {
+        die "Can't proceed as file isn't rectangular\n" . Dumper($geometry);
+    } 
+    if ($column > $geometry->{columns}) {
+        confess "Column is out of range '$column' \n";
+    }
+
+    do_file($file, $column, $value, $skip_title);
+}
+
+sub do_file {
+    my ( $file, $column, $required, $skip_title ) = @_;
+    
+    my $line_count   = 0;
+    my $lines_output = 0;
+    my $data = parse_tab_delimited_file_to_array($file, 'clean');
+    
+    if ($skip_title) {
+        my $titles = shift(@$data);
+        print join("\t", @$titles), "\n";
+        print STDERR "Skipped title line: ", join("\t", @$titles), "\n";
+        $line_count++;
+    }
+    
+    foreach my $data (@$data) {
+    
+        $line_count++;
+
+        my $value = $data->[$column - 1];
+        if ($value and $value eq $required) {
+            print join("\t", @$data), "\n";
+            $lines_output++;
+        }
+    }
+    
+    print STDERR "Line count  : $line_count\n";
+    print STDERR "Lines output: $lines_output\n";
+}
+

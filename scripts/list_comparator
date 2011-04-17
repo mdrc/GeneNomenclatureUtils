@@ -1,0 +1,187 @@
+#!/software/bin/perl
+### nomenclature
+
+=pod
+
+=head1 NAME - list_comparator
+
+=head1 COMMAND LINE PARAMETERS 
+
+Required parameters
+  --config_file           configuration_files
+  
+Optional parameters    
+  --compare                 names of lists to compare
+  --include_all             include all lists in comparision
+  --quiet                   produce less logging output
+  --filter_by               only include genes found in specified list
+
+=head1 DESCRIPTION
+
+Programme that compares an arbitray number of lists by gene IDs, or other
+unique strings
+
+Each list is held in a single tab-delimited file, and the parameters to
+parse each one are foun in the YAML format configuration files.
+
+An example of a configuration file specifying two lists:
+
+--->FILE START
+skipwords: NOT_FOUND
+id_match: '^MGI:\d+$'
+
+
+lists:
+    MY-LIST-1:
+        file: my_list_of_genes_1.txt
+        column: 1
+        skip_title: 1 
+        table:
+        pubmed:
+        year: 2011
+        species: mouse
+        description: Genes from experiment 1
+        confidential: no
+
+    MY-LIST-2:
+        file: my_list_of_genes_1.txt
+        column: 1
+        skip_title: 1 
+        table:
+        pubmed:
+        year: 2011
+        species: mouse
+        description: Genes from experiment 2
+        confidential: no
+<---FILE END
+
+The skipwords parameter provides a list of stop symbols used to indicate
+no gene in that particular row
+
+The id_match parameter is a regular expression used to perform basic ID
+format checking on the IDs in the text files.
+
+The names of the lists parsed are 'MY-LIST-1' and 'MY-LIST-2'. These are
+the ones used in the --compare parameter
+
+File specifies the path to the file, and column (were left-most is 1) 
+specifies the column containing the IDs in that particular file.
+
+skip_title = 1 tells the list parser that the first column is a title row,
+and does not contain an ID. 
+
+The other parameters are optional.
+
+The example lists and configuration file (as above) are found in:
+
+GeneNomenclatureUtils/data
+GeneNomenclatureUtils/conf
+
+
+Compare the example lists:
+
+./list_comparator --config_file=example_list_config.ini --include_all
+
+
+./list_comparator
+=================
+
+CONFIG FILE: GeneNomenclatureUtils/conf/example_list_config.ini
+ID match: ^MGI:\d+$
+SKIPWORDS : NOT_FOUND
+
+Name        : MY-LIST-2
+File        : data/my_list_of_genes_2.txt
+IDs column  : 1
+Skip title  : 1
+Verified IDs: 11
+Invalid IDs : 0
+Duplicates  : 0
+Blanks      : 0
+Skipwords   : 1
+
+Name        : MY-LIST-1
+File        : data/my_list_of_genes_1.txt
+IDs column  : 1
+Skip title  : 1
+Verified IDs: 14
+Invalid IDs : 0
+Duplicates  : 0
+Blanks      : 0
+Skipwords   : 0
+
+  Comparison: MY-LIST-1 (14)
+  Comparison: MY-LIST-2 (11)
+
+UNION OF ALL SETS: 21
+
+Gene\tMY-LIST-1\tMY-LIST-2
+MGI:1196345\tYES\tNO
+MGI:1915512\tYES\tNO
+MGI:1914291\tYES\tNO
+<SNIP>
+
+The full output of the example comparision can be found in:
+GeneNomenclatureUtils/docs/example_list_comparator_output.txt
+
+=head1 AUTHOR - mike_croning@hotmail.com
+
+=cut
+
+use strict;
+use warnings;
+use Carp;
+use DPStore::Utils::ListComparator qw(
+    do_list_comparison
+    dump_lists
+    get_all_list_names
+    parse_list_config
+);
+use DPStore::Utils::TabFileParser qw(
+    output_array_of_arrays
+); 
+use DPStore::Utils qw(
+    show_perldoc
+);
+use Getopt::Long;
+
+{
+    print "\n$0\n", '=' x length($0), "\n\n";
+    my (@config_files, $comparison, $include_all, $quiet, $filter_by);
+
+    GetOptions(
+        'config_file=s' => \@config_files,
+        'compare=s'     => \$comparison,
+        'include_all'   => \$include_all,
+        'quiet'         => \$quiet,
+        'filter_by=s'   => \$filter_by
+    );
+    unless (@config_files) {
+        show_perldoc("Must specify at least one --config_file");
+    }
+    unless ($comparison or $include_all) {
+        show_perldoc("Must specify --compare or --include_all");
+    }
+    if ($comparison and $include_all) {
+        show_perldoc("Must specify ONE of --compare or --include_all");
+    }
+    unless ($ENV{DPStoreConfDir}) {
+        show_perldoc('Must set $DPStoreConfDir');
+    }
+
+    foreach my $file (@config_files) {
+        parse_list_config($ENV{DPStoreConfDir} . '/' . $file);
+    }
+    
+    if ($include_all) {
+        $comparison = get_all_list_names();
+    }
+    
+    my $table = do_list_comparison($comparison, $quiet, undef, $filter_by);
+    
+    unless ($quiet) {
+        output_array_of_arrays($table);
+    }
+}    
+
+

@@ -1,0 +1,102 @@
+#!/usr/local/bin/perl
+### nomenclature
+
+=pod
+
+=head1 NAME - rearrange_and_cut_columns
+
+=head1 COMMAND LINE PARAMETERS
+
+Required parameters
+  --file                 file to be processed                
+  --columns              e.g. 3,2,1 (reverse the columns in 3 col file)
+
+=head1 DESCRIPTION
+
+Utility to cut and rearrange columns in a tab-delimited txt file.
+
+Example command line
+
+./add_mgi_id_by_mgi_symbol --file=/nfs/file.txt
+
+--columns=2,1,3 #Swap 1 and 2 second columns
+--columns=1     #Output first column
+
+=head1 AUTHOR - mike_croning@hotmail.com
+
+=cut
+
+use strict;
+use warnings;
+use Carp;
+use DPStore::Utils qw(
+    show_perldoc
+);
+use DPStore::Utils::TabFileParser qw(
+    clean_array_elements_of_whitespace
+    clean_line_of_trailing_whitespace
+    clean_tab_delimited_file
+    close_data_files
+    close_output_files
+    confirm_keys_are_present
+    get_tab_file_geometry
+    open_data_file
+    open_output_file
+    output_array_of_arrays
+    output_hash_of_arrays
+    output_tab_delimited_txt_from_hash_of_arrays
+    parse_columns_from_parameter
+    parse_tab_delimited_file_to_array
+    parse_tab_delimited_file_to_hash_keyed_by_column
+    read_next_line_from_data_file 
+    set_tabfileparser_clobber
+    set_tabfile_parser_path_root
+    write_line_to_output_file
+    write_lines_to_output_file
+);
+use Data::Dumper;
+use Getopt::Long;
+
+{
+    print STDERR "\n$0\n", '=' x length($0), "\n\n";
+    my ($file, $output_columns);
+        
+    GetOptions(
+        "file=s"    => \$file,
+        "columns=s" => \$output_columns,
+    ) or show_perldoc();
+    
+    unless ($file and -e $file) {
+        show_perldoc('Must set --file to valid file');
+    }
+    unless ($output_columns) {
+        show_perldoc('Must set --columns');
+    }
+
+    
+    my $geometry    = get_tab_file_geometry($file);
+    unless ($geometry->{rectangular}) {
+        die "Can't proceed as file isn't rectangular\n" . Dumper($geometry);
+    } 
+    my $output_cols = parse_columns_from_parameter($output_columns, $geometry);
+
+    print STDERR 'OUTPUT COLS: ', Dumper($output_cols);
+    
+    do_file($file, $output_cols);
+}
+
+sub do_file {
+    my ( $file, $output_cols ) = @_;
+    
+    my $data = parse_tab_delimited_file_to_array($file, 'clean');
+    foreach my $data (@$data) {
+
+        my $line = '';
+        foreach my $column (@$output_cols) {
+        
+            $line .= $data->[$column - 1] . "\t";
+        } 
+        chop($line);
+        print "$line\n";
+    }
+}

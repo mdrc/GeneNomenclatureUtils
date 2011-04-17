@@ -1,0 +1,118 @@
+#!/usr/local/bin/perl
+### nomenclature
+=pod
+
+=head1 NAME - txt_file_format_sniffer
+
+=head1 COMMAND LINE PARAMETERS 
+
+Required parameters
+  --file                    file to check
+
+=head1 DESCRIPTION
+
+Reports the types whitespace contained in the specified file, attempting
+to guess whether it is Unix/Linux, DOS/Windows or MAC formatted txt file.
+
+=head1 AUTHOR - mike_croning@hotmail.com
+
+=cut
+
+use strict;
+use warnings;
+use Carp;
+use DPStore::Utils qw(
+    show_perldoc
+);
+use DPStore::Utils::TabFileParser qw(
+    clean_array_elements_of_whitespace
+    clean_line_of_trailing_whitespace
+    clean_tab_delimited_file
+    close_data_files
+    close_output_files
+    confirm_keys_are_present
+    open_data_file
+    open_output_file
+    output_array_of_arrays
+    output_hash_of_arrays
+    output_tab_delimited_txt_from_hash_of_arrays
+    parse_tab_delimited_file_to_array
+    parse_tab_delimited_file_to_hash_keyed_by_column
+    read_next_line_from_data_file 
+    set_tabfileparser_clobber
+    set_tabfile_parser_path_root
+    write_line_to_output_file
+    write_lines_to_output_file
+);
+use Data::Dumper;
+use Getopt::Long;
+
+{
+    print STDERR "\n$0\n", '=' x length($0), "\n\n";
+    my ($file, $column, $value, $skip_title);
+        
+    GetOptions(
+        "file=s"     => \$file,
+    ) or show_perldoc();
+    
+    unless ($file) {
+        show_perldoc('Must set --file');
+    }
+    
+    unless (-e $file) {
+        show_perldoc("Can't read '$file'");
+    }
+    do_file($file);
+}
+
+sub do_file {
+    my ( $file, $column, $required, $skip_title ) = @_;
+    
+    print "File : $file\n";
+    open (FILE, $file);
+    binmode FILE;
+    
+    my $buffer;
+    read (FILE, $buffer, 65535);
+    close (FILE);
+    
+    my $data = parse_tab_delimited_file_to_array($file, 'clean');
+    print "Lines: ", scalar(@$data), "\n\n";
+
+    my $yes_count = 0;
+
+    ### Unix / Linux
+    print "Unix/Linux  - ";     
+    if ($buffer =~ /\w\n\w/) {
+        print "YES: ";
+        $yes_count++;
+    } else {
+        print "NO : ";
+    }
+    print 'Containing: \w\n\w', "\n";
+
+    ### DOS / Windows
+    print "DOS/Windows - ";
+    if ($buffer =~ /\w\r\n\w/ or $buffer =~ /\w\n\r\w/) {
+        print "YES: ";
+        $yes_count++;
+    } else {
+        print "NO : ";
+    }
+    print 'Containing: \w\r\n\w|\w\n\r\w', "\n";
+    
+    ### 
+    print "MAC         - ";
+    if ($buffer =~ /\w\r\w/) {
+        print "YES: ";
+        $yes_count++;
+    } else {
+        print "NO : ";
+    }
+    print 'Containing: \w\r\w', "\n";
+    
+    if ($yes_count > 1) {
+        print "\nResult ambiguous\n"; 
+    }
+}
+

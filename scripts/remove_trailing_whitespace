@@ -1,0 +1,68 @@
+#!/usr/local/bin/perl
+### nomenclature
+
+=pod
+
+=head1 NAME - remove_trailing_whitespace
+
+=head1 COMMAND LINE PARAMETERS 
+
+  --file            file to pe processed
+
+=head1 DESCRIPTION
+
+Removes trailing white space from lines in a tab_delimited 
+file. 
+
+=head1 AUTHOR - mike_croning@hotmail.com
+
+=cut
+
+use strict;
+use warnings;
+use Carp;
+use DPStore::Utils::TabFileParser qw(
+    clean_array_elements_of_whitespace
+    clean_line_of_trailing_whitespace
+    clean_tab_delimited_file
+    close_data_files
+    close_output_files
+    confirm_keys_are_present
+    open_data_file
+    open_output_file
+    output_array_of_arrays
+    output_hash_of_arrays
+    output_tab_delimited_txt_from_hash_of_arrays
+    parse_tab_delimited_file_to_array
+    parse_tab_delimited_file_to_hash_keyed_by_column
+    read_next_line_from_data_file 
+    set_tabfileparser_clobber
+    set_tabfile_parser_path_root
+    write_line_to_output_file
+    write_lines_to_output_file
+);   
+use Data::Dumper;
+use Getopt::Long;
+
+{
+    print STDERR "\n$0\n", '=' x length($0), "\n\n";
+    my ($file);
+        
+    GetOptions(
+        "file=s"          => \$file,
+    );
+    confess "Must set --file" unless $file;
+    
+    my $data = parse_tab_delimited_file_to_array($file, 'clean');
+
+    my $line_count = 0;
+    foreach my $entry (@$data) {
+
+        my $line = join("\t", @$entry);
+        $line =~ s/\w+$//;
+        print join("\t", @$entry);
+		print "\n";        
+    }
+    
+    print STDERR "Line: count: $line_count\n";    
+} 

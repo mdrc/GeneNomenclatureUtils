@@ -1,0 +1,80 @@
+### Community-provided gene and protein nomenclature resources utilised by the 
+### GeneNomenclatureUtils packages
+
+### Mouse Genome Informatics (MGI) ###
+
+wget ftp://ftp.informatics.jax.org/pub/reports/HMD_HumanPhenotype.rpt
+wget ftp://ftp.informatics.jax.org/pub/reports/MGI_PhenotypicAllele.rpt
+wget ftp://ftp.informatics.jax.org/pub/reports/HMD_HGNC_Accession.rpt
+wget ftp://ftp.informatics.jax.org/pub/reports/MGI_MouseHumanSequence.rpt
+wget ftp://ftp.informatics.jax.org/pub/reports/MRK_List2.rpt
+wget ftp://ftp.informatics.jax.org/pub/reports/MRK_Synonym.sql.rpt
+wget ftp://ftp.informatics.jax.org/pub/reports/MRK_InterPro.rpt
+wget ftp://ftp.informatics.jax.org/pub/reports/MGI_InterProDomains.sql.rpt
+wget ftp://ftp.informatics.jax.org/pub/reports/gene_association.mgi
+wget ftp://ftp.informatics.jax.org/pub/reports/VOC_MammalianPhenotype.rpt
+wget ftp://ftp.informatics.jax.org/pub/reports/MGI_PhenoGenoMP.rpt
+wget ftp://ftp.informatics.jax.org/pub/reports/MRK_Sequence.rpt
+wget ftp://ftp.informatics.jax.org/pub/reports/MRK_SwissProt.rpt
+wget ftp://ftp.informatics.jax.org/pub/reports/MRK_SwissProt_TrEMBL.rpt
+wget ftp://ftp.informatics.jax.org/pub/reports/MRK_Reference.rpt
+wget ftp://ftp.informatics.jax.org/pub/reports/MRK_VEGA.rpt
+wget ftp://ftp.informatics.jax.org/pub/reports/MRK_ENSEMBL.rpt
+wget ftp://ftp.informatics.jax.org/pub/reports/HMD_HumanSequence.rpt
+
+
+### HGNC ###
+
+wget -O hgnc_core_data.txt 'http://www.genenames.org/cgi-bin/hgnc_downloads.cgi?title=Core+Data;col=gd_hgnc_id;col=gd_app_sym;col=gd_app_name;col=gd_status;col=gd_prev_sym;col=gd_aliases;col=gd_pub_chrom_map;col=gd_pub_acc_ids;col=gd_pub_refseq_ids;status=Approved;status=Approved+Non-Human;status=Entry+Withdrawn;status_opt=3;=on;where=;order_by=gd_app_sym_sort;limit=;format=text;submit=submit;.cgifields=;.cgifields=status;.cgifields=chr'
+wget -O hgnc_all_data.txt 'http://www.genenames.org/cgi-bin/hgnc_downloads.cgi?title=All+Data;col=gd_hgnc_id;col=gd_app_sym;col=gd_app_name;col=gd_status;col=gd_locus_type;col=gd_prev_sym;col=gd_prev_name;col=gd_aliases;col=gd_pub_chrom_map;col=gd_date2app_or_res;col=gd_date_mod;col=gd_date_name_change;col=gd_pub_acc_ids;col=gd_enz_ids;col=gd_pub_eg_id;col=gd_mgd_id;col=gd_other_ids;col=gd_pubmed_ids;col=gd_pub_refseq_ids;col=gd_gene_fam_name;col=md_gdb_id;col=md_eg_id;col=md_mim_id;col=md_refseq_id;col=md_prot_id;status=Approved;status=Approved+Non-Human;status=Entry+Withdrawn;status_opt=3;=on;where=;order_by=gd_app_sym_sort;limit=;format=text;submit=submit;.cgifields=;.cgifields=status;.cgifields=chr'
+
+
+### Entrez Gene ###
+
+wget ftp://ftp.ncbi.nih.gov/gene/DATA/gene2accession.gz
+wget ftp://ftp.ncbi.nih.gov/gene/DATA/gene2ensembl.gz
+wget ftp://ftp.ncbi.nih.gov/gene/DATA/gene2go.gz
+wget ftp://ftp.ncbi.nih.gov/gene/DATA/mim2gene
+wget ftp://ftp.ncbi.nih.gov/gene/DATA/gene2pubmed.gz
+wget ftp://ftp.ncbi.nih.gov/gene/DATA/gene_info.gz
+
+
+### OMIM files not available from NCBI 2/11 ###
+
+# wget ftp://ftp.ncbi.nih.gov/repository/OMIM/omim.txt.Z
+# wget ftp://ftp.ncbi.nih.gov/repository/OMIM/genemap
+# wget ftp://ftp.ncbi.nih.gov/repository/OMIM/genemap.key
+# wget ftp://ftp.ncbi.nih.gov/repository/OMIM/morbidmap
+
+
+### Using archived OMIM NCBI files ###
+
+wget ftp://ftp.ncbi.nih.gov/repository/OMIM/ARCHIVE/omim.txt.Z
+wget ftp://ftp.ncbi.nih.gov/repository/OMIM/ARCHIVE/genemap
+wget ftp://ftp.ncbi.nih.gov/repository/OMIM/ARCHIVE/genemap.key
+wget ftp://ftp.ncbi.nih.gov/repository/OMIM/ARCHIVE/morbidmap
+
+
+### Rat Genome Database (RGD) ###
+
+wget ftp://rgd.mcw.edu/pub/data_release/GENES_HUMAN.txt
+wget ftp://rgd.mcw.edu/pub/data_release/GENES_MOUSE.txt
+wget ftp://rgd.mcw.edu/pub/data_release/GENES_RAT.txt
+wget ftp://rgd.mcw.edu/pub/data_release/RGD_ORTHOLOGS
+
+
+### UniProt ###
+
+wget ftp://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/uniprot_sprot.dat.gz
+wget ftp://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/uniprot_trembl.dat.gz
+
+
+# setenv RGD_dir      ${cwd}
+# setenv MGI_dir      ${cwd}
+# setenv ENTREZ_dir   ${cwd}
+# setenv HGNC_dir     ${cwd}
+# setenv OMIM_dir     ${cwd}
+# setenv NCBI_dir     ${cwd}
+# setenv SWISS_dir    ${cwd}
+
+

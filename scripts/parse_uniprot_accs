@@ -1,0 +1,95 @@
+#!/usr/local/bin/perl
+### nomenclature
+
+=pod
+
+=head1 NAME - parse_uniprot_accs
+
+=head1 DESCRIPTION
+
+Parses the UniProt uniprot_sprot.dat and uniprot_trembl.dat files expecting
+to find them in the directory pointed to by $ENV{SWISS_dir}
+
+These can be downloaded from:
+
+ftp://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/uniprot_sprot.dat.gz
+ftp://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/uniprot_trembl.dat.gz
+
+Produces lines like:
+
+Q197F8\tQ197F8\tprimary\n
+Q197F7\tQ197F7\tprimary\n
+P92177\tP92177\tprimary\n
+Q8IN86\tP92177\tsecondary\n
+Q8IN87\tP92177\tsecondary\n
+Q9VEA8\tP92177\tsecondary\n
+
+These can be written to a file and later used to look up the current primary
+accessions for records that were retired or merged, i.e. their accessions 
+became secondary.
+
+=head1 AUTHOR - mike_croning@hotmail.com
+
+=cut
+
+use strict;
+use warnings;
+use Carp;
+
+{
+    print STDERR "\n$0\n", '=' x length($0), "\n\n";
+    unless ($ENV{SWISS_dir}) {
+        confess "Must set \$ENV{SWISS_dir}\n";
+    }
+    
+    parse_swissprot_file($ENV{SWISS_dir} . '/uniprot_sprot.dat');
+    parse_swissprot_file($ENV{SWISS_dir} . '/uniprot_trembl.dat');
+}
+
+
+{
+    sub parse_swissprot_file {
+        my ( $file ) = @_;
+        
+        local *FILE;
+        open (FILE, "<$file") 
+            or die "Could not open file: '$file' $!";
+        print STDERR "Parsing: $file\n";
+        
+        my $primary_count   = 0;
+        my $secondary_count = 0;
+        my $line_count = 0;
+        
+            
+        while (defined(my $line = <FILE>)) {
+            if ($line =~ s/^AC\s\s\s//) {
+            
+                $line_count++;
+                if ($line_count % 10000 == 0) {
+                    print STDERR '.';
+                }
+                
+                chomp($line);
+                $line =~ s/;$// or die "Error";
+                $line =~s/\s+//g;
+                
+                my @ids = split(';', $line);
+                
+                my $primary = shift(@ids);
+                print "$primary\t$primary\tprimary\n";
+                $primary_count++;
+                
+                foreach my $secondary (@ids) {
+                    print "$secondary\t$primary\tsecondary\n";
+                    $secondary_count++;
+                    
+                }
+            }
+        }
+        close (FILE) or die "Could not close file";
+        print STDERR "\n";
+        print STDERR "Primary   IDs parsed: $primary_count\n";
+        print STDERR "Secondary IDs parsed: $secondary_count\n";
+        print STDERR "Parsed lines        : $line_count\n\n"; 
+    }
+}

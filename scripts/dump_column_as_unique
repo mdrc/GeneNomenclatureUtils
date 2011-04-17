@@ -1,0 +1,95 @@
+#!/usr/local/bin/perl
+### nomenclature
+
+=pod
+
+=head1 NAME - dump_column_as_unique
+
+=head1 COMMAND LINE PARAMETERS 
+
+Required parameters
+  --file                    file to process
+  --column                  column to dump (>=1)
+  
+Optional parameters
+  --skip_title              skip first (title) row
+
+=head1 DESCRIPTION
+
+Dumps a the specified column from a tab-delimited text file, making
+it unique.
+
+=head1 AUTHOR - mike_croning@hotmail.com
+
+=cut
+
+use strict;
+use warnings;
+use Carp;
+use DPStore::Utils::TabFileParser qw(
+    clean_array_elements_of_whitespace
+    clean_line_of_trailing_whitespace
+    clean_tab_delimited_file
+    close_data_files
+    close_output_files
+    confirm_keys_are_present
+    open_data_file
+    open_output_file
+    output_array_of_arrays
+    output_hash_of_arrays
+    output_tab_delimited_txt_from_hash_of_arrays
+    parse_tab_delimited_file_to_array
+    parse_tab_delimited_file_to_hash_keyed_by_column
+    read_next_line_from_data_file 
+    set_tabfileparser_clobber
+    set_tabfile_parser_path_root
+    write_line_to_output_file
+    write_lines_to_output_file
+);   
+use Data::Dumper;
+use Getopt::Long;
+
+{
+    print STDERR "\n$0\n", '=' x length($0), "\n\n";
+    my ($file, $column_num, $skip_title);
+    GetOptions(
+        "file=s"       => \$file,
+        "column=i"     => \$column_num,
+        "skip_title"   => \$skip_title
+    );
+    confess "Must set --file" unless $file;
+    unless (defined($column_num) and $column_num >= 1) {
+        confess "Must set --column (>=1)";
+    }
+
+    
+    my $data = parse_tab_delimited_file_to_array($file, 'clean');
+    my $title = shift(@$data) if $skip_title;
+
+    my $unique = {};
+    my $nothing_to_check = 0;
+    my $rows_checked     = 0;
+    
+    foreach my $entry (@$data) {
+        
+        $rows_checked++;
+        my $cell = $entry->[$column_num - 1];
+        unless ($cell and length($cell) >= 1) {
+            $nothing_to_check++;
+        }
+        
+        $unique->{$cell}++;
+    }
+    
+    if ($skip_title) {
+        print "$title->[$column_num - 1]\n";
+    }
+    
+    print join("\n", keys(%$unique)), "\n";
+    
+    
+    print STDERR "\nFile: $file\n";
+    print STDERR "Rows checked : $rows_checked\n";
+    print STDERR "Unique values: ", scalar(keys(%$unique)), "\n";
+    print STDERR "Empty cells  : $nothing_to_check\n";
+} 

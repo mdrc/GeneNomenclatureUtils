@@ -1,0 +1,173 @@
+#!/software/bin/perl
+### nomenclature
+
+=pod
+
+=head1 NAME - check_entrez_gene_ids
+
+=head1 COMMAND LINE PARAMETERS 
+
+Required parameters
+  --file                    file to check
+  --entrez_gene_id_column   column containing IDs to check (>=1)
+  --tax_id                  tax_id
+  --output_column           column to output check results (>=1)
+  
+Optional parameters
+  --skip_title              skip first (title) row
+  --help|h
+
+=head1 DESCRIPTION
+
+Checks Entrez Gene IDs by looking for a nomenclature file
+called gene2accession_tax_id in the directory pointed to
+by $ENV{ENTREZ_dir}
+
+Output to STDOUT
+
+Example command line
+
+./check_entrez_gene_ids --file=../examples/entrez_gene_ids_test.txt
+--entrez_gene_id_column=1 --output_column=1 --tax_id=9606
+> my_output.txt
+
+This will prepend a column to the file with the results of the 
+check which will be one of: PASS, FAIL, NOTHING_TO_CHECK, NON_NUMERIC
+
+In the example above the nomenclature file searched for would by
+gene2accession_9606
+
+Nomenclature files are single-taxon extractions of:
+
+wget ftp://ftp.ncbi.nih.gov/gene/DATA/gene2accession.gz
+nice +5 gunzip gene2accession.gz
+
+Extraction can be performed with: extract_from_ncbi_gene2_accession
+
+=head1 AUTHOR - mike_croning@hotmail.com
+
+=cut
+
+use strict;
+use warnings;
+use Carp;
+use DPStore::Utils qw(
+    show_perldoc
+);
+use DPStore::Utils::SeqIDNomenclature qw(
+    check_for_file
+);
+use DPStore::Utils::TabFileParser qw(
+    clean_array_elements_of_whitespace
+    clean_line_of_trailing_whitespace
+    clean_tab_delimited_file
+    close_data_files
+    close_output_files
+    confirm_keys_are_present
+    open_data_file
+    open_output_file
+    output_array_of_arrays
+    output_hash_of_arrays
+    output_tab_delimited_txt_from_hash_of_arrays
+    parse_tab_delimited_file_to_array
+    parse_tab_delimited_file_to_hash_keyed_by_column
+    read_next_line_from_data_file 
+    set_tabfileparser_clobber
+    set_tabfile_parser_path_root
+    write_line_to_output_file
+);   
+use Getopt::Long;
+
+{
+    print STDERR "\n$0\n", '=' x length($0), "\n\n";
+    my ( $file, $column_num, $output_column, $tax_id, $skip_title );
+    GetOptions(
+        "file=s"                  => \$file,
+        "entrez_gene_id_column=i" => \$column_num,
+        "output_column=i"         => \$output_column,
+        "tax_id=i"                => \$tax_id,
+        "skip_title"              => \$skip_title,
+        "help|h"                  => \&show_perldoc
+    ) or show_perldoc();
+    
+    show_perldoc("Must specify --file") unless $file;
+    unless (defined($column_num) and $column_num >= 1) {
+        show_perldoc("Must set --entrez_gene_id_column (>=1)");
+    }
+    unless ($output_column and $output_column >= 1) {
+        show_perldoc("Must set --output_column >= 1");
+    }
+    unless ($tax_id and $tax_id >= 1) {
+        show_perldoc("Must set --tax_id to integer >=1");
+    }
+    
+    my $entrez_file      = 'gene2accession' . '_' . $tax_id;
+    my $entrez_file_spec = check_for_file('ENTREZ_dir', $entrez_file);
+    print STDERR "Using ID file: $entrez_file_spec\n"; 
+    
+    check_ids($file, $entrez_file_spec, $column_num
+        , $output_column, $tax_id, $skip_title);
+}
+
+
+sub check_ids {
+    my ( $file, $entrez_file, $column_num
+        , $output_column, $tax_id, $skip_title ) = @_;
+
+    my $entrez_genes = parse_tab_delimited_file_to_hash_keyed_by_column($entrez_file, 2);
+    print STDERR "Parsed ids   : ", scalar(keys(%$entrez_genes)), "\n";
+
+    my $entries = parse_tab_delimited_file_to_array($file, 'clean');
+    if ($skip_title) {
+        my $titles = shift(@$entries);
+        
+        splice (@$titles, $output_column - 1, 0, "EntrezGene $tax_id");
+    }
+    
+    ### Loop over the NCBI EntrezGene IDs 
+    
+    my $passed           = 0;
+    my $failed           = 0;
+    my $nothing_to_check = 0;
+    my $non_numeric      = 0;
+    my $line_count       = 0;
+    
+    foreach my $entry (@$entries) {
+        
+        $line_count++;
+        my $line = join("\t", @$entry);
+        my $id = $entry->[$column_num - 1];
+        
+        
+        my $status;
+        unless ($id and length($id) > 0) {
+            $status = 'NOTHING_TO_CHECK';
+            $nothing_to_check++;
+        }
+        if (not $status and $id !~  /^\d+$/) { 
+            $status = 'NON_NUMERIC';
+            $non_numeric++;
+        }
+        unless ($status) {
+            if (not $status and $entrez_genes->{$id}) {
+                $status = 'PASS';
+                $passed++;
+            } else {
+                $status = 'FAIL';
+                $failed++;
+            }
+        }        
+        unless ($status) {
+            confess "Error on '$line";
+        }
+        splice (@$entry, $output_column - 1, 0, $status);
+        print join("\t", @$entry), "\n";
+    }
+    
+    print STDERR "\n";
+    print STDERR "PASSED          : $passed\n";
+    print STDERR "FAILED          : $failed\n";
+    print STDERR "NON NUMERIC     : $non_numeric\n";
+    print STDERR "NOTHING TO CHECK: $nothing_to_check\n";
+    print STDERR "TOTAL           : $line_count\n";
+}

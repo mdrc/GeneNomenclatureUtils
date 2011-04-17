@@ -1,0 +1,17 @@
+### nomenclature
+
+                      GeneNomenclatureUtils Package Structure
+                      ---------------------------------------
+
+1) DIRECTORY STRUCTURE
+                        
+The GeneNomenclatureUtils package has the following structure by default.
+
+    GeneNomenclatureUtils
+    GeneNomenclatureUtils/conf              Example configuration files                             
+    GeneNomenclatureUtils/data              Example data files
+    GeneNomenclatureUtils/docs              Documentation
+    GeneNomenclatureUtils/example_output    Example output
+    GeneNomenclatureUtils/modules           Perl modules
+    GeneNomenclatureUtils/scripts           The package scripts
+

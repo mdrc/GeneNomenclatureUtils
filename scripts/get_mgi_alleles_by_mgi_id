@@ -1,0 +1,163 @@
+#!/usr/local/bin/perl
+### nomenclature
+
+=pod
+
+=head1 NAME - get_mgi_alleles_by_mgi_id
+
+=head1 COMMAND LINE PARAMETERS 
+
+Required parameters
+  --file                    file to check
+  --mgi_id_column           column containing MGI IDs
+  --transfer_column         additional columns to transfer
+  
+Optional parameters
+  --skip_title              skip first (title) row
+  --test                    enable test mode
+
+=head1 DESCRIPTION
+
+Fetches alleles for genes in the tab-delimited file, specified
+by MGI ID.
+
+Provides a report including, PubMed ID, MGI allele ID, name, source,
+type and MPO term count
+
+=head1 AUTHOR - mike_croning@hotmail.com
+
+=cut
+
+use strict;
+use warnings;
+use Carp;
+use DPStore::Utils::TabFileParser qw(
+    clean_array_elements_of_whitespace
+    clean_line_of_trailing_whitespace
+    clean_tab_delimited_file
+    close_data_files
+    close_output_files
+    confirm_keys_are_present
+    open_data_file
+    open_output_file
+    output_array_of_arrays
+    output_hash_of_arrays
+    output_tab_delimited_txt_from_hash_of_arrays
+    parse_tab_delimited_file_to_array
+    parse_tab_delimited_file_to_hash_keyed_by_column
+    read_next_line_from_data_file 
+    set_tabfileparser_clobber
+    set_tabfile_parser_path_root
+    write_line_to_output_file
+    write_lines_to_output_file
+);
+use DPStore::Utils::SeqIDNomenclature qw(
+    parse_mgi_phenotypic_allele_file
+);
+use Getopt::Long;
+use Data::Dumper;
+
+{
+    print STDERR "\n$0\n", '=' x length($0), "\n\n";
+    my ($file, $mgi_id_column, $skip_title, $test, @additional_columns);
+        
+    GetOptions(
+        "file=s"            => \$file,
+        "mgi_id_column=i"   => \$mgi_id_column,
+        "skip_title"        => \$skip_title,
+        "transfer_column=i" => \@additional_columns,         
+        "test"              => \$test
+    ) or show_perldoc();
+    confess "Must set --file" unless $file;
+    unless ($mgi_id_column and $mgi_id_column >= 1) {
+        confess "Must set --mgi_symbol_column >= 1"
+    }
+
+    foreach my $column (@additional_columns) {
+        unless ($column >= 1) {
+            show_perldoc('Must set --additional_column >= 1');
+        }
+    }
+
+    do_file($file, $mgi_id_column, $skip_title, $test
+        , \@additional_columns);
+}
+
+sub do_file {
+    my ( $file, $mgi_id_column, $skip_title, $test, $additional_columns ) = @_;
+    
+    ### Parse nomenclature files
+    my $alleles_by_mgi_id = parse_mgi_phenotypic_allele_file();
+    
+    if ($test) {
+        my $val = 'MGI:95819';
+        print STDERR "TESTING: with '$val'\n";
+        print STDERR "RESULT : ", $alleles_by_mgi_id->{$val}, "\n\n";
+        die;
+    }
+
+    my $entries = parse_tab_delimited_file_to_array($file);
+    if ($skip_title) {
+        my $titles = shift(@$entries);
+    }
+    print "MGI ID\t";
+    foreach my $additional_column (@$additional_columns) {
+        print "Additional\t";   
+    }
+    print "PubMed ID\tMGI Allele ID\tName\tSource\tType\tMPO term count\n";
+    
+   
+    ### Loop over the MGI IDs
+    
+    my $genes_with_alleles = 0;
+    my $total_alleles      = 0;
+    my $pubmed_reports     = {};
+    
+    foreach my $entry (@$entries) {
+    
+        ### Mouse symbol, synonyms, name
+        my $mgi_id = $entry->[$mgi_id_column - 1];
+        my $alleles = $alleles_by_mgi_id->{$mgi_id};
+        if ($alleles) {
+            $genes_with_alleles++;
+            
+            foreach my $allele (@$alleles) {
+            
+                my $allele_id        = $allele->[0];
+                my $allele_name      = $allele->[1];
+                my $source           = $allele->[2];
+                my $allele_type      = $allele->[3];
+                my $pubmed_id        = $allele->[4];
+
+                my $mpo_terms_string = $allele->[9];
+                my $mpo_count = 0;
+                if ($mpo_terms_string) {
+                    my @fields = split(",", $mpo_terms_string);
+                    $mpo_count = scalar(@fields);
+                }
+                
+                if ($pubmed_id and $pubmed_id =~ /^\d+$/) {
+                    $pubmed_reports->{$pubmed_id}++;
+                }
+                #print Dumper($allele); 
+                
+                
+                print "$mgi_id\t";
+                foreach my $additional_column (@$additional_columns) {
+                    print $entry->[$additional_column - 1], "\t";
+                }
+                
+                
+                print join("\t", $pubmed_id, $allele_id, $allele_name
+                    , $source, $allele_type, $mpo_count);
+
+                print "\n";
+                $total_alleles++;
+            }
+        }
+    }
+    
+    print STDERR "Genes with alleles  : $genes_with_alleles\n";
+    print STDERR "Total alleles       : $total_alleles\n";
+    print STDERR "Total PubMed reports: ", scalar(keys(%$pubmed_reports)), "\n";
+}

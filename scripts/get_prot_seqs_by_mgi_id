@@ -1,0 +1,216 @@
+#!/usr/local/bin/perl
+### dev
+
+=pod
+
+=head1 NAME - get_prot_seqs_by_mgi_id
+
+=head1 COMMAND LINE PARAMETERS
+
+Required parameters
+  --file                file to be processed
+  --mgi_id_column       column number with MGI IDs
+
+Optional parameters
+  --skip_title
+  
+=head1 DESCRIPTION
+
+Get a protein sequence for each mouse gene in the specified file
+by MGI ID, firstly from SwissProt then TrEMBL, then RefSeq
+
+=head1 AUTHOR - mike_croning@hotmail.com
+
+=cut
+
+use strict;
+use warnings;
+use Carp;
+use DPStore::Utils qw(
+    show_perldoc
+);
+use DPStore::Utils::Counts;
+use DPStore::Utils::SeqIDNomenclature qw(
+    get_swissprot_or_trembl_acc
+    parse_hmd_human_sequence_file
+    parse_hmd_human_sequence_file_entry
+    parse_mgi_list_2_file
+    parse_mgi_swissprot_trembl
+    
+);
+use DPStore::Utils::TabFileParser qw(
+    clean_array_elements_of_whitespace
+    clean_line_of_trailing_whitespace
+    clean_tab_delimited_file
+    close_data_files
+    close_output_files
+    confirm_keys_are_present
+    open_data_file
+    open_output_file
+    output_array_of_arrays
+    output_hash_of_arrays
+    output_tab_delimited_txt_from_hash_of_arrays
+    parse_tab_delimited_file_to_array
+    parse_tab_delimited_file_to_hash_keyed_by_column
+    read_next_line_from_data_file 
+    set_tabfileparser_clobber
+    set_tabfile_parser_path_root
+    write_line_to_output_file
+    write_lines_to_output_file
+);
+use DPStore::Utils qw(
+    show_perldoc
+);
+use Getopt::Long;
+use Data::Dumper;
+
+### Global
+my $counts;
+
+{
+    print STDERR "This programme requires Sanger Institute Pfetch\n";
+    print STDERR "\n$0\n", '=' x length($0), "\n\n";
+    my ($file, $mgi_column, $skip_title);   
+
+    GetOptions(
+        "file=s"          => \$file,
+        "mgi_id_column=i" => \$mgi_column,
+        "skip_title"      => \$skip_title,
+    );
+    unless ($file) {
+        show_perldoc('Must set --file');
+    }
+    unless ($mgi_column and $mgi_column >= 1) {
+        show_perldoc('Must set --mgi_id_column >= 1');
+    }
+
+    my ($mgi_swiss, $mgi_trembl) = parse_mgi_swissprot_trembl();
+    my ($parsed_by_mgi_symbol, $parsed_by_mgi_id) = parse_mgi_list_2_file();
+    my $hmd_human_sequence = parse_hmd_human_sequence_file();
+    
+    initialise_counts();
+    do_file($file, $mgi_column, $skip_title, $parsed_by_mgi_id
+        , $hmd_human_sequence);
+    
+    END {
+        $counts->display_counts(\*STDERR) if $counts;
+    }
+}
+
+sub initialise_counts {
+    my @counts = qw(
+        found_by_swissprot
+        found_by_trembl
+        multiple_lookup
+        mgi_id_not_found
+        failed_pfetch
+        mgi_symbol_not_found
+        found_by_refseq
+    );
+    
+    $counts = DPStore::Utils::Counts->new(@counts);
+}
+
+
+sub do_file {
+    my ( $file, $mgi_column, $skip_title, $parsed_by_mgi_id
+        , $hmd_human_sequence ) = @_;
+
+    my $entries = parse_tab_delimited_file_to_array($file);
+    if ($skip_title) {
+        my $titles = shift(@$entries);
+    }
+    print STDERR "Genes parsed: ", scalar(@$entries), "\n\n";
+    
+    foreach my $entry (@$entries) {
+    
+        my $uniprot_acc = 'NOT_FOUND';
+        my $line = join("\t", @$entry);
+        
+        my $mgi_id     = $entry->[$mgi_column - 1];
+        unless ($mgi_id and $mgi_id =~ /^MGI:\d+/) {
+            confess "Bad MGI ID on '$line'\n";
+        }
+        
+        my $prot_seq;
+        
+        my ($acc, $mode) = get_swissprot_or_trembl_acc($mgi_id);
+        my $symbol = $parsed_by_mgi_id->{$mgi_id};
+        unless ($symbol) {
+            $counts->increment_mgi_symbol_not_found;
+            $symbol = 'UNKNOWN';
+        }
+        
+        ### Did we get a SwissProt or Trembl acc?
+        if ($acc) {
+            $uniprot_acc = $acc;
+
+            if ($mode =~ /swiss/) {
+                $counts->increment_found_by_swissprot();
+            } elsif ($mode =~ /trembl/) {
+                $counts->increment_found_by_trembl();
+            } elsif ($mode =~ /multiple/) {
+                $counts->increment_multiple_lookup();
+            }
+        }
+        
+        ### Can we get a refseq protein accession?
+        unless ($acc) {
+            $acc = get_refseq_acc($hmd_human_sequence, $mgi_id);
+            if ($acc) {
+                $counts->increment_found_by_refseq;
+            }      
+        }
+            
+        if ($acc) {
+            print ">$acc $mgi_id $symbol\n";
+            $prot_seq = pfetch($acc);
+            if ($prot_seq) {
+                my @lines = split("\n", $prot_seq);
+                shift(@lines);
+                print join("\n", @lines), "\n";
+            } else {
+                print "FAILED_SEQ_FETCH\n";
+            }
+        } else {
+            print ">NOENTRY $mgi_id $symbol\n";
+            print STDERR "No entry for: $mgi_id\n";
+            $counts->increment_mgi_id_not_found;
+        }
+    }
+}
+
+sub get_refseq_acc {
+    my ( $hmd_human_sequence, $mgi_id ) = @_;
+    
+    my $entry = $hmd_human_sequence->{$mgi_id};
+    
+    my $acc;
+    if ($entry) {
+        my $parsed = parse_hmd_human_sequence_file_entry($entry);
+        if (@{$parsed->{mouse_protein_refseq_ids}}) {
+            $acc = $parsed->{mouse_protein_refseq_ids}->[0];
+        }        
+    }
+    return $acc;
+}
+
+sub pfetch {
+    my ( $acc )  = @_;
+    
+    my $string = `pfetch $acc`;
+    
+    my $original = $string;
+    my $count = ($original =~ tr/>//);
+    if ($count > 1) {
+        warn "More than one '>' in: $string";
+    }
+    
+    if ($string =~  /^no\smatch/) {
+        $counts->increment_failed_pfetch;
+        return;
+    }
+    return $string;
+}
+
+

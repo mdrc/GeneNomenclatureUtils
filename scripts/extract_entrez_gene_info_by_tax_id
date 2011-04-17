@@ -1,0 +1,85 @@
+#!/software/bin/perl
+### nomenclature
+
+=pod
+
+=head1 NAME - extract_entrez_gene_info_by_tax_id
+
+=head1 COMMAND LINE PARAMETERS 
+
+Required parameters
+  --tax_id                  taxonomy ID
+
+=head1 DESCRIPTION
+
+Extracts from the Entrez Gene file 'gene_info' by taxonomy ID.
+
+ftp://ftp.ncbi.nih.gov/gene/DATA/gene_info.gz
+
+Common taxonomy IDs
+  9606    human
+  10090   mouse
+
+=head1 AUTHOR - mike_croning@hotmail.com
+
+=cut
+
+use strict;
+use warnings;
+use Carp;
+use DPStore::Utils qw(
+    show_perldoc
+);
+use DPStore::Utils::TabFileParser qw(
+    clean_array_elements_of_whitespace
+    clean_line_of_trailing_whitespace
+    clean_tab_delimited_file
+    close_data_files
+    close_output_files
+    confirm_keys_are_present
+    open_data_file
+    open_output_file
+    output_array_of_arrays
+    output_hash_of_arrays
+    output_tab_delimited_txt_from_hash_of_arrays
+    parse_tab_delimited_file_to_array
+    parse_tab_delimited_file_to_hash_keyed_by_column
+    read_next_line_from_data_file
+    set_tabfileparser_clobber
+    set_tabfile_parser_path_root
+    write_line_to_output_file
+    write_line_to_output_file
+    find_keys_in_two_hashes
+    find_keys_not_in_second_hash
+);
+use Getopt::Long;
+
+{
+    print STDERR "\n$0\n", '=' x length($0), "\n\n";
+    my ( $tax_id );
+    GetOptions(
+        "tax_id=i"                => \$tax_id,
+    ) or show_perldoc();
+    unless ($tax_id) {
+        show_perldoc("Must set --tax_id");
+    }
+    unless ($ENV{'ENTREZ_dir'}) {
+        show_perldoc('Must set $ENV{ENTREZ_dir}');
+    }
+
+    my $file = $ENV{'ENTREZ_dir'} . '/gene_info';
+    unless (-e $file) {
+        confess "Could not read: '$file'\n";
+    }
+    
+    my $count = 0;
+    open_data_file('gene', $file);
+    while (my $line = read_next_line_from_data_file('gene')) {
+        if ($line =~ /^$tax_id\t/) {
+            print $line;
+            $count++;
+        }
+    }
+        
+    print STDERR "$count genes for $tax_id\n";
+}

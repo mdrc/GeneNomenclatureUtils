@@ -1,0 +1,150 @@
+#!/usr/local/bin/perl
+### nomenclature
+
+=pod
+
+=head1 NAME - categorise_by_column
+
+=head1 COMMAND LINE PARAMETERS
+
+Required parameters
+  --file                 file to be processed                
+  --column               column to check against (>= 1)
+  --value                string value to compare against
+  --positive             value to output in case match
+  --negative             value to output in case when not matched
+  --output_column        column to output results (>= 1)
+
+Optional parameters
+  --skip_title           skip title line 
+
+=head1 DESCRIPTION
+
+Examines the specified column in a tab-delimited file, making a string
+comparison against --value, outputting the text specified with
+--positive and --negative.
+
+=head1 AUTHOR - mike_croning@hotmail.com
+
+=cut
+
+use strict;
+use warnings;
+use Carp;
+use DPStore::Utils qw(
+    show_perldoc
+);
+use DPStore::Utils::TabFileParser qw(
+    clean_array_elements_of_whitespace
+    clean_line_of_trailing_whitespace
+    clean_tab_delimited_file
+    close_data_files
+    close_output_files
+    confirm_keys_are_present
+    open_data_file
+    open_output_file
+    output_array_of_arrays
+    output_hash_of_arrays
+    output_tab_delimited_txt_from_hash_of_arrays
+    parse_tab_delimited_file_to_array
+    parse_tab_delimited_file_to_hash_keyed_by_column
+    read_next_line_from_data_file 
+    set_tabfileparser_clobber
+    set_tabfile_parser_path_root
+    write_line_to_output_file
+    write_lines_to_output_file
+);
+use Data::Dumper;
+use Getopt::Long;
+
+{
+    print STDERR "\n$0\n", '=' x length($0), "\n\n";
+    my ($file, $column, $value, $positive, $negative
+        , $skip_title, $output_column);
+        
+    GetOptions(
+        "file=s"          => \$file,
+        "column=i"        => \$column,
+        "value=s"         => \$value,
+        "positive=s"      => \$positive,
+        "negative=s"      => \$negative,
+        "skip_title"      => \$skip_title,
+        "output_column=i" => \$output_column 
+    ) or show_perldoc();
+    
+    unless ($file and -e $file) {
+        show_perldoc('Must set --file to valid file');
+    }
+    unless ($column and $column >= 1) {
+        show_perldoc('Must set --column >= 1');
+    }
+    unless (defined($value)) {
+        show_perldoc('Must set --value');
+    }
+    unless ($positive) {
+        show_perldoc('Must set --positive');
+    }
+    unless ($negative) {
+        show_perldoc('Must set --negative');
+    }
+    unless ($output_column and $output_column >= 1) {
+        show_perldoc('Must set --output_column >= 1');
+    }
+    
+    
+    do_file($file, $column, $value, $positive, $negative
+        , $skip_title, $output_column);
+}
+
+sub do_file {
+    my ( $file, $column, $required, $positive, $negative
+        , $skip_title, $output_column ) = @_;
+    
+    print STDERR "Categorise by: '$required' as '$positive' else '$negative'\n";
+    
+    my $line_count     = 0;
+    my $positive_count = 0;
+    my $negative_count = 0;
+    my $null_count     = 0;
+    
+    my $data = parse_tab_delimited_file_to_array($file, 'clean');
+    
+    if ($skip_title) {
+        my $titles = shift(@$data);
+        splice (@$titles, $output_column - 1, 0, 'CATEGORY');
+
+        print join("\t", @$titles), "\n";
+        print STDERR "Skipped title line: ", join("\t", @$titles), "\n";
+        $line_count++;
+    }
+    
+    foreach my $entry (@$data) {
+    
+        $line_count++;
+
+        my $value = $entry->[$column - 1];
+        my $output;
+
+        unless (defined($value)) {
+            $output = 'null';
+            $null_count++;
+        } elsif ($value eq $required) {
+            $positive_count++;
+            $output = $positive;
+        } elsif ($value ne $required) {
+            $negative_count++;
+            $output = $negative;
+        } else {
+            confess "Error";
+        }
+        
+        splice (@$entry, $output_column - 1, 0, $output);
+        print join("\t", @$entry), "\n";
+    }
+    
+    print STDERR "Line count  : $line_count\n";
+    print STDERR "Positive    : $positive_count\n";
+    print STDERR "Negative    : $negative_count\n";
+    print STDERR "Null count  : $null_count\n";
+}
+

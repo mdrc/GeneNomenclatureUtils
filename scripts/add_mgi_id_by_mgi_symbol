@@ -1,0 +1,149 @@
+#!/usr/local/bin/perl
+### nomenclature
+
+=pod
+
+=head1 NAME - add_mgi_id_by_mgi_symbol
+
+=head1 COMMAND LINE PARAMETERS
+
+Required parameters
+  --file                    file to be processed                
+  --mgi_symbol_column       column number with MGI Symbols
+  --output_column           column to output the added IDs
+  
+  
+Optional parameters
+  --skip_title              skip title row
+
+=head1 DESCRIPTION
+
+Adds MGI IDs (eg. MGI:1888986) to a tab-delimited file, by MGI SYMBOL
+e.g. Dlg3.
+
+Looks for the nomenclature file called 'MRK_List2.sql.rpt' in the
+directory pointed to by $ENV{MGI_dir}
+
+Outputs to STDOUT
+
+Example command line
+
+./add_mgi_id_by_mgi_symbol --file=/nfs/file.txt --mgi_symbol_column=1
+--output_column=1 --skip_title
+
+This will prepend a column to the file.
+
+=head1 AUTHOR - mike_croning@hotmail.com
+
+=cut 
+
+use strict;
+use warnings;
+use Carp;
+use DPStore::Utils::TabFileParser qw(
+    clean_array_elements_of_whitespace
+    clean_line_of_trailing_whitespace
+    clean_tab_delimited_file
+    close_data_files
+    close_output_files
+    confirm_keys_are_present
+    open_data_file
+    open_output_file
+    output_array_of_arrays
+    output_hash_of_arrays
+    output_tab_delimited_txt_from_hash_of_arrays
+    parse_tab_delimited_file_to_array
+    parse_tab_delimited_file_to_hash_keyed_by_column
+    read_next_line_from_data_file 
+    set_tabfileparser_clobber
+    set_tabfile_parser_path_root
+    write_line_to_output_file
+    write_lines_to_output_file
+);
+use DPStore::Utils::SeqIDNomenclature qw(
+    check_for_file
+    parse_mgi_list_2_file
+);
+use DPStore::Utils qw(
+    show_perldoc
+);
+use Getopt::Long;
+use Data::Dumper;
+
+
+{
+    print STDERR "\n$0\n", '=' x length($0), "\n\n";
+    my ($file, $mgi_column, $output_column, $skip_title);
+        
+    GetOptions(
+        "file=s"              => \$file,
+        "mgi_symbol_column=i" => \$mgi_column,
+        "output_column=i"     => \$output_column,
+        "skip_title"          => \$skip_title,
+    );
+
+    ### Check we have the correct parameters
+    unless ($file) {
+        show_perldoc('Must set --file');
+    }
+    unless ($mgi_column and $mgi_column >= 1) {
+        show_perldoc('Must set --mgi_symbol_column >= 1');
+    }
+    unless ($output_column and $output_column >= 1) {
+        show_perldoc('Must set --output_column >= 1');
+    }
+    
+    do_file($file, $mgi_column, $output_column, $skip_title);
+}
+
+sub do_file {
+    my ( $file, $mgi_column, $output_column, $skip_title ) = @_;
+    
+    ### Parse nomenclature files
+    my ($parsed_by_mgi_symbol) = parse_mgi_list_2_file();
+
+    my $entries = parse_tab_delimited_file_to_array($file);
+    if ($skip_title) {
+        my $titles = shift(@$entries);
+        
+        splice (@$titles, $output_column - 1, 0, 'MGI ID');
+        print join("\t", @$titles), "\n";
+    }
+   
+    ### Loop over the MGI IDs
+    
+    my $found             = 0;
+    my $not_found         = 0;
+    my $nothing_to_lookup = 0;
+    
+    foreach my $entry (@$entries) {
+    
+        ### Mouse symbol, synonyms, name
+        
+        my $output = 'NOT_FOUND';
+        $entry->[$mgi_column - 1] =~ s/\r//g;
+        
+        my $symbol = $entry->[$mgi_column - 1];
+        
+        unless ($symbol) {
+            $nothing_to_lookup++;
+        }
+        
+        my $mgi_id = $parsed_by_mgi_symbol->{$symbol};
+        if ($mgi_id) {
+            $output = $mgi_id;
+            $found++
+        } else {
+            $not_found++;
+            print STDERR "Not found: '$symbol'\n";
+        }
+        
+        splice (@$entry, $output_column - 1, 0, $output);
+        print join("\t", @$entry), "\n";
+    }
+    
+    print STDERR "\n";
+    print STDERR "Found           : $found\n";
+    print STDERR "Not found       : $not_found\n";
+    print STDERR "Nothing to check: $nothing_to_lookup\n";
+}

@@ -1,0 +1,72 @@
+#!/software/bin/perl
+### nomenclature
+
+=pod
+
+=head1 NAME - write_spreadsheet
+
+=head1 COMMAND LINE PARAMETERS 
+
+Required parameters
+  --file                        file to convert
+  
+=head1 DESCRIPTION
+
+Converts a tab-delimited file to Microsoft Excel .xls
+binary format using Spreadsheet::WriteExcel
+
+Creates a 'plain vanilla' workbook with a single worksheet
+with all cells formatted simlarly (be default).
+
+Example command line
+
+  ./write_spreadsheet --file=data.txt 
+  
+Will create a file called 'data.xls'
+
+=head1 AUTHOR - mike_croning@hotmail.com
+
+=cut 
+
+use strict;
+use warnings;
+use Carp;
+use Data::Dumper;
+use DPStore::Utils qw(
+    show_perldoc
+);
+use DPStore::Utils::TabFileParser qw(
+    parse_tab_delimited_file_to_array
+);
+use DPStore::Utils::Spreadsheet qw(
+    write_excel_from_table
+);
+use Getopt::Long;
+
+{
+    print STDERR "\n$0\n", '=' x length($0), "\n\n";
+    my ($file);
+    
+    GetOptions(
+        'file=s' => \$file,
+    );
+    unless ($file) {
+        show_perldoc("Must specify --file");
+    }
+        
+    my $table = parse_tab_delimited_file_to_array($file, 'clean');   
+    print STDERR "Parsed : ", scalar(@$table), " rows\n";
+
+    my $output_file = $file;
+    
+    my $pos = rindex($file, '.');
+    if ($pos > 0) {
+        $file = substr($file, 0, $pos) . '.xls';
+    } else {
+        $file .= '.xls';
+    }
+    print STDERR "Writing: $file\n";
+
+    my $row_count = write_excel_from_table($file, $table);
+    print STDERR "Wrote  : $row_count rows\n";
+}

@@ -1,0 +1,137 @@
+#!/software/bin/perl
+### nomenclature
+
+=pod
+
+=head1 NAME - extract_from_ncbi_gene2_accession
+
+=head1 COMMAND LINE PARAMETERS
+
+Required parameters
+  --tax_id              tax_id for genes to extract
+
+Optional parameters
+  --help|h              display help
+ 
+=head1 DESCRIPTION
+
+Extracts entries from the NCBI EntrezGene file 'gene2accession'
+retrieved using:
+
+  wget ftp://ftp.ncbi.nih.gov/gene/DATA/gene2accession.gz
+  nice +5 gunzip gene2accession.gz
+
+A species must be specified using the --tax_id parameter.
+
+   9606  Homo sapiens
+  10090  Mus musclus
+  
+Output to STDOUT
+
+Example command line
+
+./extract_from_ncbi_gene2_accession --tax_id=9606
+
+(H. sapiens)
+
+=head1 AUTHOR - mike_croning@hotmail.com
+
+=cut
+
+use strict;
+use warnings;
+use Carp;
+use DPStore::Utils qw(
+    show_perldoc
+    test_integer
+);
+use DPStore::Utils::SeqIDNomenclature qw(
+    check_for_file
+);
+use Getopt::Long;
+
+{
+    print STDERR "\n$0\n", '=' x length($0), "\n\n";
+    my $tax_id;
+    GetOptions(
+        "tax_id=i"        => \$tax_id,
+        "help|h"          => \&show_perldoc
+    ) or show_perldoc();
+    
+    unless ($tax_id) {
+        show_perldoc('Must set --tax_id')
+    }
+    $tax_id = verify_tax_id_as_integer($tax_id);
+    
+    my $file = 'gene2accession';
+    my $file_spec = check_for_file('ENTREZ_dir', $file);
+    
+    my $out_file_spec = $file_spec . '_' . $tax_id;
+    print STDERR "OUTPUT TO       : $out_file_spec\n\n";
+    
+    extract_from_gene2accession($tax_id, $file_spec, $out_file_spec);
+
+} 
+
+sub extract_from_gene2accession {
+    my ( $req_tax_id, $file_spec, $out_file_spec ) = @_;
+    
+    local *FILE;
+    local *OUT;
+
+    open (FILE, "<$file_spec")
+        or die "Could not open '$file_spec' $!";
+    open (OUT, ">$out_file_spec")
+        or die "Could not open for writing '$out_file_spec' $!";
+       
+    my $column_titles = <FILE>;
+    
+    my $line_count    = 0;
+    my $lines_written = 0;
+    my $seen          = {};
+        
+    while (defined(my $line = <FILE>)) {
+        #last; #debug
+        $line_count++;
+    
+        chomp($line);
+        my ($tax_id, $id) = split("\t", $line);
+        unless ($tax_id and test_integer($tax_id) and $tax_id > 0) {
+            confess "Invalid tax_id on '$line'";
+        }
+        unless ($id and test_integer($id) and $id > 0) {
+            confess "Invalid id on '$line'";
+        }
+        
+        my $key = $tax_id . '_' . $id;
+        if ($tax_id == $req_tax_id) {
+            unless ($seen->{$key}) {
+                print OUT "$tax_id\t$id\n"
+                    or die "Could not write to '$out_file_spec' $!";
+                $seen->{$key}++;
+                $lines_written++;
+            }
+        }
+        
+        unless ($line_count % 10000) {
+            print STDERR '.';
+        }
+        if ($lines_written and not $lines_written % 1000) {
+            print STDERR '*';
+        }
+    }
+    close OUT or print STDERR "Could not close: '$out_file_spec'";
+    print STDERR "Lines written: $lines_written\n"; 
+}
+
+
+
+sub verify_tax_id_as_integer {
+    my ( $id ) = @_;
+
+    unless (test_integer($id) and $id > 0) {
+        confess "Tax id should be +ve integer: '$id'";
+    }
+    print STDERR "SPECIFIED TAX ID: $id\n";
+    return $id;
+}

@@ -1,0 +1,103 @@
+#!/usr/local/bin/perl
+### dev
+
+=pod
+
+=head1 NAME - check_uniprot_ids
+
+=head1 COMMAND LINE PARAMETERS 
+
+Required parameters
+  --file                    file to check
+  --column                  column with UniProt IDs (>=1)
+  
+Optional parameters
+  --skip_title              skip first (title) row
+
+=head1 DESCRIPTION
+
+Checks UniProt IDs in the specified tab-delimited file and column
+
+Uses a Sanger Institute utility call pfetch
+
+=head1 AUTHOR - mike_croning@hotmail.com
+
+=cut
+
+use strict;
+use warnings;
+use Carp;
+use Getopt::Long;
+use DPStore::Utils::TabFileParser qw (
+    clean_array_elements_of_whitespace
+    clean_line_of_trailing_whitespace
+    clean_tab_delimited_file
+    close_data_files
+    close_output_files
+    confirm_keys_are_present
+    open_data_file
+    open_output_file
+    output_array_of_arrays
+    output_hash_of_arrays
+    output_tab_delimited_txt_from_hash_of_arrays
+    parse_tab_delimited_file_to_array
+    parse_tab_delimited_file_to_hash_keyed_by_column
+    read_next_line_from_data_file 
+    set_tabfileparser_clobber
+    set_tabfile_parser_path_root
+    write_line_to_output_file );   
+
+{
+    print STDERR "\n$0\n", '=' x length($0), "\n\n";
+    my ( $file, $column_num, $skip_title );
+    GetOptions(
+        "file=s"        => \$file,
+        "column=i"      => \$column_num,
+        "skip_title"    => \$skip_title
+    ) or show_perldoc();
+
+    confess "Must specify a --file" unless $file;
+    unless (defined($column_num) and $column_num >= 1) {
+        confess "Must set --column (>=1)";
+    }
+
+
+    my $data = parse_tab_delimited_file_to_array($file, 'clean');
+    shift(@$data) if $skip_title;
+
+
+    my $passed = 0;
+    my $failed = 0;
+    my $nothing_to_check = 0;
+    foreach my $entry (@$data) {
+        
+        my $line = join("\t", @$entry);
+        
+        my $symbol = $entry->[$column_num - 1];
+        unless ($symbol and length($symbol) > 0) {
+            print "NOTHING_ON\t$line\n";
+            $nothing_to_check++;
+            next;
+        }
+        
+        if (pfetch_swall($symbol)) {
+            $passed++;
+        } else {
+            print "FAILED\t$line\n";
+            $failed++
+        }
+    }
+    
+    print STDERR "Passed          : $passed\n";
+    print STDERR "Failed          : $failed\n";
+    print STDERR "Nothing to check: $nothing_to_check\n";
+}
+
+sub pfetch_swall {
+    my ( $id ) = @_;
+    
+    my $seq = `pfetch $id`;
+    if ($seq and $seq !~ /no match/i) {
+        return 1;
+    }
+}

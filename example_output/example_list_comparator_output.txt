@@ -1,0 +1,54 @@
+./list_comparator
+=================
+
+CONFIG FILE: GeneNomenclatureUtils/conf/example_list_config.ini
+ID match: ^MGI:\d+$
+SKIPWORDS : NOT_FOUND
+
+Name        : MY-LIST-2
+File        : data/my_list_of_genes_2.txt
+IDs column  : 1
+Skip title  : 1
+Verified IDs: 11
+Invalid IDs : 0
+Duplicates  : 0
+Blanks      : 0
+Skipwords   : 1
+
+Name        : MY-LIST-1
+File        : data/my_list_of_genes_1.txt
+IDs column  : 1
+Skip title  : 1
+Verified IDs: 14
+Invalid IDs : 0
+Duplicates  : 0
+Blanks      : 0
+Skipwords   : 0
+
+  Comparison: MY-LIST-1 (14)
+  Comparison: MY-LIST-2 (11)
+
+UNION OF ALL SETS: 21
+
+Gene	MY-LIST-1	MY-LIST-2
+MGI:1196345	YES	NO
+MGI:1915512	YES	NO
+MGI:1914291	YES	NO
+MGI:2138993	YES	NO
+MGI:107436	NO	YES
+MGI:106672	NO	YES
+MGI:108109	YES	NO
+MGI:88437	YES	NO
+MGI:1278344	YES	NO
+MGI:1932407	NO	YES
+MGI:1336186	YES	NO
+MGI:1932075	YES	YES
+MGI:108092	NO	YES
+MGI:1355330	YES	YES
+MGI:1890651	NO	YES
+MGI:1338068	YES	NO
+MGI:99217	NO	YES
+MGI:1921257	NO	YES
+MGI:1347059	YES	YES
+MGI:1914710	YES	NO
+MGI:1919161	YES	YES

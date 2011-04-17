@@ -1,0 +1,139 @@
+#!/software/bin/perl
+### nomenclature
+
+=pod
+
+=head1 NAME - compare_columns_output_differences
+
+=head1 COMMAND LINE PARAMETERS 
+
+Required parameters
+  --file1               First  tab-delimited data file
+  --file2               Second tab-delimited data file
+  --file1_column        Column to parse from file1 (>= 1)
+  --file2_column        Column to parse from file2 (>= 1)
+  --mode                Must be 'common' or 'not_in_second'
+
+Optional parameters
+  --allow_dups          Allow duplicates in columns of either file     
+  
+=head1 DESCRIPTION
+
+Takes two tab-delimited data files and compares the IDs parsed
+from the specified columns.
+
+=head1 AUTHOR - mike_croning@hotmail.com
+ 
+=cut
+
+use strict;
+use warnings;
+use Carp;
+use DPStore::Utils qw(
+    show_perldoc
+);
+use DPStore::Utils::TabFileParser qw(
+   clean_array_elements_of_whitespace
+    clean_line_of_trailing_whitespace
+    clean_tab_delimited_file
+    close_data_files
+    close_output_files
+    confirm_keys_are_present
+    open_data_file
+    open_output_file
+    output_array_of_arrays
+    output_hash_of_arrays
+    output_tab_delimited_txt_from_hash_of_arrays
+    parse_tab_delimited_file_to_array
+    parse_tab_delimited_file_to_hash_keyed_by_column
+    read_next_line_from_data_file 
+    set_tabfileparser_clobber
+    set_tabfile_parser_path_root
+    write_line_to_output_file
+    write_lines_to_output_file
+    find_keys_in_two_hashes
+    find_keys_not_in_second_hash
+    verify_cell
+);   
+use Data::Dumper;
+use Getopt::Long;
+
+{
+    print STDERR "\n$0\n", '=' x length($0), "\n\n";
+    my ($file1, $file2, $file_column1, $file_column2, $mode, $allow_dups);
+    
+    GetOptions(
+        "file1=s"        => \$file1,
+        "file2=s"        => \$file2,
+        "file1_column=i" => \$file_column1,
+        "file2_column=i" => \$file_column2,
+        "mode=s"         => \$mode,
+        "allow_dups"     => \$allow_dups
+    );
+    show_perldoc("Must set --file1") unless $file1;
+    show_perldoc("Must set --file2") unless $file2;
+    
+    unless (defined($file_column1) and $file_column1 >= 1) {
+        show_perldoc("Must set --file_column_1 (>=1)");
+    }
+    unless (defined($file_column2) and $file_column2 >= 1) {
+        show_perldoc("Must set --file_column_2 (>=1)");
+    }
+    unless ($mode and $mode =~ /^common$|^not_in_second$/) {
+        show_perldoc("Must set --mode to 'common' or 'not_in_second')");
+    }
+
+    my $data1 = parse_tab_delimited_file_to_hash_keyed_by_column(
+        $file1, $file_column1, $allow_dups);
+    my $data2 = parse_tab_delimited_file_to_hash_keyed_by_column(
+        $file2, $file_column2, $allow_dups);
+    
+    print STDERR "FILE1             : $file1\n";
+    print STDERR "KEYS PARSED: ", scalar(keys(%$data1)), "\n\n";
+    
+    print STDERR "FILE2             : $file2\n";
+    print STDERR "KEYS PARSED: ", scalar(keys(%$data2)), "\n\n";
+    
+    my $keys;
+    if ($mode eq 'common') {
+        $keys = find_keys_in_two_hashes($data1, $data2);
+        if ($keys) {
+            print STDERR "COMMON KEYS: ", scalar(@$keys), "\n";
+            output($keys);
+        } else {
+            print STDERR "NO COMMON KEYS\n";
+        }
+    } elsif ($mode eq 'not_in_second') {
+        $keys = find_keys_not_in_second_hash($data1, $data2);
+        if ($keys) {    
+            print STDERR "KEYS NOT IN SECOND: ", scalar(@$keys), "\n";
+            output($keys);
+        } else {
+            print STDERR "NO DIFERRENCE\n";
+        }
+    } else {
+        confess "Error";
+    }
+}
+
+sub output {
+    my ( $array ) = @_;
+    
+    foreach my $id (@$array) {
+        print "$id\n";
+    }
+}
+
+sub find_common_keys {
+    my ( $hash1, $hash2 ) = @_;
+    
+    my $keys = find_keys_in_two_hashes($hash1, $hash2);
+    return $keys;
+}
+
+sub find_different_keys {
+    my ( $hash1, $hash2) = @_;
+
+    my $keys  = find_keys_not_in_second_hash($hash1, $hash2);
+    return $keys;    
+}

@@ -1,0 +1,137 @@
+#!/usr/bin/perl
+### nomenclature
+
+=pod
+
+=head1 NAME - medline_cache_create_db_tables
+
+=head1 COMMAND LINE PARAMETERS
+
+Required parameters
+  --config_file         database connection config_file
+
+=head1 DESCRIPTION
+
+Creates the tables for the MEDLINE cache database of the GeneNomenclatureUtils
+package.
+
+You should create the db first (manually) on the MySQL server specified in the
+configuration file then run this script
+
+The default configuration file is:
+GeneNomenclatureUtils/conf/medline_cache_db.ini
+
+Which should look like (configre as necessary)
+
+[MEDLINE DB]
+db   = medline_test
+host = host
+port = 3306
+user = user
+pass = pass
+
+Example command line
+
+  ./medline_cache_create_db_tables --config_file=medline_cache_db.ini
+
+=head1 AUTHOR - mike_croning@hotmail.com
+
+=cut
+
+use strict;
+use warnings;
+use Config::IniFiles;
+use Carp;
+use Getopt::Long;
+use DPStore::Utils qw(
+    show_perldoc
+);
+use MedlineCacheDB;
+
+{
+    print "\n$0\n", '=' x length($0), "\n\n";
+    my ($db, $user, $pass, $host, $port, $config_file);
+
+    GetOptions(
+        'config_file=s' => \$config_file
+    ) or show_perldoc();
+    unless ($config_file) {
+        show_perldoc();
+    }
+    
+    my $dba = MedlineCacheDB->new($config_file);
+    
+    init_tables();
+    make_tables($dba);
+}
+
+
+{
+    my %tables;
+    sub init_tables {
+        %tables = (
+            request => q{
+                  request_id    INT unsigned not null primary key auto_increment
+                , pubmed_id     INT unsigned not null unique
+                , status        ENUM('requested', 'available', 'error') not null default 'requested'
+
+                , key (pubmed_id)
+            },
+            
+            
+            medline => q{
+                  medline_id    INT unsigned not null primary key auto_increment
+                , pubmed_id     INT unsigned not null unique
+                , record        TEXT not null
+    
+                , key (pubmed_id)
+                , FULLTEXT (record)
+            },
+        );
+    }
+    
+    sub get_tables {
+        
+        return \%tables;
+        
+    }
+}
+
+sub make_tables {
+    my ( $dba ) = @_;
+    
+    my $dbh = $dba->dbh;
+
+    my $tables = get_tables();
+
+    foreach my $tab (sort keys %$tables) {
+
+        $dbh->do("create table $tab ($tables->{$tab})");
+        print "Made table: '$tab'\n";
+    }
+}
+
+sub initialise_medline_cache_db_connection {
+    my ( $cfg ) = @_;
+    
+    my $db   = $cfg->val('MEDLINE DB', 'db')
+        or confess 'db not set'; 
+    my $host = $cfg->val('MEDLINE DB', 'host')
+        or confess 'host not set';
+    my $port = $cfg->val('MEDLINE DB', 'port');
+    $port = 3306 unless $port;
+    my $user = $cfg->val('MEDLINE DB', 'user')
+        or confess "user not set";
+    my $pass = $cfg->val('MEDLINE DB', 'pass')
+        or confess "pass not set";
+    
+    my $dsn = "dbi:mysql:$db:$host:$port";
+    my $dbh;
+    
+    eval {
+        $dbh  =  DBI->connect($dsn, $user, $pass, {RaiseError => 1});
+    };
+    die "No connection" unless $dbh;
+    print STDERR "Connected to $dsn\n";
+    return $dbh;
+}

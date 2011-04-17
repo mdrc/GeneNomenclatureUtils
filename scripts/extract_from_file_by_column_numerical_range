@@ -1,0 +1,128 @@
+#!/software/bin/perl
+### nomenclature
+
+=pod
+
+=head1 NAME - extract_from_file_by_column_numerical_range
+
+=head1 COMMAND LINE PARAMETERS 
+
+Required parameters
+  --file              file from which to extract
+  --column            column to check (>=1)
+  --lower_bound       minimum value of column
+  --upper_bound       maximum value of column
+        
+Optional parameters
+  --skip_title        skip the first (title) line
+  --suppress_title    do not output the title line
+
+=head1 DESCRIPTION
+
+Used to split (or chunk) a large file into smaller chunks by
+extracting within the specified numerical range
+ 
+=head1 AUTHOR - mike_croning@hotmail.com
+
+=cut
+
+use strict;
+use warnings;
+use Carp;
+use DBI;
+use Data::Dumper;
+use DPStore::Utils::TabFileParser qw(
+    clean_array_elements_of_whitespace
+    clean_line_of_trailing_whitespace
+    clean_tab_delimited_file
+    close_data_files
+    close_output_files
+    confirm_keys_are_present
+    open_data_file
+    open_output_file
+    output_array_of_arrays
+    output_hash_of_arrays
+    output_tab_delimited_txt_from_hash_of_arrays
+    parse_tab_delimited_file_to_array
+    parse_tab_delimited_file_to_hash_keyed_by_column
+    read_next_line_from_data_file 
+    set_tabfileparser_clobber
+    set_tabfile_parser_path_root
+    write_line_to_output_file
+    write_lines_to_output_file
+);   
+use DPStore::Utils qw(
+    show_perldoc
+);
+use Getopt::Long;
+
+{
+    print STDERR "\n$0\n", '=' x length($0), "\n\n";
+    my ( $file, $column_num, $lower_bound, $upper_bound, $skip_title
+        , $suppress_title );
+    GetOptions(
+        "file=s"         => \$file,
+        "skip_title"     => \$skip_title,
+        "column=i"       => \$column_num,
+        "lower_bound=i"  => \$lower_bound,
+        "upper_bound=i"  => \$upper_bound,
+        "suppress_title" => \$suppress_title
+    ) or show_perldoc();
+    
+    unless ($file) {
+        show_perldoc("Must specify --file");
+    }
+    unless ($column_num and $column_num >= 1) {
+        show_perldoc("Must specify column >= 1");
+    }
+    unless (defined($lower_bound)) {
+        show_perldoc("Must set --lower_bound");
+    }
+    unless (defined($upper_bound)) {
+        show_perldoc("Must set --upper_bound");
+    }
+    unless ($lower_bound < $upper_bound) {
+        show_perldoc("Must set --lower_bound < --upper_bound");
+    }
+    
+    do_file($file, $skip_title, $column_num, $lower_bound, $upper_bound
+        , $suppress_title);
+}
+
+sub do_file {
+    my ( $file, $skip_title, $column_num, $lower_bound
+        , $upper_bound, $suppress_title )= @_;
+    
+    my $data = parse_tab_delimited_file_to_array($file);
+    
+    if ($skip_title) {
+        my $titles = shift(@$data);
+        print STDERR "Skipped title line: ", join("\t", @$titles), "\n";
+        print join("\t", @$titles), "\n" unless $suppress_title;
+    }
+    
+    
+    my $lines_output     = 0;
+    my $nothing_to_check = 0;
+    my $lines_parsed     = 0;
+    
+    foreach my $entry (@$data) {
+    
+        $lines_parsed++;
+        my $cell_value = $entry->[$column_num - 1];
+        unless (defined($cell_value)) {
+            $nothing_to_check++;
+            next
+        }
+        
+        if ($cell_value >= $lower_bound and $cell_value <= $upper_bound) {
+            print join("\t", @$entry), "\n";
+            $lines_output++
+        }
+    }
+
+    print STDERR "\n";
+    print STDERR "Lines parsed               : $lines_parsed\n";
+    print STDERR "Lined emitted              : $lines_output\n";
+    print STDERR "Lines with nothing to check: $nothing_to_check\n";
+}

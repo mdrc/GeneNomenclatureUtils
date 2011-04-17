@@ -1,0 +1,102 @@
+#!/usr/local/bin/perl
+### nomenclature
+
+=pod
+
+=head1 NAME - count_rows_and_columns
+
+=head1 COMMAND LINE PARAMETERS
+
+Required parameters
+  --file                    file to be checked                
+
+Optional paramaeters
+  --has_title               treat first row/line as a title line
+  --debug                   enable debugging output
+   
+=head1 DESCRIPTION
+
+Utility to check the dimensions of a tab-delimited files, and also
+report its rectangularity
+
+Example command line
+
+./count_rows_and_columns --file=input.txt --has_title
+
+=head1 AUTHOR - mike_croning@hotmail.com
+
+=cut
+
+use strict;
+use warnings;
+use Carp;
+use DPStore::Utils qw(
+    show_perldoc
+);
+use DPStore::Utils::TabFileParser qw(
+    clean_array_elements_of_whitespace
+    clean_line_of_trailing_whitespace
+    clean_tab_delimited_file
+    close_data_files
+    close_output_files
+    confirm_keys_are_present
+    get_tab_file_geometry
+    open_data_file
+    open_output_file
+    output_array_of_arrays
+    output_hash_of_arrays
+    output_tab_delimited_txt_from_hash_of_arrays
+    parse_tab_delimited_file_to_array
+    parse_tab_delimited_file_to_hash_keyed_by_column
+    read_next_line_from_data_file 
+    set_tabfileparser_clobber
+    set_tabfile_parser_path_root
+    write_line_to_output_file
+    write_lines_to_output_file
+);
+use Data::Dumper;
+use Getopt::Long;
+
+{
+    print STDERR "\n$0\n", '=' x length($0), "\n\n";
+    my ($file, $skip_title, $debug);
+        
+    GetOptions(
+        "file=s"     => \$file,
+        "has_title" => \$skip_title,
+        "debug"      => \$debug
+    ) or show_perldoc();
+    
+    unless ($file and -e $file) {
+        show_perldoc('Must set --file to valid file');
+    }
+    
+    my $geometry = get_tab_file_geometry($file, $skip_title);
+    
+    print "FILE               : $file\n";
+    print "Rectangular        : ";
+    if ($geometry->{rectangular}) {
+        print "YES\n";
+        print "Row count          : $geometry->{rows} ";
+        if ($skip_title) {
+            print " (excluding title row)";
+        }
+        print "\n"; 
+        print "Column count       : $geometry->{columns}\n";
+    } else {
+        print "NO\n";
+        print "Columns widths     : ", Dumper($geometry->{column_widths}), "\n"
+    }
+    print "\n";
+    
+    if ($skip_title) {
+        my $titles_by_column = $geometry->{titles};
+    
+        foreach my $column (sort { $a <=> $b } (keys(%$titles_by_column))) {
+            print "  $column", ' ' x (4 - length($column));
+            print ": $titles_by_column->{$column}\n";
+        }
+        print "\n";
+    }
+    print STDERR Dumper($geometry) if $debug;
+}

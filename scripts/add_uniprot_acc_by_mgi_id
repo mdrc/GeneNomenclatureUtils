@@ -1,0 +1,145 @@
+#!/usr/local/bin/perl
+### nomenclature
+
+=pod
+
+=head1 NAME - add_uniprot_acc_by_mgi_id
+
+=head1 COMMAND LINE PARAMETERS
+
+Required parameters
+  --file                file to be processed
+  --mgi_id_column       column number with MGI IDs
+  --output_column       column to output the added IDs
+
+Optional parameters
+  --skip_title          skip title row
+ 
+=head1 DESCRIPTION
+
+Add UniProt accs to tab-delimited file, by MGI ID (eg. MGI:1888986).
+
+=head1 AUTHOR - mike_croning@hotmail.com
+
+=cut
+
+use strict;
+use warnings;
+use Carp;
+use DPStore::Utils qw(
+    show_perldoc
+);
+use DPStore::Utils::SeqIDNomenclature qw(
+    get_swissprot_or_trembl_acc
+    parse_mgi_swissprot_trembl
+);
+use DPStore::Utils::TabFileParser qw(
+    clean_array_elements_of_whitespace
+    clean_line_of_trailing_whitespace
+    clean_tab_delimited_file
+    close_data_files
+    close_output_files
+    confirm_keys_are_present
+    open_data_file
+    open_output_file
+    output_array_of_arrays
+    output_hash_of_arrays
+    output_tab_delimited_txt_from_hash_of_arrays
+    parse_tab_delimited_file_to_array
+    parse_tab_delimited_file_to_hash_keyed_by_column
+    read_next_line_from_data_file 
+    set_tabfileparser_clobber
+    set_tabfile_parser_path_root
+    write_line_to_output_file
+    write_lines_to_output_file
+);
+use Getopt::Long;
+
+{
+    print STDERR "\n$0\n", '=' x length($0), "\n\n";
+    my ($file, $column_num, $skip_title, $output_column);
+    GetOptions(
+        "file=s"             => \$file,
+        "mgi_id_column=i"    => \$column_num,
+        "skip_title"         => \$skip_title,
+        "output_column=i"    => \$output_column,
+    );
+    confess "Must set --file" unless $file;
+
+    unless (defined($column_num) and $column_num >= 1) {
+        confess "Must set --mgi_id_column (>=1)";
+    }
+    unless ($output_column and $output_column >= 1) {
+        confess "Must set --output_column";
+    }
+
+    my ($mgi_swiss, $mgi_trembl) = parse_mgi_swissprot_trembl();
+    
+    do_file($file, $column_num, $output_column, $skip_title);
+
+    
+}
+
+sub do_file {
+    my ( $file, $mgi_column, $output_column, $skip_title ) = @_;
+
+    my $entries = parse_tab_delimited_file_to_array($file);
+    if ($skip_title) {
+        my $titles = shift(@$entries);
+        
+        splice (@$titles, $output_column - 1, 0, 'UniProt');
+        print join("\t", @$titles), "\n";
+    }
+
+    ### Loop over the MGI IDs
+    
+    my $found_by_swiss          = 0;
+    my $found_by_trembl         = 0;
+    my $nothing_to_lookup       = 0;
+    my $not_found               = 0;
+    my $multiple_lookup         = 0;
+
+    foreach my $entry (@$entries) {
+
+        my $uniprot_acc = 'NOT_FOUND';
+        my $line = join("\t", @$entry);
+        
+        my $mgi_id = $entry->[$mgi_column - 1];
+        unless ($mgi_id) {
+            $nothing_to_lookup++;
+        } else {
+            $mgi_id =~ s/^\s+//;
+            $mgi_id =~ s/\s=$//;
+            
+            unless ($mgi_id =~ /^MGI:\d+/) {
+                confess "Error with MGI ID on '$line'";
+            }
+            
+            my ($acc, $mode) = get_swissprot_or_trembl_acc($mgi_id);
+
+            if ($acc) {
+                $uniprot_acc = $acc;
+                
+                if ($mode =~ /swiss/) {
+                    $found_by_swiss++;
+                } elsif ($mode =~ /trembl/) {
+                    $found_by_trembl++;
+                }
+                
+                if ($mode =~ /multiple/) {
+                    $multiple_lookup++;
+                }
+            } 
+        }
+            
+        splice (@$entry, $output_column - 1, 0, $uniprot_acc);
+        print join("\t", @$entry), "\n";
+    }
+    
+    ### Output the summary stats
+    print STDERR "Found by SWISS    : $found_by_swiss\n";
+    print STDERR "Found by TREMBL   : $found_by_trembl\n";
+    print STDERR "Nothing to lookup : $nothing_to_lookup\n";
+    print STDERR "Not found         : $not_found\n";
+    print STDERR "Multiple lookup   : $multiple_lookup\n";
+}

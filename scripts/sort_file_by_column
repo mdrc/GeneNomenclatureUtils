@@ -1,0 +1,146 @@
+#!/usr/local/bin/perl
+### nomenclature
+
+=pod
+
+=head1 NAME - sort_file_by_column
+
+=head1 COMMAND LINE PARAMETERS 
+
+Required parameters
+  --file                    file to be processed                
+  --column                  column to sort be (>=1)
+  --ascending               sort by ascending
+  --descending              sort by descending
+  --mode                    'string' or 'numeric'
+  --ignore_case             make search case-insensitive
+
+Optional parameters
+  --skip_title              skip title row
+
+=head1 DESCRIPTION
+
+Sorts a tab-delimited file by a specified column, by string or numeric
+search, ascending or descending, and optionally case-insensitive.
+
+=head1 AUTHOR - mike_croning@hotmail.com
+
+=cut
+
+use strict;
+use warnings;
+use Carp;
+use DPStore::Utils::TabFileParser qw(
+    clean_array_elements_of_whitespace
+    clean_line_of_trailing_whitespace
+    clean_tab_delimited_file
+    close_data_files
+    close_output_files
+    confirm_keys_are_present
+    open_data_file
+    open_output_file
+    output_array_of_arrays
+    output_hash_of_arrays
+    output_tab_delimited_txt_from_hash_of_arrays
+    parse_tab_delimited_file_to_array
+    parse_tab_delimited_file_to_hash_keyed_by_column
+    read_next_line_from_data_file 
+    set_tabfileparser_clobber
+    set_tabfile_parser_path_root
+    write_line_to_output_file
+    write_lines_to_output_file
+);   
+use Getopt::Long;
+
+{
+    print STDERR "\n$0\n", '=' x length($0), "\n\n";
+    my ($file, $column, $up, $down, $mode, $case_insensitive, $skip_title);
+       
+    ### Command line parsing
+    GetOptions(
+        "file=s"      => \$file,
+        "column=i"    => \$column,
+        "ascending"   => \$up,
+        "descending"  => \$down,
+        "mode=s"      => \$mode,
+        "ignore_case" => \$case_insensitive,
+        "skip_title"  => \$skip_title
+    ) or confess "Error with options";
+    
+    confess "Must set --file" unless $file;
+    unless ($column and $column > 0) {
+        confess "Must set --column >= 0";
+    }
+    unless ($up or $down) {
+        confess "Must set one of --ascending or --descending";
+    }
+    if ($up and $down) {
+        confess "Must set only ONE of --ascending and --descending";
+    }
+    my $ascending = 0;
+    if ($up) {
+        $ascending++;
+    }
+    unless ($mode and $mode =~ /^string$|^numeric$/) {
+        confess "Must set --mode to 'string' or 'numeric'";
+    }
+
+
+    ### Load data into memory
+    my $data = parse_tab_delimited_file_to_array($file, 'clean');
+    if ($skip_title) {
+        print STDERR "Skipping title row\n";
+        print join("\t", @{shift(@$data)}), "\n";
+    }
+
+
+    ### Numeric sorts
+    if ($mode eq 'numeric' and $ascending == 0) {
+        foreach my $index (sort {$data->[$b]->[$column - 1] <=> $data->[$a]->[$column -1] } (0 .. $#$data)) {
+
+            print join("\t", @{$data->[$index]});
+		    print "\n";        
+        }
+    }
+    if ($mode eq 'numeric' and $ascending == 1) {
+        foreach my $index (sort {$data->[$a]->[$column - 1] <=> $data->[$b]->[$column -1 ] } (0 .. $#$data)) {
+
+            print join("\t", @{$data->[$index]});
+		    print "\n";        
+        }
+    }
+
+
+    ### String / alphabetic sorts
+    if ($mode eq 'string' and $ascending == 0) {
+        if ($case_insensitive) {
+            foreach my $index (sort {lc($data->[$b]->[$column - 1]) cmp lc($data->[$a]->[$column -1]) } (0 .. $#$data)) {
+
+                print join("\t", @{$data->[$index]});
+		        print "\n";        
+            }
+        } else {
+            foreach my $index (sort {$data->[$b]->[$column - 1] cmp $data->[$a]->[$column -1] } (0 .. $#$data)) {
+
+                print join("\t", @{$data->[$index]});
+		        print "\n";        
+            }
+        }
+    }
+    if ($mode eq 'string' and $ascending == 1) {
+    
+        if ($case_insensitive) {
+            foreach my $index (sort {lc($data->[$a]->[$column - 1]) cmp lc($data->[$b]->[$column -1]) } (0 .. $#$data)) {
+
+                print join("\t", @{$data->[$index]});
+		        print "\n";        
+            }
+        } else {
+            foreach my $index (sort {$data->[$a]->[$column - 1] cmp $data->[$b]->[$column -1] } (0 .. $#$data)) {
+
+                print join("\t", @{$data->[$index]});
+		        print "\n";        
+            }
+        }
+    }
+} 

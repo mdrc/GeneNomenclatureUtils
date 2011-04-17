@@ -1,0 +1,14 @@
+
+# Copyright (C) 2005-2011 Genome Research Limited (GRL)
+#
+# Author: Mike Croning, Seth Grant
+#
+# Refer to the Perl Artistic License 2.0 for the terms under which you may use
+# modify, and redistribute this source.
+# http://www.opensource.org/licenses/artistic-license-2.0.php
+# 
+# Comments and feedback to: mike_croning@hotmail.com
+# 
+# THIS PACKAGE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED
+# WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
+# MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.

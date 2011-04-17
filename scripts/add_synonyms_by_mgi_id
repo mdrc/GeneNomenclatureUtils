@@ -1,0 +1,149 @@
+#!/usr/local/bin/perl
+### nomenclature
+
+=pod
+
+=head1 NAME - add_synonyms_by_mgi_id
+
+=head1 COMMAND LINE PARAMETERS 
+
+Required parameters
+  --file                    file to pricess
+  --mgi_id_column           column containing MGI IDs (>=1)
+  --output_column           column to output results (>=1)
+  
+Optional parameters
+  --skip_title              skip first (title) row
+  --test                    debugging use
+  
+=head1 DESCRIPTION
+
+Adds gene/protein synonyms to a tab-delimited file by MGI ID.
+
+=head1 AUTHOR - mike_croning@hotmail.com
+
+=cut
+
+
+use strict;
+use warnings;
+use Carp;
+use DPStore::Utils::TabFileParser qw(
+    clean_array_elements_of_whitespace
+    clean_line_of_trailing_whitespace
+    clean_tab_delimited_file
+    close_data_files
+    close_output_files
+    confirm_keys_are_present
+    open_data_file
+    open_output_file
+    output_array_of_arrays
+    output_hash_of_arrays
+    output_tab_delimited_txt_from_hash_of_arrays
+    parse_tab_delimited_file_to_array
+    parse_tab_delimited_file_to_hash_keyed_by_column
+    read_next_line_from_data_file 
+    set_tabfileparser_clobber
+    set_tabfile_parser_path_root
+    write_line_to_output_file
+    write_lines_to_output_file
+);
+use DPStore::Utils::SeqIDNomenclature qw(
+    parse_mgi_synonym_file
+);
+use Getopt::Long;
+use Data::Dumper;
+
+{
+    print STDERR "\n$0\n", '=' x length($0), "\n\n";
+    my ($file, $mgi_id_column, $output_column, $skip_title
+        , $test);
+        
+    GetOptions(
+        "file=s"            => \$file,
+        "mgi_id_column=i"   => \$mgi_id_column,
+        "output_column=i"   => \$output_column,
+        "skip_title"        => \$skip_title,
+        "test"              => \$test,
+    );
+    confess "Must set --file" unless $file;
+    unless ($mgi_id_column and $mgi_id_column >= 1) {
+        confess "Must set --mgi_symbol_column >= 1"
+    }
+    
+    unless ($output_column and $output_column >= 1) {
+        confess "Must set --output_column >= 1";
+    }
+    
+    do_file($file, $mgi_id_column, $output_column, $skip_title
+        , $test);
+}
+
+sub do_file {
+    my ( $file, $mgi_id_column, $output_column, $skip_title
+        , $test ) = @_;
+    
+    ### Parse nomenclature files
+    my ($parsed_by_mgi_id) = parse_mgi_synonym_file();
+
+    if ($test) {
+        my $val = 'MGI:1888986';
+        print STDERR "TESTING: with '$val'\n";
+        my $result = $parsed_by_mgi_id->{$val};
+        print STDERR "RESULT : ", Dumper($result), "\n\n";
+    }
+
+    my $entries = parse_tab_delimited_file_to_array($file);
+    if ($skip_title) {
+        my $titles = shift(@$entries);
+        
+        splice (@$titles, $output_column - 1, 0, 'SYNONYMS');
+        print join("\t", @$titles), "\n";
+    }
+   
+    ### Loop over the MGI IDs
+    
+    my $found             = 0;
+    my $not_found         = 0;
+    my $nothing_to_lookup = 0;
+    
+    foreach my $entry (@$entries) {
+    
+        ### Mouse symbol, synonyms, name
+        
+        my $output = '';
+        $entry->[$mgi_id_column - 1] =~ s/\r//g;
+        
+        my $mgi_id = $entry->[$mgi_id_column - 1];
+        if ($test) {
+            print STDERR "Need to lookup: '$mgi_id'\n";
+            next;
+        }
+        
+        unless ($mgi_id) {
+            $nothing_to_lookup++;
+            next;
+        }
+        
+        my $synonyms = $parsed_by_mgi_id->{$mgi_id};
+        if ($synonyms) {
+            shift(@$synonyms);
+            foreach my $synonym (@$synonyms) {
+                $output .= $synonym . ', ';
+            }
+            $output =~ s/,\s$//;
+            $found++
+        } else {
+            $not_found++;
+            print STDERR "Not found: '$mgi_id'\n";
+        }
+        
+        splice (@$entry, $output_column - 1, 0, $output);
+        print join("\t", @$entry), "\n";
+    }
+    
+    print STDERR "\n";
+    print STDERR "Found           : $found\n";
+    print STDERR "Not found       : $not_found\n";
+    print STDERR "Nothing to check: $nothing_to_lookup\n";
+}

@@ -1,0 +1,199 @@
+#!/usr/local/bin/perl
+### nomenclature
+
+=pod
+
+=head1 NAME - download_nomenclature_files
+
+=head1 COMMAND LINE PARAMETERS 
+
+Required parameters
+  --dir                 directory to write files
+
+Optional parameters
+  --file_list           else assumes
+    GeneNomenclatureUtils/conf/GeneNomenclatureUtils_download_urls.txt
+    
+=head1 DESCRIPTION
+
+Downloads and g/unzips the files listed in GeneNomenclatureUtils_urls.txt
+
+Uses wget for this purpose. Ensure $http_proxy is set (if necessary)
+ 
+=head1 AUTHOR - mike_croning@hotmail.com
+
+=cut
+
+use strict;
+use warnings;
+use Carp;
+use DPStore::Utils qw(
+    show_perldoc
+);
+use DPStore::Utils::TabFileParser qw(
+    clean_array_elements_of_whitespace
+    clean_line_of_trailing_whitespace
+    clean_tab_delimited_file
+    close_data_files
+    close_output_files
+    confirm_keys_are_present
+    open_data_file
+    open_output_file
+    output_array_of_arrays
+    output_hash_of_arrays
+    output_tab_delimited_txt_from_hash_of_arrays
+    parse_tab_delimited_file_to_array
+    parse_tab_delimited_file_to_hash_keyed_by_column
+    read_next_line_from_data_file 
+    set_tabfileparser_clobber
+    set_tabfile_parser_path_root
+    write_line_to_output_file
+    write_lines_to_output_file
+);   
+use Data::Dumper;
+use Getopt::Long;
+
+my $errors            = 0;
+my $downloaded        = {};
+my $failed            = {};
+my $failed_decompress = {};
+
+{
+    print STDERR "\n$0\n", '=' x length($0), "\n\n";
+    my ($dir, $file_list );
+    GetOptions(
+        "dir=s"       => \$dir,
+        "file_list=s" => \$file_list
+    );
+    unless ($dir) {
+        show_perldoc("Must set --dir");
+    }
+    unless (-d $dir) {
+        show_perldoc("'$dir' is not a directory");
+    }
+    unless ($file_list) {
+        $file_list = $ENV{DPStoreConfDir} .'/GeneNomenclatureUtils_download_urls.txt';
+    }
+    unless (-e $file_list) {
+        show_perldoc("Cannot read '$file_list'");
+    }
+    print STDERR "Nomeclature URLs: $file_list\n";
+    do_download($dir, $file_list);
+} 
+
+sub do_download {
+    my ( $dir, $file ) = @_;
+    
+    open_data_file('URLS', $file)
+        or die "Could not open '$file'";
+        
+    while (my $line = read_next_line_from_data_file('URLS')) {
+
+        chomp($line);
+        $line =~ s/^\s+//;
+        $line =~ s/\s$//;
+        if ($line =~ /^###/) {
+            print "$line\n";
+        } elsif (length($line) < 5) {
+            print "\n";
+        } elsif ($line =~ /^wget/) {
+            download_url($line, $dir);
+        }
+    }
+    close_data_files();
+    
+    print STDERR "\n\n";
+    if (keys(%$downloaded)) {
+        print STDERR "Downloaded\n";
+        foreach my $url (keys(%$downloaded)) {
+            print STDERR "$url\n";
+        }
+        print STDERR "\n";
+    }
+
+    if (keys(%$failed)) {    
+        print STDERR "Failed\n";
+        foreach my $url (keys(%$failed)) {
+            print STDERR "$url ($failed->{$url})\n";
+        }
+    }
+
+    if (keys(%$failed_decompress)) {
+        print STDERR "Failed decompress\n";
+        foreach my $url (keys(%$failed_decompress)) {
+            print STDERR "$url ($failed_decompress->{$url})\n";
+        }
+    }
+    
+    print STDERR "\n";
+    print STDERR "Total files downloaded  : ", scalar(keys(%$downloaded)), "\n\n";
+    print STDERR "File list parsing errors: $errors\n" if $errors;
+    print STDERR "Total download failures : ", scalar(keys(%$failed)), "\n" if scalar(keys(%$failed));
+    print STDERR "Failed to decompress    : ", scalar(keys(%$failed_decompress)), "\n" if scalar(keys(%$failed_decompress));
+}
+
+sub download_url {
+    my ( $line, $path ) = @_;
+    
+    my @fields = split(/\s+/, $line);
+    
+    ### Construct the wget command line
+    
+    my ($file_name, $url, $runner_string, $file_path);
+    if (@fields == 2) {
+        $file_name = $fields[$#fields];
+        $file_name = substr($file_name, rindex($file_name, '/') + 1);
+        $file_path = $path . '/' . $file_name;
+        $url = $fields[1];
+        
+        $runner_string = "wget -P $path $url";
+        
+    } elsif (@fields == 4 and $fields[1] eq '-O') {
+        $file_name = $fields[2];
+        $file_path = $path . '/' . $file_name;
+        $url = $fields[3];
+        
+        $runner_string = "wget -O $file_path $url";
+        
+        if (index($file_name, '/') >= 0) {
+            confess "Error with '$file_name'";
+        }
+    } else {
+        warn "Don't understand '$line'\n";
+        $errors++;
+    }
+    
+    ### Do the download
+    
+    print "Downloading: $runner_string\n";
+    my $exit_code_1 = system ($runner_string);
+    if ($exit_code_1 == 0) {
+        if (-s $file_path) {
+            $downloaded->{$url}++;
+        } else {
+            $failed->{$url} = $!;
+            $exit_code_1 = -1;
+        }
+    } else {
+        $failed->{$url} = $!;
+    }
+    return if $exit_code_1 == -1;
+    
+    ### Do we need to gunzip / unzip ?
+    
+    my $prog;
+    if ($file_name =~ /\.gz$|\.Z$/) {
+        $prog = 'gunzip';
+    } elsif ($file_name =~ /\.zip$/) {
+        $prog = 'unzip';
+    } else {
+        return;
+    }
+    
+    sleep 2;
+    my $uncompress_string = "$prog $file_path";
+    my $exit_code_2 = system ($uncompress_string);
+    unless ($exit_code_2 == 0) {
+        $failed_decompress->{$file_path} = $!;
+    }
+}

@@ -1,0 +1,18 @@
+### nomeclature
+
+                        DPStore Package Dependencies
+                        ----------------------------
+                        
+CPAN
+----
+
+Config::IniFiles
+DBI
+
+
+COMMAND LINE
+------------
+
+wget
+gunzip
+unzip

@@ -1,0 +1,273 @@
+#!/usr/local/bin/perl
+### nomenclature
+
+=pod
+
+=head1 NAME - add_omim_by_entrez_gene_id
+
+=head1 COMMAND LINE PARAMETERS
+
+Required parameters
+  --file                    file to be processed                
+  --entrez_gene_id_column   column containing Entrez Gene IDs
+  --output_column           column to output results
+  --mode                    'gene' or 'phenotype' or phenotitle'
+
+Optional parameters
+  --skip_title              skip first (title) row
+  --transfer_column         one or more columns to transfer to the output
+                            usually additional identifiers or gene symbols  
+  
+=head1 DESCRIPTION
+
+Extracts information from the OMIM flatfile producing a report for all
+the genes specified by human Entrez Gene ID in the tab-delimited 
+text file
+
+=head1 AUTHOR - mike_croning@hotmail.com
+
+=cut
+
+use strict;
+use warnings;
+use Carp;
+use DPStore::Utils qw(
+    show_perldoc
+);
+use DPStore::Utils::TabFileParser qw(
+    clean_array_elements_of_whitespace
+    clean_line_of_trailing_whitespace
+    clean_tab_delimited_file
+    close_data_files
+    close_output_files
+    confirm_keys_are_present
+    open_data_file
+    open_output_file
+    output_array_of_arrays
+    output_hash_of_arrays
+    output_tab_delimited_txt_from_hash_of_arrays
+    parse_tab_delimited_file_to_array
+    parse_tab_delimited_file_to_hash_keyed_by_column
+    read_next_line_from_data_file 
+    set_tabfileparser_clobber
+    set_tabfile_parser_path_root
+    write_line_to_output_file
+    write_lines_to_output_file
+);
+use DPStore::Utils::SeqIDNomenclature qw(
+    parse_mim2gene
+    parse_omim_titles
+);
+use Data::Dumper;
+use Getopt::Long;
+
+
+{
+    print STDERR "\n$0\n", '=' x length($0), "\n\n";
+    my ($file, $entrez_id_column, $output_column, $mode, $skip_title
+        , @additional_columns);
+
+    GetOptions(
+        "file=s"                  => \$file,
+        "entrez_gene_id_column=i" => \$entrez_id_column,
+        "output_column=i"         => \$output_column,
+        "mode=s"                  => \$mode,
+        "skip_title"              => \$skip_title,
+        "transfer_column=i"       => \@additional_columns         
+    ) or show_perldoc();
+    
+    unless ($file and -e $file) {
+        show_perldoc('Must set --file to valid file');
+    }
+    unless ($entrez_id_column and $entrez_id_column >= 1) {
+        show_perldoc('Must set --entrez_id_column');
+    }
+    unless ($mode and $mode =~ /^gene$|^phenotype$|^phenotitle$/) {
+        show_perldoc("Must set --mode to one of 'gene', 'phenotype', 'phenotitle'");
+    }
+    if ($mode ne 'phenotitle') {
+        unless ($output_column and $output_column >= 1) {
+            show_perldoc('Must set --output_column');
+        }
+    }
+    foreach my $column (@additional_columns) {
+        unless ($column >= 1) {
+            show_perldoc('Must set --additional_column >= 1');
+        }
+    }
+
+    if ($mode eq 'phenotitle') {
+        do_file_phenotitle($file, $entrez_id_column, $skip_title, \@additional_columns);
+    } else {
+        do_file($file, $entrez_id_column, $output_column, $mode, $skip_title);
+    }
+}
+
+sub do_file_phenotitle {
+    my ( $file, $entrez_id_column, $skip_title, $additional_columns ) = @_;
+
+    my ($omim_gene_to_entrez, $omim_phenotype_to_entrez) = parse_mim2gene();
+    my $omim_titles = parse_omim_titles();
+    
+    my $genes  = parse_tab_delimited_file_to_array($file, 'clean');
+    my $titles;
+    
+    if ($skip_title) {
+        $titles = shift(@$genes);
+    }
+    
+    ### Print the title line
+    print "Entrez Gene (Hs)\t";
+    foreach my $column (@$additional_columns) {
+        if ($skip_title) {
+            print $titles->[$column - 1];
+        } else {
+            print "Additional";
+        }
+        print "\t";
+    }
+    print "OMIM ID (Pheno)\tPhenotype\n";
+
+    my $genes_with_phenotypes = 0;
+    my $nothing_to_check      = 0;
+    my $numeric_ids_checked   = 0;
+    my $empty_cells           = 0;
+    my $non_numeric           = 0;
+    my $phenotypes_added      = 0;
+
+    foreach my $entry (@$genes) {
+        my $entrez_hs  = $entry->[$entrez_id_column - 1];
+        
+        if ($entrez_hs) {
+            if ($entrez_hs eq 'NOT_FOUND') {
+                $nothing_to_check++;
+            } elsif ($entrez_hs !~ /^\d+$/) {
+                $non_numeric++;
+            } else {
+                $numeric_ids_checked++;
+            }
+        } else {
+            $empty_cells++;
+        }
+
+        my $phenotype_omim = $omim_phenotype_to_entrez->{$entrez_hs};
+        if ($phenotype_omim) {
+            
+            $genes_with_phenotypes++;
+            foreach my $omim_id (@$phenotype_omim) {
+                
+                my $title;
+                unless ($title = $omim_titles->{$omim_id}) {
+                    $title = 'NOT_FOUND';
+                }
+                
+                my @fields;
+                push (@fields, $entrez_hs);
+                foreach my $additional_column (@$additional_columns) {
+                    push (@fields, $entry->[$additional_column - 1]);    
+                }
+                push (@fields, $omim_id, $title);
+                print join("\t", @fields), "\n";
+                $phenotypes_added++;
+            }
+        }
+    }
+
+    print STDERR "Numeric IDs checked       : $numeric_ids_checked\n";
+    print STDERR "Non-numeric (invalid) IDs : $non_numeric\n";
+    print STDERR "Empty cells               : $empty_cells\n";            
+    
+    print STDERR "Genes with phenotypes: $genes_with_phenotypes\n";
+    print STDERR "Total Phenotypes     : $phenotypes_added\n";
+}
+ 
+sub do_file {
+    my ( $file, $entrez_id_column, $output_column, $mode, $skip_title ) = @_;
+    
+    my ($omim_gene_to_entrez, $omim_phenotype_to_entrez) = parse_mim2gene();
+
+    my $omim_title;
+    if ($mode eq 'phenotype') {
+        $omim_title = 'OMIM ID (Pheno)';
+    } elsif ($mode eq 'gene') {
+        $omim_title = 'OMIM ID (Gene)';
+    }
+
+    my $genes = parse_tab_delimited_file_to_array($file, 'clean');
+    if ($skip_title) {
+        my $titles = shift(@$genes);
+
+        splice (@$titles, $output_column - 1, 0, $omim_title);
+        print join("\t", @$titles), "\n";
+    }
+
+    ### Loop over the Entrez Gene IDs
+    
+    my $phenotypes_added      = 0;
+    my $genes_to_omim         = 0;
+    my $genes_with_phenotypes = 0;
+    my $nothing_to_check      = 0;
+    my $empty_cells           = 0;
+    my $non_numeric           = 0;
+    my $numeric_ids_checked   = 0;
+    
+    foreach my $entry (@$genes) {
+        my $entrez_hs  = $entry->[$entrez_id_column - 1];
+        
+        if ($entrez_hs) {
+            if ($entrez_hs eq 'NOT_FOUND') {
+                $nothing_to_check++;
+            } elsif ($entrez_hs !~ /^\d+$/) {
+                $non_numeric++;
+            } else {
+                $numeric_ids_checked++;
+            }
+        } else {
+            $empty_cells++;
+        }
+        
+        my $phenotype_omim = $omim_phenotype_to_entrez->{$entrez_hs};
+        my $gene_omim = $omim_gene_to_entrez->{$entrez_hs};
+        
+        my $pheno_concat = '';
+        if ($phenotype_omim) {
+            
+            $genes_with_phenotypes++;
+            $pheno_concat = join( ', ', @$phenotype_omim);
+            $pheno_concat =~ s/\s+$//;
+            
+            $phenotypes_added += scalar(@$phenotype_omim);
+        } else {
+            $pheno_concat = 'NOT_FOUND';
+        }
+        
+        my $gene_string  = '';
+        if ($gene_omim) {
+        
+            if (scalar(@$gene_omim) == 1) {
+                $gene_string = $gene_omim->[0];
+                $genes_to_omim++;
+            } else {
+                $gene_string = 'MULTIPLE';
+            }
+        } else {
+            $gene_string = 'NOT_FOUND';
+        }
+        
+        if ($mode eq 'phenotype') {
+            splice(@$entry, $output_column - 1, 0, $pheno_concat);          
+        } else {
+            splice(@$entry, $output_column - 1, 0, $gene_string);          
+        }
+        
+        print join("\t", @$entry), "\n";
+    }
+    
+    print STDERR "Numeric IDs checked       : $numeric_ids_checked\n";
+    print STDERR "Non-numeric (invalid) IDs : $non_numeric\n";
+    print STDERR "Empty cells               : $empty_cells\n";            
+    
+    print STDERR "Genes with phenotypes: $genes_with_phenotypes\n";
+    print STDERR "Phenotypes added     : $phenotypes_added\n";
+    print STDERR "Gene to OMIM links   : $genes_to_omim\n";
+}

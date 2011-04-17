@@ -1,0 +1,127 @@
+#!/usr/local/bin/perl
+### nomenclature
+
+=pod
+
+=head1 NAME - count_row_occurrences
+
+=head1 COMMAND LINE PARAMETERS 
+
+Required parameters
+  --file                 file to be processed                
+  --columns              e.g. 1,2,3
+  --value                value to look for
+  --output_column        >= 1
+  
+Optional parameters
+  --skip_title              skip first (title) row
+
+=head1 DESCRIPTION
+
+Counts the number of occurrences of the value in the columns specified
+outputting the total count
+
+=head1 AUTHOR - mike_croning@hotmail.com
+
+=cut
+
+use strict;
+use warnings;
+use Carp;
+use DPStore::Utils qw(
+    show_perldoc
+);
+use DPStore::Utils::TabFileParser qw(
+    clean_array_elements_of_whitespace
+    clean_line_of_trailing_whitespace
+    clean_tab_delimited_file
+    close_data_files
+    close_output_files
+    confirm_keys_are_present
+    get_tab_file_geometry
+    open_data_file
+    open_output_file
+    output_array_of_arrays
+    output_hash_of_arrays
+    output_tab_delimited_txt_from_hash_of_arrays
+    parse_columns_from_parameter
+    parse_tab_delimited_file_to_array
+    parse_tab_delimited_file_to_hash_keyed_by_column
+    read_next_line_from_data_file 
+    set_tabfileparser_clobber
+    set_tabfile_parser_path_root
+    write_line_to_output_file
+    write_lines_to_output_file
+);
+use Data::Dumper;
+use Getopt::Long;
+
+{
+    print STDERR "\n$0\n", '=' x length($0), "\n\n";
+    my ($file, $columns, $value, $skip_title, $output_column);
+        
+    GetOptions(
+        "file=s"          => \$file,
+        "columns=s"       => \$columns,
+        "value=s"         => \$value,
+        "skip_title"      => \$skip_title,
+        "output_column=i" => \$output_column
+    ) or show_perldoc();
+    
+    unless ($file and -e $file) {
+        show_perldoc('Must set --file to valid file');
+    }
+    unless ($columns) {
+        show_perldoc('Must set --columns');
+    }
+    unless ($value) {
+        show_perldoc('Must set --value');
+    }
+    unless ($output_column and $output_column >= 1) {
+        show_perldoc('Must set --output_column >= 1');
+    }
+
+    my $geometry    = get_tab_file_geometry($file, $skip_title);
+    unless ($geometry->{rectangular}) {
+        die "Can't proceed as file isn't rectangular\n" . Dumper($geometry);
+    } 
+    my $parsed_columns = parse_columns_from_parameter($columns, $geometry);
+    print STDERR 'ROWS: ', Dumper($parsed_columns);
+    
+    do_file($file, $parsed_columns, $value, $skip_title, $output_column);
+}
+
+sub do_file {
+    my ( $file, $columns, $required, $skip_title, $output_column ) = @_;
+    
+    my $line_count = 0;
+    
+    my $data = parse_tab_delimited_file_to_array($file, 'clean');
+
+    if ($skip_title) {
+        my $titles = shift(@$data);
+        
+        splice (@$titles, $output_column - 1, 0, 'COUNT');
+        print join("\t", @$titles), "\n";
+        print STDERR "Skipped title line: ", join("\t", @$titles), "\n";
+        $line_count++;
+    }
+
+    foreach my $entry (@$data) {
+
+        my $row_count = 0;
+        foreach my $column (@$columns) {
+        
+            $line_count++;
+        
+            my $value = $entry->[$column - 1];
+            if ($value and $value eq $required) {
+                $row_count++;
+            }
+        } 
+    
+        splice (@$entry, $output_column - 1, 0, $row_count);
+        print join("\t", @$entry), "\n";
+    }
+}
+
