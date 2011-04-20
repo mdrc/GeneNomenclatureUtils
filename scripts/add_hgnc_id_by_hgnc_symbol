@@ -9,15 +9,23 @@
 
 Required parameters
   --file                    file to be processed                
-  --hgnc_symbol_column      column containing HGNC symbols
-  --output_column           column to output the added IDs
+  --hgnc_symbol_column      column containing HGNC symbols (>= 1)
+  --output_column           column to output the added IDs (>= 1)
   
 Optional parameters
   --skip_title              skip first (title) row
 
 =head1 DESCRIPTION
 
-To be added
+Adds HGNC IDs (eg. HGNC:4584) by the HGNC symbols found in the
+specified column of a tab-delimited text file
+
+Example command line
+
+./add_hgnc_id_by_hgnc_symbol --file=my_file.txt --hgnc_symbol_column=1
+--skip_title --output_column=1 > my_output.txt
+
+This will prepend a column to the file with the requested IDs.
 
 =head1 AUTHOR - mike_croning@hotmail.com
 
@@ -29,28 +37,8 @@ use Carp;
 use DPStore::Utils qw(
     show_perldoc
 );
-use DPStore::Utils::TabFileParser qw(
-    clean_array_elements_of_whitespace
-    clean_line_of_trailing_whitespace
-    clean_tab_delimited_file
-    close_data_files
-    close_output_files
-    confirm_keys_are_present
-    open_data_file
-    open_output_file
-    output_array_of_arrays
-    output_hash_of_arrays
-    output_tab_delimited_txt_from_hash_of_arrays
-    parse_tab_delimited_file_to_array
-    parse_tab_delimited_file_to_hash_keyed_by_column
-    read_next_line_from_data_file 
-    set_tabfileparser_clobber
-    set_tabfile_parser_path_root
-    write_line_to_output_file
-    write_lines_to_output_file
-);
 use DPStore::Utils::SeqIDNomenclature qw(
-    check_for_file
+    check_or_translate_ids_in_file
     parse_hgnc_core_file
 );
 use Getopt::Long;
@@ -58,71 +46,27 @@ use Data::Dumper;
 
 {
     print STDERR "\n$0\n", '=' x length($0), "\n\n";
-    my ($file, $hgnc_column, $output_column, $skip_title);
+    my ($file, $hgnc_symbol_column, $output_column, $skip_title);
         
     GetOptions(
         "file=s"                => \$file,
-        "hgnc_symbol_column=i"  => \$hgnc_column,
+        "hgnc_symbol_column=i"  => \$hgnc_symbol_column,
         "output_column=i"       => \$output_column,
         "skip_title"            => \$skip_title,
     ) or show_perldoc();
     show_perldoc("Must set --file") unless $file;
-    unless ($hgnc_column and $hgnc_column >= 1) {
+    unless ($hgnc_symbol_column and $hgnc_symbol_column >= 1) {
         show_perldoc("Must set --hgnc_symbol_column >= 1");
     }
     unless ($output_column and $output_column >= 1) {
         show_perldoc("Must set --output_column >= 1");
     }
-    
-    do_file($file, $hgnc_column, $output_column, $skip_title);
-}
 
-sub do_file {
-    my ( $file, $hgnc_column, $output_column, $skip_title ) = @_;
-    
-    ### Parse nomenclature files
+    ### Parse nomenclature file(s)
     my ($parsed_by_symbol, $parsed_by_hgnc_id, $approved_name_by_hgnc_id)
         = parse_hgnc_core_file();
-        
-    my $entries = parse_tab_delimited_file_to_array($file);
-    if ($skip_title) {
-        my $titles = shift(@$entries);
-        
-        splice (@$titles, $output_column - 1, 0, 'HGNC ID');
-        print join("\t", @$titles), "\n";
-    }
-   
-    ### Loop over the HGNC symbols
-    
-    my $found             = 0;
-    my $not_found         = 0;
-    my $nothing_to_lookup = 0;
-    
-    foreach my $entry (@$entries) {
-    
-        ### Mouse symbol, synonyms, name
-        
-        my $output = 'NOT_FOUND';
-        my $symbol = $entry->[$hgnc_column - 1];
-        unless ($symbol) {
-            $nothing_to_lookup++;
-        }
-        
-        my $hgnc_id = $parsed_by_symbol->{$symbol};
-        if ($hgnc_id) {
-            $output = $hgnc_id;
-            $found++
-        } else {
-            $not_found++;
-            print STDERR "Not found: '$symbol'";
-        }
-        
-        splice (@$entry, $output_column - 1, 0, $output);
-        print join("\t", @$entry), "\n";
-    }
-    
-    print STDERR "\n";
-    print STDERR "Found           : $found\n";
-    print STDERR "Not found       : $not_found\n";
-    print STDERR "Nothing to check: $nothing_to_lookup\n";
+
+    ### Do the translation
+    check_or_translate_ids_in_file($file, $parsed_by_symbol, 'HGNC ID'
+        , '^\w+$', $hgnc_symbol_column, $output_column, $skip_title, 'translate');
 }

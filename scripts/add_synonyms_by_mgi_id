@@ -8,9 +8,9 @@
 =head1 COMMAND LINE PARAMETERS 
 
 Required parameters
-  --file                    file to pricess
+  --file                    file to be processed
   --mgi_id_column           column containing MGI IDs (>=1)
-  --output_column           column to output results (>=1)
+  --output_column           column to output added results (>=1)
   
 Optional parameters
   --skip_title              skip first (title) row
@@ -18,44 +18,29 @@ Optional parameters
   
 =head1 DESCRIPTION
 
-Adds gene/protein synonyms to a tab-delimited file by MGI ID.
+Adds MGI synonyms to a tab-delimited file by MGI ID using data parsed
+from the MGI nomenclature file 'MRK_Synonym.sql.rpt' which should be
+in the directory pointed to by $ENV{MGI_dir}
 
 =head1 AUTHOR - mike_croning@hotmail.com
 
 =cut
 
-
 use strict;
 use warnings;
 use Carp;
+use Data::Dumper;
 use DPStore::Utils qw(
     show_perldoc
-);
-use DPStore::Utils::TabFileParser qw(
-    clean_array_elements_of_whitespace
-    clean_line_of_trailing_whitespace
-    clean_tab_delimited_file
-    close_data_files
-    close_output_files
-    confirm_keys_are_present
-    open_data_file
-    open_output_file
-    output_array_of_arrays
-    output_hash_of_arrays
-    output_tab_delimited_txt_from_hash_of_arrays
-    parse_tab_delimited_file_to_array
-    parse_tab_delimited_file_to_hash_keyed_by_column
-    read_next_line_from_data_file 
-    set_tabfileparser_clobber
-    set_tabfile_parser_path_root
-    write_line_to_output_file
-    write_lines_to_output_file
 );
 use DPStore::Utils::SeqIDNomenclature qw(
     parse_mgi_synonym_file
 );
+use DPStore::Utils::TabFileParser qw(
+    parse_tab_delimited_file_to_array
+);
+
 use Getopt::Long;
-use Data::Dumper;
 
 {
     print STDERR "\n$0\n", '=' x length($0), "\n\n";
@@ -73,29 +58,24 @@ use Data::Dumper;
     unless ($mgi_id_column and $mgi_id_column >= 1) {
         show_perldoc("Must set --mgi_symbol_column >= 1");
     }
-    
     unless ($output_column and $output_column >= 1) {
         show_perldoc("Must set --output_column >= 1");
     }
     
-    do_file($file, $mgi_id_column, $output_column, $skip_title
-        , $test);
+    ### Parse nomenclature files
+    my ($synonyms_by_mgi_id) = parse_mgi_synonym_file();
+
+    ### Test ?
+    do_test($synonyms_by_mgi_id) if $test;
+    
+    do_file($synonyms_by_mgi_id, $file, $mgi_id_column, $output_column
+        , $skip_title, $test);
 }
 
 sub do_file {
-    my ( $file, $mgi_id_column, $output_column, $skip_title
-        , $test ) = @_;
+    my ( $synonyms_by_mgi_id, $file, $mgi_id_column, $output_column
+        , $skip_title, $test ) = @_;
     
-    ### Parse nomenclature files
-    my ($parsed_by_mgi_id) = parse_mgi_synonym_file();
-
-    if ($test) {
-        my $val = 'MGI:1888986';
-        print STDERR "TESTING: with '$val'\n";
-        my $result = $parsed_by_mgi_id->{$val};
-        print STDERR "RESULT : ", Dumper($result), "\n\n";
-    }
-
     my $entries = parse_tab_delimited_file_to_array($file);
     if ($skip_title) {
         my $titles = shift(@$entries);
@@ -112,23 +92,15 @@ sub do_file {
     
     foreach my $entry (@$entries) {
     
-        ### Mouse symbol, synonyms, name
-        
         my $output = '';
-        $entry->[$mgi_id_column - 1] =~ s/\r//g;
-        
         my $mgi_id = $entry->[$mgi_id_column - 1];
-        if ($test) {
-            print STDERR "Need to lookup: '$mgi_id'\n";
-            next;
-        }
-        
         unless ($mgi_id) {
             $nothing_to_lookup++;
-            next;
         }
         
-        my $synonyms = $parsed_by_mgi_id->{$mgi_id};
+        ### Mouse symbol, synonym, synonym, ...
+        
+        my $synonyms = $synonyms_by_mgi_id->{$mgi_id};
         if ($synonyms) {
             shift(@$synonyms);
             foreach my $synonym (@$synonyms) {
@@ -149,4 +121,14 @@ sub do_file {
     print STDERR "Found           : $found\n";
     print STDERR "Not found       : $not_found\n";
     print STDERR "Nothing to check: $nothing_to_lookup\n";
+}
+
+sub do_test {
+    my ( $parsed_by_mgi_id ) = @_;
+    
+    my $val = 'MGI:1888986';
+    print STDERR "TESTING: with '$val'\n";
+    my $result = $parsed_by_mgi_id->{$val};
+    print STDERR "RESULT : ", Dumper($result), "\n\n";
+    exit;
 }

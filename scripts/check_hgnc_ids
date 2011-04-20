@@ -1,0 +1,76 @@
+#!/software/bin/perl
+### nomenclature
+
+=pod
+
+=head1 NAME - check_hgnc_ids
+
+=head1 COMMAND LINE PARAMETERS
+
+Required parameters
+  --file                    file to be checked                
+  --hgnc_id_column          column containing IDs to check (>= 1)
+  --output_column           column to output results (>= 1)
+  
+Optional parameters
+  --skip_title              skip first (title) row
+
+=head1 DESCRIPTION
+
+Checks HGNC IDs (eg. HGNC:4584) in the specified column of 
+a tab-delimited text file
+
+Outputs to STDOUT
+
+Example command line
+
+./check_hgnc_ids --file=my_file.txt --hgnc_id_column=1
+--skip_title --output_column=1 > my_output.txt
+
+This will prepend a column to the file with the results of the
+check.
+
+=head1 AUTHOR - mike_croning@hotmail.com
+
+=cut 
+
+use strict;
+use warnings;
+use Carp;
+use DPStore::Utils qw(
+    show_perldoc
+);
+use DPStore::Utils::SeqIDNomenclature qw(
+    check_or_translate_ids_in_file
+    parse_hgnc_core_file
+);   
+
+use Getopt::Long;
+
+{
+   print STDERR "\n$0\n", '=' x length($0), "\n\n";
+   my ($file, $hgnc_id_column, $output_column, $skip_title);
+        
+    GetOptions(
+        "file=s"              => \$file,
+        "hgnc_id_column=i"    => \$hgnc_id_column,
+        "output_column=i"     => \$output_column,
+        "skip_title"          => \$skip_title,
+    ) or show_perldoc();
+    show_perldoc("Must set --file") unless $file;
+    unless ($hgnc_id_column and $hgnc_id_column >= 1) {
+        show_perldoc("Must set --hgnc_id_column >= 1");
+    }
+    
+    unless ($output_column and $output_column >= 1) {
+        show_perldoc("Must set --output_column >= 1");
+    }
+    
+    ### Parse nomenclature file(s)
+    my ($parsed_by_symbol, $parsed_by_hgnc_id, $approved_name_by_hgnc_id)
+        = parse_hgnc_core_file();
+
+    ### Do the check
+    check_or_translate_ids_in_file($file, $parsed_by_hgnc_id, 'HGNC ID CHECK'
+        , '^HGNC:\d+$', $hgnc_id_column, $output_column, $skip_title);
+}

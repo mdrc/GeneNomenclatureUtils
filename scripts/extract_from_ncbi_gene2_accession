@@ -43,7 +43,6 @@ use warnings;
 use Carp;
 use DPStore::Utils qw(
     show_perldoc
-    test_integer
 );
 use DPStore::Utils::SeqIDNomenclature qw(
     check_for_file
@@ -61,16 +60,18 @@ use Getopt::Long;
     unless ($tax_id) {
         show_perldoc('Must set --tax_id')
     }
-    $tax_id = verify_tax_id_as_integer($tax_id);
+    unless ($tax_id and $tax_id =~ /^\d+/ and $tax_id > 0) {
+        show_perldoc('Must set --tax_id to an integer >0')
+    }
     
     my $file = 'gene2accession';
     my $file_spec = check_for_file('ENTREZ_dir', $file);
     
     my $out_file_spec = $file_spec . '_' . $tax_id;
-    print STDERR "OUTPUT TO       : $out_file_spec\n\n";
+    print STDERR "INPUT gene2accession: $file_spec\n";
+    print STDERR "OUTPUT TO           : $out_file_spec\n\n";
     
     extract_from_gene2accession($tax_id, $file_spec, $out_file_spec);
-
 } 
 
 sub extract_from_gene2accession {
@@ -88,18 +89,18 @@ sub extract_from_gene2accession {
     
     my $line_count    = 0;
     my $lines_written = 0;
+    my $duplicates    = 0;
     my $seen          = {};
         
     while (defined(my $line = <FILE>)) {
-        #last; #debug
         $line_count++;
     
         chomp($line);
         my ($tax_id, $id) = split("\t", $line);
-        unless ($tax_id and test_integer($tax_id) and $tax_id > 0) {
+        unless ($tax_id and $tax_id =~ /^\d+/ and $tax_id > 0) {
             confess "Invalid tax_id on '$line'";
         }
-        unless ($id and test_integer($id) and $id > 0) {
+        unless ($id and $id =~ /^\d+/ and $id > 0) {
             confess "Invalid id on '$line'";
         }
         
@@ -110,28 +111,16 @@ sub extract_from_gene2accession {
                     or die "Could not write to '$out_file_spec' $!";
                 $seen->{$key}++;
                 $lines_written++;
+            } else {
+                $duplicates++;
             }
         }
         
-        unless ($line_count % 10000) {
+        unless ($line_count % 100000) {
             print STDERR '.';
-        }
-        if ($lines_written and not $lines_written % 1000) {
-            print STDERR '*';
         }
     }
     close OUT or print STDERR "Could not close: '$out_file_spec'";
-    print STDERR "Lines written: $lines_written\n"; 
-}
-
-
-
-sub verify_tax_id_as_integer {
-    my ( $id ) = @_;
-
-    unless (test_integer($id) and $id > 0) {
-        confess "Tax id should be +ve integer: '$id'";
-    }
-    print STDERR "SPECIFIED TAX ID: $id\n";
-    return $id;
+    print STDERR "\nLines written         : $lines_written\n";
+    print STDERR   "Duplicates Entrez IDs : $duplicates\n\n"; 
 }

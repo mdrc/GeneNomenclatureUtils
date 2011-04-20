@@ -25,6 +25,7 @@ use DPStore::Utils::TabFileParser qw(
     clean_array_elements_of_whitespace
     close_data_files
     open_data_file
+    parse_tab_delimited_file_to_array
     parse_tab_delimited_file_to_hash_keyed_by_column
     read_next_line_from_data_file
 );
@@ -34,6 +35,7 @@ use vars qw{ @ISA @EXPORT_OK };
 @ISA = qw(Exporter);
 @EXPORT_OK = qw(
     check_for_file
+    check_or_translate_ids_in_file
     get_swissprot_or_trembl_acc
     lookup_names_for_interpro_accs
     parse_hgnc_all_file
@@ -59,6 +61,112 @@ use vars qw{ @ISA @EXPORT_OK };
     parse_omim_titles
     parse_synonyms_from_hgnc_all_file
 );
+
+=head1 check_or_translate_ids_in_file
+
+Used to compare the IDs in the specified column of a file against the
+passed hash of IDs. 
+
+$reg_ex is used to perform basic validation of the alphanumeric form of
+the id, in addition to check it in the hash of IDs passed by reference.
+
+Example call (to check)
+
+check_or_translate_ids_in_file($file, $valid_ids_hash, 'CHECK NAME', $reg_ex
+        , $id_column, $output_column, $skip_title);
+
+Example call (to translate)
+
+check_or_translate_ids_in_file($file, $valid_ids_hash, 'CHECK NAME', $reg_ex
+        , $id_column, $output_column, $skip_title, 'translate');
+
+=cut
+
+sub check_or_translate_ids_in_file {
+    my ( $file, $valid_ids, $check_name, $validation_pattern
+        , $column_to_check, $output_column, $skip_title, $translate ) = @_;
+
+    my $entries = parse_tab_delimited_file_to_array($file, 'clean');
+    if ($skip_title) {
+        my $titles = shift(@$entries);
+        
+        splice (@$titles, $output_column - 1, 0, $check_name);
+        print join("\t", @$titles), "\n";
+    }
+
+    ### Loop over the IDs
+    
+    my $found             = 0;
+    my $not_found         = 0;
+    my $nothing_to_lookup = 0;
+    my $invalid           = 0;
+    my $invalid_ids       = {};
+    my $not_found_ids     = {};         
+    
+    foreach my $entry (@$entries) {
+    
+        my $output;
+        my $successful_lookup;
+        
+        my $id = $entry->[$column_to_check - 1];
+        unless ($id) {
+            $output = 'NOTHING_TO_CHECK';
+            $nothing_to_lookup++;
+        } else {
+            unless ($id =~ /$validation_pattern/) {
+                $output = 'INVALID';
+                $invalid_ids->{$id}++;
+                $invalid++;
+            }
+        }
+        
+        unless ($output) {
+            if ($valid_ids->{$id}) {
+                if ($translate) {
+                    $output = $valid_ids->{$id};
+                } else {
+                    $output = 'PASS';
+                }
+                $successful_lookup++;
+                $found++;
+            } else {
+                $output = 'FAIL';
+                $not_found_ids->{$id}++;
+                $not_found++;
+            }
+        }
+        
+        ### 
+        if ($translate and !$successful_lookup) {
+            $output = 'NOT_FOUND';
+        }
+        
+        splice (@$entry, $output_column - 1, 0, $output);
+        print join("\t", @$entry), "\n";
+    }
+    
+    print STDERR "\n";
+    print STDERR "Found           : $found\n";
+    print STDERR "Invalid         : $invalid\n";
+    print STDERR "Not found       : $not_found\n";
+    print STDERR "Nothing to check: $nothing_to_lookup\n";
+    
+    if ($not_found) {
+        print STDERR "\nNOT FOUND IDs:\n";
+        foreach my $id (keys(%$not_found_ids)) {
+            print STDERR "  $id", ' ' x (20 - length($id))
+                , $not_found_ids->{$id}, " occurrences\n";
+        }
+    }
+    
+    if ($invalid) {
+        print STDERR "\nINVALID IDs: (not matching '$validation_pattern')\n";
+        foreach my $id (keys(%$invalid_ids)) {
+            print STDERR "  $id", ' ' x (20 - length($id))
+                , $invalid_ids->{$id}, " occurrences\n";
+        }
+    }
+}
 
 ### parse_omim_titles
 #

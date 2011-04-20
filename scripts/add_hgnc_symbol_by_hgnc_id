@@ -3,13 +3,13 @@
 
 =pod
 
-=head1 NAME - add_mgi_symbol_by_mgi_id
+=head1 NAME - add_hgnc_symbl_by_hgnc_id
 
 =head1 COMMAND LINE PARAMETERS
 
 Required parameters
   --file                    file to be processed                
-  --mgi_id_column           column containing MGI Symbols (>= 1)
+  --hgnc_id_column          column containing HGNC IDs (>= 1)
   --output_column           column to output added symbols (>= 1)
   
 Optional parameters
@@ -17,20 +17,18 @@ Optional parameters
 
 =head1 DESCRIPTION
 
-Adds MGI symbols (e.g. Dlg3) by MGI ID (e.g. MGI:1888986)
+Adds HGNC symbols (eg. GRIN1) by the HGNC IDs found in the
+specified column of a tab-delimited text file
 
-Looks for the nomenclature file called 'MRK_List2.sql.rpt' in the
-directory pointed to by $ENV{MGI_dir}
-
-Output to STDOUT
+Outputs to STDOUT
 
 Example command line
 
-./add_mgi_symbol_by_mgi_id --file=my_file.txt --mgi_id_column=1
+./add_hgnc_symbol_by_hgnc_id --file=my_file.txt --hgnc_id_column=1
 --skip_title --output_column=1 > my_output.txt
 
-This will prepend a column to the file with MGI Symbols based on MGI IDs,
-reporting which ones are not matched in the MGI file.
+This will prepend a column to the file with HGNC  symbols based on
+HGNC IDs, reporting which ones were not found.
 
 =head1 AUTHOR - mike_croning@hotmail.com
 
@@ -44,24 +42,24 @@ use DPStore::Utils qw(
 );
 use DPStore::Utils::SeqIDNomenclature qw(
     check_or_translate_ids_in_file
-    parse_mgi_list_2_file
+    parse_hgnc_core_file
 );   
 
 use Getopt::Long;
 
 {
    print STDERR "\n$0\n", '=' x length($0), "\n\n";
-   my ($file, $mgi_column, $output_column, $skip_title);
+   my ($file, $hgnc_id_column, $output_column, $skip_title);
         
     GetOptions(
         "file=s"              => \$file,
-        "mgi_id_column=i"     => \$mgi_column,
+        "hgnc_id_column=i"    => \$hgnc_id_column,
         "output_column=i"     => \$output_column,
         "skip_title"          => \$skip_title,
     ) or show_perldoc();
     show_perldoc("Must set --file") unless $file;
-    unless ($mgi_column and $mgi_column >= 1) {
-        show_perldoc("Must set --mgi_id_column >= 1");
+    unless ($hgnc_id_column and $hgnc_id_column >= 1) {
+        show_perldoc("Must set --hgnc_id_column >= 1");
     }
     
     unless ($output_column and $output_column >= 1) {
@@ -69,10 +67,11 @@ use Getopt::Long;
     }
     
     ### Parse nomenclature file(s)
-    my ($parsed_by_mgi_symbol, $parsed_by_mgi_id) = parse_mgi_list_2_file();
-    
-    ### Do the translation
-    check_or_translate_ids_in_file($file, $parsed_by_mgi_id, 'MGI ID'
-        , '^MGI:\d+$', $mgi_column, $output_column, $skip_title, 'translate');
-}
+    my ($parsed_by_symbol, $parsed_by_hgnc_id, $approved_name_by_hgnc_id)
+        = parse_hgnc_core_file();
 
+    ### Do the translation
+    check_or_translate_ids_in_file($file, $parsed_by_hgnc_id, 'HGNC SYMBOL'
+    	, '^HGNC:\d+$', $hgnc_id_column, $output_column, $skip_title
+        , 'translate');
+}

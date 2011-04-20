@@ -54,7 +54,9 @@ Entrez Gene: http://www.ncbi.nlm.nih.gov/gene
 HGNC: http://www.genenames.org
 
     add_hgnc_id_by_hgnc_symbol
-
+    add_hgnc_symbol_by_hgnc_id
+    check_hgnc_ids
+    
 
 MGI: http://www.informatics.jax.org
 
@@ -65,6 +67,7 @@ MGI: http://www.informatics.jax.org
     add_ortho_gene_id_by_mgi_id
     add_uniprot_acc_by_mgi_id
     add_synonyms_by_mgi_id
+    check_mgi_ids
     combine_by_mgi_id_column
     generate_interpro_report_from_mgi_id
     get_mgi_alleles_by_mgi_id
