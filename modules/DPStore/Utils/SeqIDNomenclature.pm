@@ -59,6 +59,8 @@ use vars qw{ @ISA @EXPORT_OK };
     parse_omim_titles
     parse_synonyms_from_hgnc_all_file
     parse_rgd_rat_genes_file
+    parse_rgd_orthologs_file
+    parse_rgd_orthologs_file_entry
 );
 
 =head1 check_or_translate_ids_in_file
@@ -79,11 +81,19 @@ Example call (to translate)
 check_or_translate_ids_in_file($file, $valid_ids_hash, 'CHECK NAME', $reg_ex
         , $id_column, $output_column, $skip_title, 'translate');
 
+A final optional parameter allows to pass a code reference for a subroutine
+called as $code->($id, $valid_ids), where $id is the ID parsed from the
+specified column of the file, and $valid_ids is the parsed nomenclature file
+hash, this is useful when the values of the latter are not simply scalars.
+
+Take at init_lookup() in GeneNomenclatures/scripts/add_mgi_id_by_rgd_id
+
 =cut
 
 sub check_or_translate_ids_in_file {
     my ( $file, $valid_ids, $check_name, $validation_pattern
-        , $column_to_check, $output_column, $skip_title, $translate ) = @_;
+        , $column_to_check, $output_column, $skip_title, $translate
+        , $lookup_sub ) = @_;
 
     my $entries = parse_tab_delimited_file_to_array($file, 'clean');
     if ($skip_title) {
@@ -120,9 +130,18 @@ sub check_or_translate_ids_in_file {
         }
         
         unless ($output) {
-            if ($valid_ids->{$id}) {
+            my $val;
+            
+            ### Straight hash lookup, or call code ? 
+            if ($lookup_sub) {
+                $val = $lookup_sub->($id, $valid_ids);
+            } else {
+                $val = $valid_ids->{$id}
+            }
+        
+            if ($val) {
                 if ($translate) {
-                    $output = $valid_ids->{$id};
+                    $output = $val;
                 } else {
                     $output = 'PASS';
                 }
@@ -476,7 +495,22 @@ sub parse_mgi_mouse_human_sequence_file_entry {
     return $entry;
 }
 
-### parse_mgi_mouse_human_orthology_file_entry
+=head2 parse_mgi_mouse_human_orthology_file_entry
+
+  my $parsed = parse_mgi_mouse_human_orthology_file_entry($entry);
+  
+  see also: parse_mgi_mouse_human_orthology_file();
+  
+Returns a hash by reference with the following keys:
+  mgi_id
+  mouse_gene_symbol
+  mouse_name
+  mouse_entrez_gene_id
+  human_hgnc_id
+  human_gene_symbol
+  human_entrez_gene_id
+  
+=cut
 
 sub parse_mgi_mouse_human_orthology_file_entry {
     my ( $mgi ) = @_;
@@ -499,9 +533,125 @@ sub parse_mgi_mouse_human_orthology_file_entry {
     return $entry;
 }
 
-### parse_mgi_mouse_human_orthology_file
-#
-# Looks for a file in $ENV{MGI_dir} called  HMD_HGNC_Accession.rpt
+=head2 parse_rgd_orthologs_file
+
+Parses the file 'RGD_ORTHOLOGS' found in the directory
+pointed to by $ENV{RGD_dir}, which has the following
+in tab-delimited columns
+
+  1   RAT_GENE_SYMBOL
+  2   RAT_GENE_RGD_ID
+  3   RAT_GENE_ENTREZ_GENE_ID
+  4   HUMAN_ORTHOLOG_SYMBOL - human ortholog(s) to rat gene
+  5   HUMAN_ORTHOLOG_RGD_ID
+  6   HUMAN_ORTHOLOG_ENTREZ_GENE_ID
+  7   HUMAN_ORTHOLOG_SOURCE - RGD or MGI
+  8   MOUSE_ORTHOLOG_SYMBOL - mouse ortholog(s) to rat gene
+  9   MOUSE_ORTHOLOG_RGD_ID
+  10  MOUSE_ORTHOLOG_ENTREZ_GENE_ID
+  11  MOUSE_ORTHOLOG_MGI_ID
+  12  MOUSE_ORTHOLOG_SOURCE - RGD or MGI
+
+  my ($parsed_by_rgd_id, $parsed_by_mgi_symbol) = 
+    parse_rgd_orthologs_file();
+    
+    
+=cut
+
+sub parse_rgd_orthologs_file {
+    my ( $allow_dups ) = @_;
+
+    my $file = 'RGD_ORTHOLOGS';
+    my $file_spec = check_for_file('RGD_dir', $file);
+    
+    my $parsed_by_rgd_id = {};
+    my $parsed_by_mgi_id = {};
+    
+    open_data_file('file', $file_spec);
+    while (my $line = read_next_line_from_data_file('file')) {
+        chomp($line);
+        next if $line =~ /^\#|^RAT_GENE_SYMBOL/;
+        
+        my @fields = split(/\t/, $line);
+        clean_array_elements_of_whitespace(\@fields);
+        
+        my $rgd_symbol = $fields[0] or confess "No RGD symbol on '$line'";
+        my $rgd_id     = $fields[1] or confess "No RGD id on '$line'";
+        my $mgi_id     = $fields[10];
+     
+        $parsed_by_rgd_id->{$rgd_id} = \@fields;
+        if ($mgi_id) {
+            $parsed_by_mgi_id->{$mgi_id} = \@fields;
+        }    
+    }
+
+    my $file_modified = ctime(stat($file_spec)->mtime);
+    print STDERR "Parsed      : $file_spec\n";
+    print STDERR "File Date   : $file_modified\n";
+    print STDERR "RGD IDs     : ", scalar(keys(%$parsed_by_rgd_id)), "\n";
+    print STDERR "MGI IDs     : ", scalar(keys(%$parsed_by_mgi_id)), "\n\n";
+    return ($parsed_by_rgd_id, $parsed_by_mgi_id);
+}
+
+=head2 parse_rgd_orthologs_file_entry
+
+  my $parsed = parse_rgd_orthologs_file_entry($entry);
+  
+  see also: parse_rgd_orthologs_file
+  
+Returns a hash by reference with the following keys:
+  rat_gene_symbol               
+  rat_gene_rgd_id               
+  rat_gene_entrez_gene_id       
+  human_ortholog_symbol         
+  human_ortholog_rgd_id   
+  human_ortholog_entrez_gene_id 
+  human_ortholog_source         
+  mouse_ortholog_symbol         
+  mouse_ortholog_rgd_id         
+  mouse_ortholog_entrez_gene_id 
+  mouse_ortholog_mgi_id         
+  mouse_ortholog_source
+         
+=cut 
+
+sub parse_rgd_orthologs_file_entry {
+    my ( $rgi ) = @_;
+
+    unless ($rgi) {
+        confess "Must pass a line from RGD_ORTHOLOGS "
+            . "parsed into an array by reference";
+    } 
+    
+    my $entry = {};
+    $entry->{rat_gene_symbol}               = $rgi->[0] or confess "No RGD symbol";
+    $entry->{rat_gene_rgd_id}               = $rgi->[1] or confess "No RGI ID";
+    $entry->{rat_gene_entrez_gene_id}       = $rgi->[2];
+    $entry->{human_ortholog_symbol}         = $rgi->[3];
+    $entry->{human_ortholog_rgd_id}         = $rgi->[4];
+    $entry->{human_ortholog_entrez_gene_id} = $rgi->[5];
+    $entry->{human_ortholog_source}         = $rgi->[6];
+    $entry->{mouse_ortholog_symbol}         = $rgi->[7];
+    $entry->{mouse_ortholog_rgd_id}         = $rgi->[8];
+    $entry->{mouse_ortholog_entrez_gene_id} = $rgi->[9];
+    $entry->{mouse_ortholog_mgi_id}         = $rgi->[10];
+    $entry->{mouse_ortholog_source}         = $rgi->[11];
+    
+    return $entry;
+}
+
+=head2 parse_mgi_mouse_human_orthology_file
+
+Looks for a file in $ENV{MGI_dir} called: 'HMD_HGNC_Accession.rpt'
+
+  my ($parsed_by_mgi_id, $parsed_by_hgnc_symbol)
+    = parse_mgi_mouse_human_orthology_file();
+
+  my $entry = $parsed_by_mgi_id->{$mgi_id};
+
+  my $parsed = parse_mgi_mouse_human_orthology_file_entry($entry);
+
+=cut
 
 sub parse_mgi_mouse_human_orthology_file {
     my ( $allow_dups ) = @_;
