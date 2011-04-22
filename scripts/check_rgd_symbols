@@ -1,0 +1,77 @@
+#!/software/bin/perl
+### nomenclature
+
+=pod
+
+=head1 NAME - check_rgd_symbols
+
+=head1 COMMAND LINE PARAMETERS
+
+Required parameters
+  --file                    file to be checked                
+  --rgd_symbol_column       column containing symbols to check (>= 1)
+  --output_column           column to output results (>=1 ) 
+  
+Optional parameters
+  --skip_title              skip first (title) row
+
+=head1 DESCRIPTION
+
+Checks symbols eg. Dlg3 in a tab-delimited file
+
+Utilises the nomenclature file called 'GENES_RAT.txt' in the
+directory pointed to by $ENV{RGD_dir}
+
+Output to STDOUT
+
+Example command line
+
+./check_rgd_symbols --file=my_file.txt --rgd_symbol_column=1
+--skip_title --output_column=1 > my_output.txt
+
+This will prepend a column to the file with the results of the
+check.
+
+=head1 AUTHOR - mike_croning@hotmail.com
+
+=cut 
+
+use strict;
+use warnings;
+use Carp;
+use DPStore::Utils qw(
+    show_perldoc
+);
+use DPStore::Utils::SeqIDNomenclature qw(
+    check_or_translate_ids_in_file
+    parse_rgd_rat_genes_file
+);   
+
+use Getopt::Long;
+
+{
+   print STDERR "\n$0\n", '=' x length($0), "\n\n";
+   my ($file, $rgd_symbol_column, $output_column, $skip_title);
+        
+    GetOptions(
+        "file=s"              => \$file,
+        "rgd_symbol_column=i" => \$rgd_symbol_column,
+        "output_column=i"     => \$output_column,
+        "skip_title"          => \$skip_title,
+    ) or show_perldoc();
+    show_perldoc("Must set --file") unless $file;
+    unless ($rgd_symbol_column and $rgd_symbol_column >= 1) {
+        show_perldoc("Must set --rgd_id_column >= 1");
+    }
+    
+    unless ($output_column and $output_column >= 1) {
+        show_perldoc("Must set --output_column >= 1");
+    }
+
+    ### Parse nomenclature file(s)
+    my ($parsed_by_rgd_symbol, $parsed_by_rgd_id) = parse_rgd_rat_genes_file();
+    
+    ### Do the check
+    check_or_translate_ids_in_file($file, $parsed_by_rgd_symbol, 'RGD SYMBOL CHECK'
+        , '^\S+$', $rgd_symbol_column, $output_column, $skip_title);
+}

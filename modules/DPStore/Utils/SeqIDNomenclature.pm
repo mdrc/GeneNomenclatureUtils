@@ -6,9 +6,7 @@
 
 =head1 DESCRIPTION
 
-=head1 AUTHOR
-
-webmaster@genes2cognition.org
+=head1 AUTHOR - mike_croning@hotmail.com
 
 =cut
 
@@ -60,6 +58,7 @@ use vars qw{ @ISA @EXPORT_OK };
     parse_mp_vocabulary
     parse_omim_titles
     parse_synonyms_from_hgnc_all_file
+    parse_rgd_rat_genes_file
 );
 
 =head1 check_or_translate_ids_in_file
@@ -146,13 +145,13 @@ sub check_or_translate_ids_in_file {
     }
     
     print STDERR "\n";
-    print STDERR "Found           : $found\n";
-    print STDERR "Invalid         : $invalid\n";
-    print STDERR "Not found       : $not_found\n";
-    print STDERR "Nothing to check: $nothing_to_lookup\n";
+    print STDERR "PASS            : $found\n";
+    print STDERR "FAIL            : $not_found\n";
+    print STDERR "INVALID         : $invalid\n";
+    print STDERR "NOTHING TO CHECK: $nothing_to_lookup\n";
     
     if ($not_found) {
-        print STDERR "\nNOT FOUND IDs:\n";
+        print STDERR "\nFAILED IDs:\n";
         foreach my $id (keys(%$not_found_ids)) {
             print STDERR "  $id", ' ' x (20 - length($id))
                 , $not_found_ids->{$id}, " occurrences\n";
@@ -166,6 +165,7 @@ sub check_or_translate_ids_in_file {
                 , $invalid_ids->{$id}, " occurrences\n";
         }
     }
+    print STDERR "\n";
 }
 
 ### parse_omim_titles
@@ -938,63 +938,130 @@ sub parse_hgnc_all_file_entry {
     
     return $entry;
 }
+=head2 parse_rgd_genes_file 
 
-### parse_mgi_list_2_file
-#
-# Looks for a file in $ENV{MGI_dir} called MRK_List2.rpt
+Looks for a file in $ENV{RGD_dir} called 'GENES_RAT.txt'
 
-sub parse_mgi_list_2_file {
+my ($parsed_by_rgd_symbol, $parsed_by_rgd_id, $approved_name_by_rgdd_id)
+    = parse_rgd_genes_file();
+
+An optional parameter allows the case of the gene symbols parsed to be
+modified, pass 'lc' or 'uc' to convert all the parsed symbols used as
+keys returned in $parsed_by_rgd_symbol, to upper or lower case.
+
+=cut
+
+sub parse_rgd_rat_genes_file {
     my ( $case ) = @_;
+    
+    return(
+       _parse_symbols_ids_names_type_file( 'GENES_RAT.txt', 'RGD_dir', $case,
+        '^\d+\s', 2, 1, 3,  'WITHDRAWN', 'eq', 34)
+    );
+}        
+
+### _parse_symbols_ids_names_type_file
+#
+# Internal subroutine used to parse symbols, IDs and names from a
+# tab-delimited nomenclature file 
+
+sub _parse_symbols_ids_names_type_file {
+    my ( $file, $dir, $case, $regex_for_line, $symbol_column
+        , $id_column, $name_column, $skip_status, $skip_type, $skip_column ) = @_;
     
     if ($case and $case !~ /^[l|u]c$/) {
         confess "Case must be 'lc' or 'uc'";
     }
-    
-    my $file = 'MRK_List2.rpt';
-    my $file_spec = check_for_file('MGI_dir', $file);
-    
-    my $parsed_by_mgi_symbol    = {};
-    my $parsed_by_mgi_id        = {};
-    my $approved_name_by_mgi_id = {};
 
-    open_data_file('mgi', $file_spec);
-    while (my $line = read_next_line_from_data_file('mgi')) {
+    my $file_spec = check_for_file($dir, $file);
+
+    my $parsed_by_symbol    = {};
+    my $parsed_by_id        = {};
+    my $approved_name_by_id = {};
+    my $skipped             = 0;
+
+    open_data_file('file', $file_spec);
+    while (my $line = read_next_line_from_data_file('file')) {
         
         chomp($line);
         
         $line =~ s/^\s+//;
         $line =~ s/\s$//;
-        next unless $line =~ /^MGI:\d+/;
-        
-        my @fields = split(/\t/, $line);
-        
-        ### Do we need to do case conversion on the MGI Symbols?
+        next unless $line =~ /$regex_for_line/;
 
-        my $mod_case_symbol = $fields[3];
-        if ($case) {
-            if ($case eq 'lc') {
-                $mod_case_symbol = lc($fields[3]);
+        my @fields = split(/\t/, $line);
+        clean_array_elements_of_whitespace(\@fields);
+        
+        my $symbol = $fields[$symbol_column - 1];
+        my $id     = $fields[$id_column - 1];
+        my $name   = $fields[$name_column -1];
+        
+        if ($skip_status) {
+            if ($skip_type eq 'eq') {
+                if ($fields[$skip_column - 1] eq $skip_status) {
+                    $skipped++;
+                    next;
+                }
+            } elsif ($skip_type eq 'ne') {
+                if ($fields[$skip_column - 1] ne $skip_status) {
+                    $skipped++;
+                    next;
+                }
             } else {
-                $mod_case_symbol = uc($fields[3]);
+                confess "Error with skip_type '$skip_type'";
             }
         }
         
-        next unless $fields[6] eq 'Gene';
-
-        clean_array_elements_of_whitespace(\@fields);
-        $parsed_by_mgi_symbol->{$mod_case_symbol} = $fields[0];
-        $parsed_by_mgi_id->{$fields[0]} = $fields[3];
+        ### Do we need to do case conversion on the symbols?
+        my $mod_case_symbol = $symbol;
+        if ($case) {
+            if ($case eq 'lc') {
+                $mod_case_symbol = lc($mod_case_symbol);
+            } else {
+                $mod_case_symbol = uc($mod_case_symbol);
+            }
+        }
         
-        $approved_name_by_mgi_id->{$fields[0]} = $fields[5];
+        $parsed_by_symbol->{$mod_case_symbol} = $id;
+        $parsed_by_id->{$id}                  = $symbol;
+        $approved_name_by_id->{$id}           = $name;
     }
     close_data_files();
     
     my $file_modified = ctime(stat($file_spec)->mtime);
-    print STDERR "Parsed     : $file_spec\n";
-    print STDERR "File Date  : $file_modified\n";
-    print STDERR "MGI symbols: ", scalar(keys(%$parsed_by_mgi_symbol)), "\n\n";
+    print STDERR "Parsed         : $file_spec\n";
+    print STDERR "File Date      : $file_modified\n";
+    print STDERR "Parsed symbols : ", scalar(keys(%$parsed_by_symbol)), "\n";
+    if ($skip_status) {
+        print STDERR "Skipped symbols: $skipped (by $skip_type '$skip_status'";
+        print STDERR " in Col:$skip_column)\n";
+    }
+    print STDERR "\n";
     
-    return ($parsed_by_mgi_symbol, $parsed_by_mgi_id, $approved_name_by_mgi_id);
+    return ($parsed_by_symbol, $parsed_by_id, $approved_name_by_id);
+}        
+
+
+=head2 parse_mgi_list_2_file
+
+Looks for a file in $ENV{MGI_dir} called MRK_List2.rpt
+
+my ($parsed_by_mgi_symbol, $parsed_by_mgi_id, $approved_name_by_mgi_id)
+    = parse_mgi_list_2_file();
+
+An optional parameter allows the case of the gene symbols parsed to be
+modified, pass 'lc' or 'uc' to convert all the parsed symbols used as
+keys returned in $parsed_by_mgi_symbol, to upper or lower case.
+
+=cut
+
+sub parse_mgi_list_2_file {
+    my ( $case ) = @_;
+
+    return(
+       _parse_symbols_ids_names_type_file( 'MRK_List2.rpt', 'MGI_dir', $case,
+        '^MGI:\d+', 4, 1, 6, 'Gene', 'ne', 7 )
+    );
 }
 
 

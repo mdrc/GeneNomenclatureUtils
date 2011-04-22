@@ -1,0 +1,7 @@
+RGD IDs	RGD SYMBOLS
+2737	Grin2a
+2736	Grin1
+68423	Dlg3
+-626	incorrect
+61928	Hif1a
+99999999	unknown

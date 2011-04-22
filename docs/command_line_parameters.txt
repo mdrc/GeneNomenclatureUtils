@@ -72,7 +72,9 @@ including MGI, HGNC, and Entrez Gene
 --hgnc_id_column                        Specify column containing HGNC IDs e.g. HGNC:4584
 --hgnc_symbol_column                    Specify column containing HGNC symbols e.g. GRIN1
 --mgi_id_column                         Specify column containing MGI IDs  e.g. MGI:95819
---mgi_symbol_column                     Specify column containing MGI IDs  e.g. Grin1
+--mgi_symbol_column                     Specify column containing MGI symbols  e.g. Grin1
+--rgd_id_column                         Specify column containing RGD IDs  e.g. 2736
+--rgd_symbol_column                     Specify column containing RGD symbols  e.g. Grin1
 
 All the above examples about are for the gene encding the NR1 subunit of the glutamate receptor, NMDA subtype
 

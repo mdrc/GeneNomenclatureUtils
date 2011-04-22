@@ -3,21 +3,21 @@
 
 =pod
 
-=head1 NAME - add_mgi_symbol_by_mgi_id
+=head1 NAME - check_mgi_symbols
 
 =head1 COMMAND LINE PARAMETERS
 
 Required parameters
-  --file                    file to be processed                
-  --mgi_id_column           column containing MGI IDs (>= 1)
-  --output_column           column to output added symbols (>= 1)
+  --file                    file to be checked                
+  --mgi_symbol_column       column containing symbols to check (>= 1)
+  --output_column           column to output results (>=1 ) 
   
 Optional parameters
   --skip_title              skip first (title) row
 
 =head1 DESCRIPTION
 
-Adds MGI symbols (e.g. Dlg3) by MGI ID (e.g. MGI:1888986)
+Checks symbols eg. Dlg3 in a tab-delimited file
 
 Looks for the nomenclature file called 'MRK_List2.sql.rpt' in the
 directory pointed to by $ENV{MGI_dir}
@@ -26,11 +26,11 @@ Output to STDOUT
 
 Example command line
 
-./add_mgi_symbol_by_mgi_id --file=my_file.txt --mgi_id_column=1
+./check_mgi_symbols --file=my_file.txt --mgi_symbol_column=1
 --skip_title --output_column=1 > my_output.txt
 
-This will prepend a column to the file with MGI Symbols based on MGI IDs,
-reporting which ones are not matched in the MGI file.
+This will prepend a column to the file with the results of the
+check.
 
 =head1 AUTHOR - mike_croning@hotmail.com
 
@@ -51,28 +51,27 @@ use Getopt::Long;
 
 {
    print STDERR "\n$0\n", '=' x length($0), "\n\n";
-   my ($file, $mgi_column, $output_column, $skip_title);
+   my ($file, $mgi_symbol_column, $output_column, $skip_title);
         
     GetOptions(
         "file=s"              => \$file,
-        "mgi_id_column=i"     => \$mgi_column,
+        "mgi_symbol_column=i" => \$mgi_symbol_column,
         "output_column=i"     => \$output_column,
         "skip_title"          => \$skip_title,
     ) or show_perldoc();
     show_perldoc("Must set --file") unless $file;
-    unless ($mgi_column and $mgi_column >= 1) {
-        show_perldoc("Must set --mgi_id_column >= 1");
+    unless ($mgi_symbol_column and $mgi_symbol_column >= 1) {
+        show_perldoc("Must set --rgd_id_column >= 1");
     }
     
     unless ($output_column and $output_column >= 1) {
         show_perldoc("Must set --output_column >= 1");
     }
-    
+
     ### Parse nomenclature file(s)
     my ($parsed_by_mgi_symbol, $parsed_by_mgi_id) = parse_mgi_list_2_file();
     
-    ### Do the translation
-    check_or_translate_ids_in_file($file, $parsed_by_mgi_id, 'MGI SYMBOL'
-        , '^MGI:\d+$', $mgi_column, $output_column, $skip_title, 'translate');
+    ### Do the check
+    check_or_translate_ids_in_file($file, $parsed_by_mgi_symbol, 'MGI SYMBOL CHECK'
+        , '^\S+$', $mgi_symbol_column, $output_column, $skip_title);
 }
-

@@ -3,13 +3,13 @@
 
 =pod
 
-=head1 NAME - add_mgi_symbol_by_mgi_id
+=head1 NAME - add_rgd_symbol_by_mgi_id
 
 =head1 COMMAND LINE PARAMETERS
 
 Required parameters
   --file                    file to be processed                
-  --mgi_id_column           column containing MGI IDs (>= 1)
+  --rgd_id_column           column containing RGI IDs (>= 1)
   --output_column           column to output added symbols (>= 1)
   
 Optional parameters
@@ -17,20 +17,20 @@ Optional parameters
 
 =head1 DESCRIPTION
 
-Adds MGI symbols (e.g. Dlg3) by MGI ID (e.g. MGI:1888986)
+Adds RGD symbols (e.g. Dlg3) by RGD ID (e.g. 68423)
 
-Looks for the nomenclature file called 'MRK_List2.sql.rpt' in the
-directory pointed to by $ENV{MGI_dir}
+Looks for the nomenclature file called 'GENES_RAT.txt' in the
+directory pointed to by $ENV{RGD_dir}
 
 Output to STDOUT
 
 Example command line
 
-./add_mgi_symbol_by_mgi_id --file=my_file.txt --mgi_id_column=1
+./add_rgd_symbol_by_rgd_id --file=my_file.txt --rgd_id_column=1
 --skip_title --output_column=1 > my_output.txt
 
-This will prepend a column to the file with MGI Symbols based on MGI IDs,
-reporting which ones are not matched in the MGI file.
+This will prepend a column to the file with RGD Symbols based on RGD IDs,
+reporting which ones are not matched in the RGD file.
 
 =head1 AUTHOR - mike_croning@hotmail.com
 
@@ -44,24 +44,24 @@ use DPStore::Utils qw(
 );
 use DPStore::Utils::SeqIDNomenclature qw(
     check_or_translate_ids_in_file
-    parse_mgi_list_2_file
+    parse_rgd_rat_genes_file
 );   
 
 use Getopt::Long;
 
 {
    print STDERR "\n$0\n", '=' x length($0), "\n\n";
-   my ($file, $mgi_column, $output_column, $skip_title);
+   my ($file, $rgd_column, $output_column, $skip_title);
         
     GetOptions(
         "file=s"              => \$file,
-        "mgi_id_column=i"     => \$mgi_column,
+        "rgd_id_column=i"     => \$rgd_column,
         "output_column=i"     => \$output_column,
         "skip_title"          => \$skip_title,
     ) or show_perldoc();
     show_perldoc("Must set --file") unless $file;
-    unless ($mgi_column and $mgi_column >= 1) {
-        show_perldoc("Must set --mgi_id_column >= 1");
+    unless ($rgd_column and $rgd_column >= 1) {
+        show_perldoc("Must set --rgd_id_column >= 1");
     }
     
     unless ($output_column and $output_column >= 1) {
@@ -69,10 +69,10 @@ use Getopt::Long;
     }
     
     ### Parse nomenclature file(s)
-    my ($parsed_by_mgi_symbol, $parsed_by_mgi_id) = parse_mgi_list_2_file();
+    my ($parsed_rgd_symbol, $parsed_by_rgd_id) = parse_rgd_rat_genes_file();
     
     ### Do the translation
-    check_or_translate_ids_in_file($file, $parsed_by_mgi_id, 'MGI SYMBOL'
-        , '^MGI:\d+$', $mgi_column, $output_column, $skip_title, 'translate');
+    check_or_translate_ids_in_file($file, $parsed_by_rgd_id, 'RGD SYMBOL'
+        , '^\d+$', $rgd_column, $output_column, $skip_title, 'translate');
 }
 

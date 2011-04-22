@@ -426,10 +426,14 @@ fields that were separated by tabs
 A third optional parameter (if true) allows keys to be duplicated, with
 only the last parsed line (with the key) being returned.
 
+A fourth optional parameter (if true) allows lines missing keys, to
+be skipped (with warning) instead of throwing a fatal error.
+
+
 =cut 
 
 sub parse_tab_delimited_file_to_hash_keyed_by_column {
-    my ( $file, $column, $allow_duplicates, $skip_missing_keys ) = @_;
+    my ( $file, $column, $allow_duplicates, $skip_missing_keys, $column_to_parse ) = @_;
 
     confess "Must pass a file_name" unless $file;
     confess "Must pass a column number" unless $column and $column >= 1;
@@ -453,7 +457,8 @@ sub parse_tab_delimited_file_to_hash_keyed_by_column {
             unless ($skip_missing_keys) {
                 confess "Cant parse a key on column $column for '$line'";
             } else {
-                print STDERR "Can't parse a key on column $column for '$line'\n";
+                print STDERR "Can't parse a key on column $column for '$line'\n"
+                    unless $DPStore::Utils::TabFileParser::quiet;
                 next;
             }
         } else {
@@ -470,7 +475,11 @@ sub parse_tab_delimited_file_to_hash_keyed_by_column {
         }
         clean_array_elements_of_whitespace(\@fields);
         
-        $tab_file_hash{$key} = \@fields;
+        unless ($column_to_parse) {
+            $tab_file_hash{$key} = \@fields;
+        } else {
+            $tab_file_hash{$key} = $fields[$column_to_parse - 1];
+        }
     }
     if (keys(%tab_file_hash)) {
         return \%tab_file_hash;
