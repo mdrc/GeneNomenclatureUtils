@@ -213,7 +213,7 @@ sub combine_terms {
     
         foreach my $term (@$array) {
         
-            $synonyms->{$term}++;
+            $synonyms->{$term}++ if $term;
         }
     }
 
@@ -258,22 +258,22 @@ sub get_human_terms_by_hgnc_id {
     return $terms unless $hgnc_id;
     
     my $symbol = $parsed_by_hgnc_id->{$hgnc_id}
-        or confess "Did not recognise '$hgnc_id'";
+        or warn "Did not recognise '$hgnc_id'";
 
     my $hgnc_synonyms = $hgnc_synonyms_by_hgnc_id->{$hgnc_id};
 
     my $human_approved_name = $approved_name_by_hgnc_id->{$hgnc_id}
-        or confess "No human approved name for $hgnc_id";
+        or warn "No human approved name for $hgnc_id";
 
     push (@$terms, $symbol);
     push (@$terms, @$hgnc_synonyms) if $hgnc_synonyms;
-    push (@$terms, $human_approved_name);
+    push (@$terms, $human_approved_name) if $human_approved_name;
     
     return $terms;
 }
 
 sub get_mutation_terms {
-    return ' AND ( single nucleotide polymorphism OR mutation OR polymorphism*  OR SNP OR SNPS OR duplication*  OR truncati*  OR deletion* OR  inversion* OR "translocation, genetic" [MESH] OR overexpressi* or over-expressi* OR "splice" [All Fields] OR splicing OR linkage OR cytogenetic*  OR syndrom*  OR nonsense or non-sense or missense or miss-sense ) AND (humans [MESH]) ';
+    return ' AND ( single nucleotide polymorphism OR mutation OR polymorphism*  OR SNP OR SNPS OR duplication*  OR truncati*  OR deletion* OR  inversion* OR "translocation, genetic" [MESH] OR overexpressi* or OR "splice" [All Fields] OR splicing OR linkage OR cytogenetic*  OR syndrom*  OR nonsense or non-sense or missense or miss-sense ) AND (humans [MESH]) ';
 }
 
 sub get_disease_clause {

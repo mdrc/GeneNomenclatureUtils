@@ -1,0 +1,17 @@
+### Execute these from the GeneNomenclatureUtils/scripts directory
+
+./check_rgd_ids --file=../data/my_list_of_genes_3.txt --rgd_id_column=1 --output_column=1 --skip_title
+
+./check_mgi_ids --file=../data/my_list_of_genes_2.txt --mgi_id_column=1 --output_column=2 --skip_title
+
+./add_rgd_symbol_by_rgd_id --file=../data/my_list_of_genes_3.txt --rgd_id_column=1 --output_column=1 --skip_title
+
+./check_rgd_symbols --file=../data/my_list_of_genes_3.txt --rgd_symbol_column=2 --output_column=1 --skip_title
+
+./check_mgi_symbols --file=../data/my_list_of_genes_1.txt --mgi_symbol_column=1 --output_column=1 --skip_title
+
+./add_mgi_id_by_rgd_id --file=../data/my_list_of_genes_3.txt --rgd_id_column=1 --output_column=1 --skip_title
+
+./add_rat_attribute_by_rgd_id --file=../data/my_list_of_genes_3.txt --rgd_id_column=1 --output_column=1 --skip_title --output_attrib=ensembl_id
+
+

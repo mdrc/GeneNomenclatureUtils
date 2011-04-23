@@ -15,14 +15,14 @@ These can be downloaded from:
 ftp://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/uniprot_sprot.dat.gz
 ftp://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/uniprot_trembl.dat.gz
 
-Produces lines like:
+Produces tab-delimited lines like:
 
-Q197F8\tQ197F8\tprimary\n
-Q197F7\tQ197F7\tprimary\n
-P92177\tP92177\tprimary\n
-Q8IN86\tP92177\tsecondary\n
-Q8IN87\tP92177\tsecondary\n
-Q9VEA8\tP92177\tsecondary\n
+Q197F8  Q197F8  primary    tax_id\n
+Q197F7  Q197F7  primary    tax_id\n
+P92177  P92177  primary    tax_id\n
+Q8IN86  P92177  secondary  tax_id\n
+Q8IN87  P92177  secondary  tax_id\n
+Q9VEA8  P92177  secondary  tax_id\n
 
 These can be written to a file and later used to look up the current primary
 accessions for records that were retired or merged, i.e. their accessions 
@@ -61,29 +61,43 @@ use DPStore::Utils qw(
         
         my $primary_count   = 0;
         my $secondary_count = 0;
-        my $line_count = 0;
+        my $line_count      = 0;
         
+        while (defined(my $ac_line = <FILE>)) {
+        
+            $line_count++;
+            chomp($ac_line);
+        
+            if ($ac_line =~ s/^AC\s\s\s//) {
+                $ac_line =~ s/;$// or die "Error";
             
-        while (defined(my $line = <FILE>)) {
-            if ($line =~ s/^AC\s\s\s//) {
-            
-                $line_count++;
                 if ($line_count % 10000 == 0) {
                     print STDERR '.';
                 }
                 
-                chomp($line);
-                $line =~ s/;$// or die "Error";
-                $line =~s/\s+//g;
+                ### Look for the species - OX line
+                my $tax_id = <FILE>;
+                $line_count++;
+                while ($tax_id !~ s/^OX\s\s\sNCBI_TaxID=//) {
+                    $tax_id = <FILE>;
+                    $line_count++;
+                }
+                chomp($tax_id);
+                chop($tax_id);
+                unless ($tax_id =~ /^\d+$/) {
+                    confess "Error parsing taxonomy ID: '$tax_id'\n";
+                }
                 
-                my @ids = split(';', $line);
+                next unless $tax_id == 9606;
+                $ac_line =~ s/\s+//g;
+                my @ids = split(';', $ac_line);
                 
                 my $primary = shift(@ids);
-                print "$primary\t$primary\tprimary\n";
+                print "$primary\t$primary\tprimary\t$tax_id\n";
                 $primary_count++;
                 
                 foreach my $secondary (@ids) {
-                    print "$secondary\t$primary\tsecondary\n";
+                    print "$secondary\t$primary\tsecondary\t$tax_id\n";
                     $secondary_count++;
                     
                 }

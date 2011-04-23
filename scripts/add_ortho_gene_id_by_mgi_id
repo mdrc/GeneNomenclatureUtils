@@ -84,9 +84,8 @@ use Data::Dumper;
         show_perldoc('Must set --file');
     }    
     unless ($mgi_id_column and $mgi_id_column >= 1) {
-        show_perldoc('Must set --mgi_symbol_column >= 1');
+        show_perldoc('Must set --mgi_id_column >= 1');
     }
-    
     unless ($output_column and $output_column >= 1) {
         show_perldoc('Must set --output_column >= 1');
     }

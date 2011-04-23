@@ -64,18 +64,6 @@ use Data::Dumper;
     do_file($file, $rgd_id_column, $output_column, $skip_title, $code_ref);
 }
 
-sub init_lookup {
-    my $code = sub {
-        my ( $id, $hash ) = @_;
-
-        my $entry = $hash->{$id} or return;
-        
-        my $parsed_orthologs = parse_rgd_orthologs_file_entry($entry);
-        my $mgi_id = $parsed_orthologs->{mouse_ortholog_mgi_id};
-        return $mgi_id;
-    }
-}
-
 sub do_file {
     my ( $file, $rgd_id_column, $output_column, $skip_title
         , $code_ref ) = @_;
@@ -87,4 +75,16 @@ sub do_file {
     check_or_translate_ids_in_file($file, $parsed_by_rgd_id, 'MGI ID'
         , '^\d+$', $rgd_id_column, $output_column, $skip_title, 'translate'
         , $code_ref);
+}
+
+sub init_lookup {
+    my $code = sub {
+        my ( $id, $hash ) = @_;
+
+        my $entry = $hash->{$id} or return;
+        
+        my $parsed_orthologs = parse_rgd_orthologs_file_entry($entry);
+        my $mgi_id = $parsed_orthologs->{mouse_ortholog_mgi_id};
+        return $mgi_id;
+    }
 }

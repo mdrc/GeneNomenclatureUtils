@@ -1,4 +1,4 @@
-### release
+### nomenclature
 
 =pod
 
@@ -59,6 +59,7 @@ use vars qw{ @ISA @EXPORT_OK };
     parse_omim_titles
     parse_synonyms_from_hgnc_all_file
     parse_rgd_rat_genes_file
+    parse_rgd_rat_genes_file_full
     parse_rgd_orthologs_file
     parse_rgd_orthologs_file_entry
 );
@@ -135,6 +136,9 @@ sub check_or_translate_ids_in_file {
             ### Straight hash lookup, or call code ? 
             if ($lookup_sub) {
                 $val = $lookup_sub->($id, $valid_ids);
+                if ($val and ref($val) =~ /ARRAY/) {
+                    $val = join(", ", @$val);
+                }
             } else {
                 $val = $valid_ids->{$id}
             }
@@ -1110,6 +1114,20 @@ sub parse_rgd_rat_genes_file {
     );
 }        
 
+=head2 parse_rgd_rat_genes_file_deep
+
+  my $parsed_by_rgd_id = parse_rgd_rat_genes_file_full();
+
+=cut 
+
+sub parse_rgd_rat_genes_file_full {
+    
+    my $file = 'GENES_RAT.txt';
+    return(
+       (_raw_parse_by_id_column($file, 'RGD_dir', '^\d+\s', '^\d+$', 1), $file)
+    );
+}        
+
 ### _parse_symbols_ids_names_type_file
 #
 # Internal subroutine used to parse symbols, IDs and names from a
@@ -1129,7 +1147,7 @@ sub _parse_symbols_ids_names_type_file {
     my $parsed_by_id        = {};
     my $approved_name_by_id = {};
     my $skipped             = 0;
-
+    
     open_data_file('file', $file_spec);
     while (my $line = read_next_line_from_data_file('file')) {
         
@@ -1191,6 +1209,44 @@ sub _parse_symbols_ids_names_type_file {
     return ($parsed_by_symbol, $parsed_by_id, $approved_name_by_id);
 }        
 
+### _raw_parse_by_id_column
+
+sub _raw_parse_by_id_column {
+    my ( $file, $dir, $regex_for_line, $regex_for_id, $id_column ) = @_;
+    
+    my $file_spec = check_for_file($dir, $file);
+
+    my $parsed_by_id        = {};
+    
+    open_data_file('file', $file_spec);
+    while (my $line = read_next_line_from_data_file('file')) {
+        
+        chomp($line);
+        
+        $line =~ s/^\s+//;
+        $line =~ s/\s$//;
+        next unless $line =~ /$regex_for_line/;
+
+        my @fields = split(/\t/, $line);
+        clean_array_elements_of_whitespace(\@fields);
+        
+        my $id     = $fields[$id_column - 1];
+        unless ($id =~ /$regex_for_id/) {
+            confess "Error validating ID '$id' with '$regex_for_id'";
+        }
+        
+        $parsed_by_id->{$id} = \@fields;
+    }
+    close_data_files();
+    
+    my $file_modified = ctime(stat($file_spec)->mtime);
+    print STDERR "Parsed         : $file_spec\n";
+    print STDERR "File Date      : $file_modified\n";
+    print STDERR "Parsed IDs     : ", scalar(keys(%$parsed_by_id)), "\n";
+    print STDERR "\n";
+    
+    return ($parsed_by_id);
+}
 
 =head2 parse_mgi_list_2_file
 

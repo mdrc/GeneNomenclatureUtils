@@ -1,0 +1,135 @@
+#!/usr/local/bin/perl
+### nomenclature
+
+=pod
+
+=head1 NAME - add_rat_attribute_by_rgd_id
+
+Required parameters
+  --file                    file to be processed                
+  --rgd_id_column           column to find RGD IDs (>=1 )
+  --output_column           column for output of attribute (>=1)
+  --output_attrib           attribute to output (use --help to see options)
+  
+Optional parameters
+  --help                    Output list of available attributes
+  --skip_title              skip title row
+
+=head1 DESCRIPTION
+
+Adds an attribute parsed from the GENES_RAT.txt file (in $ENV{RGD_dir}) to the
+specified column in the tab-delimited file by look-up on RGD ID.
+
+About 38 attributes are available, use --help to see the full list, these
+include:
+
+  ensembl_id
+  entrez_gene
+  symbol
+
+=head1 AUTHOR - mike_croning@hotmail.com
+
+=cut
+
+use strict;
+use warnings;
+use Carp;
+use Data::Dumper;
+use DPStore::Utils qw(
+    show_perldoc
+);
+use DPStore::Utils::SeqIDNomenclature qw(
+    check_or_translate_ids_in_file
+    parse_rgd_rat_genes_file_full
+);
+use DPStore::Utils::TabFileParser qw(
+    parse_tab_delimited_file_to_array
+);
+use GeneNomenclatureUtils::ColumnParser;
+use Getopt::Long;
+
+{
+    print STDERR "\n$0\n", '=' x length($0), "\n\n";
+    my ($file, $rgd_id_column, $output_column, $skip_title
+        , $output_attrib, $help);
+        
+    GetOptions(
+        "file=s"            => \$file,
+        "rgd_id_column=i"   => \$rgd_id_column,
+        "output_column=i"   => \$output_column,
+        "skip_title"        => \$skip_title,
+        "output_attrib=s"   => \$output_attrib,
+        "help"              => \$help
+    ) or show_perldoc();
+    
+    ### Parse the nomenclature file(s)
+    my ($parsed_by_rgd_id, $parser_name) = parse_rgd_rat_genes_file_full();
+    
+    
+    ### Set up the column parser module, get valid attributes
+    GeneNomenclatureUtils::ColumnParser::configure();
+    my $valid_attributes
+        = GeneNomenclatureUtils::ColumnParser::get_attribute_names($parser_name);
+    
+    if ($help) {
+        validate_output_attrib($valid_attributes);
+    }
+    unless ($file) {
+        show_perldoc('Must set --file');
+    }    
+    unless ($rgd_id_column and $rgd_id_column >= 1) {
+        show_perldoc('Must set --rgd_id_column >= 1');
+    }
+    unless ($output_column and $output_column >= 1) {
+        show_perldoc('Must set --output_column >= 1');
+    }
+    
+    ### Check the specified output attribute
+    validate_output_attrib($valid_attributes, $output_attrib);
+    set_lookup_params($parser_name, $output_attrib);
+    
+    my $code_ref = init_lookup();
+    my $column_title = uc($output_attrib);
+    $column_title =~ tr/_/ /;
+    
+    check_or_translate_ids_in_file($file, $parsed_by_rgd_id, $column_title
+        , '^\d+$', $rgd_id_column, $output_column, $skip_title, 'translate'
+        , $code_ref);
+}
+
+{
+    my ($parser_name, $attribute);
+    sub set_lookup_params {
+        ( $parser_name, $attribute ) = @_;
+    }
+
+    sub init_lookup {
+        my $code = sub {
+            my ( $id, $hash ) = @_;
+
+            my $entry = $hash->{$id} or return;
+            my $parsed_entry = 
+                GeneNomenclatureUtils::ColumnParser::parse_row_to_named_attributes(
+                    $parser_name, $entry);
+            
+            my $value = $parsed_entry->{$attribute};      
+            return $value;
+        }
+    }
+}
+
+sub validate_output_attrib {
+    my ( $valid, $attrib ) = @_;
+
+    my $valid_string = join(", ", sort {$a cmp $b} keys(%$valid));
+    
+    if ($attrib) {
+        $attrib = lc($attrib);
+        unless ($valid->{$attrib}) {
+            confess "Invalid --output_attribute: '$attrib'\nchoose one of: "
+                . "$valid_string\n\n";
+        }
+    } else {
+        confess "Must set --output_attribute to one of: \n$valid_string\n\n";
+    }
+}
