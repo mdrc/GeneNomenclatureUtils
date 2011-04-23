@@ -94,6 +94,21 @@ our $debug;
             37  => ['gene_type'],
             38  => ['ensembl_id']
         };
+
+        $parsers->{'RGD_ORTHOLOGS'} = {
+            1   => ['rat_gene_symbol', '^\S+$'],
+            2   => ['rat_gene_rgd_id', '^\d+$'],
+            3   => ['rat_gene_entrez_gene_id'],
+            4   => ['human_ortholog_symbol', undef, '\|'],
+            5   => ['human_ortholog_rgd_id'],
+            6   => ['human_ortholog_entrez_gene_id'],
+            7   => ['human_ortholog_source'],
+            8   => ['mouse_ortholog_symbol', undef, '\|'],
+            9   => ['mouse_ortholog_rgd_id'],
+            10  => ['mouse_ortholog_entrez_gene_id'],
+            11  => ['mouse_ortholog_mgi_id'],
+            12  => ['mouse_ortholog_source']
+        };        
         
         ### Do some simple validation on the parsers, check
         ### attribute names are not duplicated
@@ -218,5 +233,24 @@ GeneNomenclatureUtils::ColumnParser::configure
         return $attributes;
     }    
 }
+
+sub validate_output_attrib {
+    my ( $valid, $attrib, $msg ) = @_;
+
+    my $valid_string = join(", ", sort {$a cmp $b} keys(%$valid));
+    $msg = '' unless $msg;
+    
+    if ($attrib) {
+        $attrib = lc($attrib);
+        unless ($valid->{$attrib}) {
+            confess "Invalid '$attrib', $msg \n$valid_string\n\n";
+        } else {
+            return $attrib;
+        }
+    } else {
+        confess "$msg\n$valid_string\n\n";
+    }
+}
+
 
 1;

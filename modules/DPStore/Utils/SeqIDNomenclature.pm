@@ -61,7 +61,6 @@ use vars qw{ @ISA @EXPORT_OK };
     parse_rgd_rat_genes_file
     parse_rgd_rat_genes_file_full
     parse_rgd_orthologs_file
-    parse_rgd_orthologs_file_entry
 );
 
 =head1 check_or_translate_ids_in_file
@@ -594,54 +593,7 @@ sub parse_rgd_orthologs_file {
     print STDERR "File Date   : $file_modified\n";
     print STDERR "RGD IDs     : ", scalar(keys(%$parsed_by_rgd_id)), "\n";
     print STDERR "MGI IDs     : ", scalar(keys(%$parsed_by_mgi_id)), "\n\n";
-    return ($parsed_by_rgd_id, $parsed_by_mgi_id);
-}
-
-=head2 parse_rgd_orthologs_file_entry
-
-  my $parsed = parse_rgd_orthologs_file_entry($entry);
-  
-  see also: parse_rgd_orthologs_file
-  
-Returns a hash by reference with the following keys:
-  rat_gene_symbol               
-  rat_gene_rgd_id               
-  rat_gene_entrez_gene_id       
-  human_ortholog_symbol         
-  human_ortholog_rgd_id   
-  human_ortholog_entrez_gene_id 
-  human_ortholog_source         
-  mouse_ortholog_symbol         
-  mouse_ortholog_rgd_id         
-  mouse_ortholog_entrez_gene_id 
-  mouse_ortholog_mgi_id         
-  mouse_ortholog_source
-         
-=cut 
-
-sub parse_rgd_orthologs_file_entry {
-    my ( $rgi ) = @_;
-
-    unless ($rgi) {
-        confess "Must pass a line from RGD_ORTHOLOGS "
-            . "parsed into an array by reference";
-    } 
-    
-    my $entry = {};
-    $entry->{rat_gene_symbol}               = $rgi->[0] or confess "No RGD symbol";
-    $entry->{rat_gene_rgd_id}               = $rgi->[1] or confess "No RGI ID";
-    $entry->{rat_gene_entrez_gene_id}       = $rgi->[2];
-    $entry->{human_ortholog_symbol}         = $rgi->[3];
-    $entry->{human_ortholog_rgd_id}         = $rgi->[4];
-    $entry->{human_ortholog_entrez_gene_id} = $rgi->[5];
-    $entry->{human_ortholog_source}         = $rgi->[6];
-    $entry->{mouse_ortholog_symbol}         = $rgi->[7];
-    $entry->{mouse_ortholog_rgd_id}         = $rgi->[8];
-    $entry->{mouse_ortholog_entrez_gene_id} = $rgi->[9];
-    $entry->{mouse_ortholog_mgi_id}         = $rgi->[10];
-    $entry->{mouse_ortholog_source}         = $rgi->[11];
-    
-    return $entry;
+    return ($parsed_by_rgd_id, $parsed_by_mgi_id, $file);
 }
 
 =head2 parse_mgi_mouse_human_orthology_file

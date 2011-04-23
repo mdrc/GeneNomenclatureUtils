@@ -3,7 +3,7 @@
 
 =pod
 
-=head1 NAME - add_rat_attribute_by_rgd_id
+=head1 NAME - add_ortho_gene_id_by_rgd_id
 
 Required parameters
   --file                    file to be processed                
@@ -17,15 +17,6 @@ Optional parameters
 
 =head1 DESCRIPTION
 
-Adds an attribute parsed from the GENES_RAT.txt file (in $ENV{RGD_dir}) to the
-specified column in the tab-delimited file by look-up on RGD ID.
-
-About 38 attributes are available, use --help to see the full list, these
-include:
-
-  ensembl_id
-  entrez_gene
-  symbol
 
 =head1 AUTHOR - mike_croning@hotmail.com
 
@@ -40,7 +31,7 @@ use DPStore::Utils qw(
 );
 use DPStore::Utils::SeqIDNomenclature qw(
     check_or_translate_ids_in_file
-    parse_rgd_rat_genes_file_full
+    parse_rgd_orthologs_file
 );
 use DPStore::Utils::TabFileParser qw(
     parse_tab_delimited_file_to_array
@@ -63,8 +54,8 @@ use Getopt::Long;
     ) or show_perldoc();
     
     ### Parse the nomenclature file(s)
-    my ($parsed_by_rgd_id, $parser_name) = parse_rgd_rat_genes_file_full();
-    
+    my ($parsed_by_rgd_id, $parsed_by_mgi_id, $parser_name) 
+        = parse_rgd_orthologs_file;
     
     ### Set up the column parser module, get valid attributes
     GeneNomenclatureUtils::ColumnParser::configure();
@@ -85,6 +76,7 @@ use Getopt::Long;
     }
     
     ### Check the specified output attribute
+    $output_attrib =
     GeneNomenclatureUtils::ColumnParser::validate_output_attrib(
         $valid_attributes, $output_attrib, 'Must set --output_attrib to one of: ');
     set_lookup_params($parser_name, $output_attrib);
