@@ -59,7 +59,6 @@ use vars qw{ @ISA @EXPORT_OK };
     parse_mp_vocabulary
     parse_omim_titles
     parse_synonyms_from_hgnc_all_file
-    parse_rgd_orthologs_file
     validate_id_type
 );
 
@@ -70,6 +69,7 @@ use vars qw{ @ISA @EXPORT_OK };
             'anything'                      => '.',
             'ensembl_rat_gene_id'           => '^ENSRNOG\d{11}$',
             'entrez_gene_id'                => '^\d+$',
+            'hgnc_id'                       => '^HGNC:\d+$',
             'mgi_id'                        => '^MGI:\d+$',
             'rgd_id'                        => '^\d+$',
             'rgd_symbol'                    => '^.*$',
@@ -622,66 +622,6 @@ sub parse_mgi_mouse_human_orthology_file_entry {
     $entry->{human_entrez_gene_id} = $mgi->[6];
     
     return $entry;
-}
-
-=head2 parse_rgd_orthologs_file
-
-Parses the file 'RGD_ORTHOLOGS' found in the directory
-pointed to by $ENV{RGD_dir}, which has the following
-in tab-delimited columns
-
-  1   RAT_GENE_SYMBOL
-  2   RAT_GENE_RGD_ID
-  3   RAT_GENE_ENTREZ_GENE_ID
-  4   HUMAN_ORTHOLOG_SYMBOL - human ortholog(s) to rat gene
-  5   HUMAN_ORTHOLOG_RGD_ID
-  6   HUMAN_ORTHOLOG_ENTREZ_GENE_ID
-  7   HUMAN_ORTHOLOG_SOURCE - RGD or MGI
-  8   MOUSE_ORTHOLOG_SYMBOL - mouse ortholog(s) to rat gene
-  9   MOUSE_ORTHOLOG_RGD_ID
-  10  MOUSE_ORTHOLOG_ENTREZ_GENE_ID
-  11  MOUSE_ORTHOLOG_MGI_ID
-  12  MOUSE_ORTHOLOG_SOURCE - RGD or MGI
-
-  my ($parsed_by_rgd_id, $parsed_by_mgi_symbol) = 
-    parse_rgd_orthologs_file();
-    
-    
-=cut
-
-sub parse_rgd_orthologs_file {
-    my ( $allow_dups ) = @_;
-
-    my $file = 'RGD_ORTHOLOGS';
-    my $file_spec = check_for_file('RGD_dir', $file);
-    
-    my $parsed_by_rgd_id = {};
-    my $parsed_by_mgi_id = {};
-    
-    open_data_file('file', $file_spec);
-    while (my $line = read_next_line_from_data_file('file')) {
-        chomp($line);
-        next if $line =~ /^\#|^RAT_GENE_SYMBOL/;
-        
-        my @fields = split(/\t/, $line);
-        clean_array_elements_of_whitespace(\@fields);
-        
-        my $rgd_symbol = $fields[0] or confess "No RGD symbol on '$line'";
-        my $rgd_id     = $fields[1] or confess "No RGD id on '$line'";
-        my $mgi_id     = $fields[10];
-     
-        $parsed_by_rgd_id->{$rgd_id} = \@fields;
-        if ($mgi_id) {
-            $parsed_by_mgi_id->{$mgi_id} = \@fields;
-        }    
-    }
-
-    my $file_modified = ctime(stat($file_spec)->mtime);
-    print STDERR "Parsed      : $file_spec\n";
-    print STDERR "File Date   : $file_modified\n";
-    print STDERR "RGD IDs     : ", scalar(keys(%$parsed_by_rgd_id)), "\n";
-    print STDERR "MGI IDs     : ", scalar(keys(%$parsed_by_mgi_id)), "\n\n";
-    return ($parsed_by_rgd_id, $parsed_by_mgi_id, $file);
 }
 
 =head2 parse_mgi_mouse_human_orthology_file

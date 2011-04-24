@@ -119,6 +119,30 @@ our $debug;
             11  => ['mouse_ortholog_mgi_id'        , undef       , 'mgi_id'],
             12  => ['mouse_ortholog_source']
         };        
+
+        $parsers->{'MGI_dir_MRK_List2.rpt'} = {
+            line_pattern => ['^MGI\sAccession', '!'],
+
+            1   => ['mgi_id'        , 'mandatory', 'mgi_id'],
+            2   => ['chr'],
+            3   => ['cm_position'],   
+            4   => ['symbol'        , 'mandatory'],
+            5   => ['status'],
+            6   => ['name'],
+            7   => ['type'],
+        };        
+
+        $parsers->{'MGI_dir_HMD_HGNC_Accession.rpt'} = {
+            line_pattern => ['.', '~'],
+
+            1   => ['mgi_id'                    , 'mandatory'   , 'mgi_id'],
+            2   => ['mouse_marker_symbol'       , 'mandatory'],
+            3   => ['mouse_marker_name'],
+            4   => ['mouse_entrez_gene_id'      , undef         , 'entrez_gene_id'],
+            5   => ['hgnc_id'                   , undef         , 'hgnc_id'],
+            6   => ['hgnc_human_marker_symbol'],
+            7   => ['human_entrez_gene_id'      , undef         , 'entrez_gene_id']
+        };        
         
         ### Do some simple validation on the parsers, check
         ### attribute names are not duplicated

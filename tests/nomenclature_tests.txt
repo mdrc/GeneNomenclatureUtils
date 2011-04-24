@@ -11,7 +11,6 @@
 
 ./add_ortho_gene_id_by_rgd_id --file=../data/my_list_of_genes_3.txt --rgd_id_column=1 --output_column=1 --skip_title --output_attrib=mouse_ortholog_symbol
 
-
 ./add_rat_attribute_by_rgd_id --file=../data/my_list_of_genes_3.txt --rgd_id_column=1 --output_column=1 --skip_title --output_attrib=ensembl_id
 
 ./add_rgd_symbol_by_rgd_id --file=../data/my_list_of_genes_3.txt --rgd_id_column=1 --output_column=1 --skip_title
