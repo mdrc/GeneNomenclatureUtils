@@ -44,9 +44,8 @@ use DPStore::Utils qw(
 );
 use DPStore::Utils::SeqIDNomenclature qw(
     check_or_translate_ids_in_file
-    parse_rgd_rat_genes_file
 );   
-
+use GeneNomenclatureUtils::Parser;
 use Getopt::Long;
 
 {
@@ -63,14 +62,15 @@ use Getopt::Long;
     unless ($rgd_symbol_column and $rgd_symbol_column >= 1) {
         show_perldoc("Must set --rgd_id_column >= 1");
     }
-    
     unless ($output_column and $output_column >= 1) {
         show_perldoc("Must set --output_column >= 1");
     }
 
     ### Parse nomenclature file(s)
-    my ($parsed_by_rgd_symbol, $parsed_by_rgd_id) = parse_rgd_rat_genes_file();
-    
+    my $parser = GeneNomenclatureUtils::Parser->new(
+        'RGD_dir', 'GENES_RAT.txt', 'symbol');
+    my $parsed_by_rgd_symbol = $parser->get_parsed();
+ 
     ### Do the check
     check_or_translate_ids_in_file($file, $parsed_by_rgd_symbol, 'RGD SYMBOL CHECK'
         , '^\S+$', $rgd_symbol_column, $output_column, $skip_title);

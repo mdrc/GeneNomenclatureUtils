@@ -32,6 +32,7 @@ use vars qw{ @ISA @EXPORT_OK };
 
 @ISA = qw(Exporter);
 @EXPORT_OK = qw(
+    can_validate_id_type
     check_for_file
     check_or_translate_ids_in_file
     get_swissprot_or_trembl_acc
@@ -58,10 +59,97 @@ use vars qw{ @ISA @EXPORT_OK };
     parse_mp_vocabulary
     parse_omim_titles
     parse_synonyms_from_hgnc_all_file
-    parse_rgd_rat_genes_file
-    parse_rgd_rat_genes_file_full
     parse_rgd_orthologs_file
+    validate_id_type
 );
+
+{
+    my $regex_for_ids;
+    sub _init_validate_id_type {
+        $regex_for_ids = {
+            'anything'                      => '.',
+            'ensembl_rat_gene_id'           => '^ENSRNOG\d{11}$',
+            'entrez_gene_id'                => '^\d+$',
+            'mgi_id'                        => '^MGI:\d+$',
+            'rgd_id'                        => '^\d+$',
+            'rgd_symbol'                    => '^.*$',
+        }
+    }
+    
+=head1 validate_id_type
+
+Checks the 'form' of an id by using a hard-coded regular expression.
+The first parameter is the type of id (case-insensitive), and the 
+second parameter is the id to validate.
+
+Will confess if no type, or id are passed. A third optional parameter
+makes the validation non-fatal if the is should fail the check.
+
+  validate_id_type('mgi_id', $id); #Will confess on failure
+  
+or 
+
+  validate_id_type('mgi_id', $id, 'not_fatal'); #Non-fatal check
+
+=cut 
+
+    sub validate_id_type {
+        my ( $id_type, $id, $not_fatal ) = @_;
+
+        _init_validate_id_type() unless $regex_for_ids;
+
+        unless ($id_type) {
+            confess "Must pass the type of id e.g. 'mgi_id'";
+        }
+        unless ($id) {
+            confess "Must pass an id to check";
+        }
+        
+        $id_type = lc($id_type);
+        my $regex = $regex_for_ids->{$id_type}
+            or confess "Dont 't know how to check id of type '$id_type'";
+        
+        unless ($id =~ /$regex/) {
+            if ($not_fatal) {
+                print STDERR "Failed to validate id_form '$id' with '$regex'";
+                return;
+            } else {
+                confess "Failed to validate id_form '$id' with '$regex'";
+            }
+        } else {
+            return 1;
+        }
+    }
+
+=head1 can_validate_id_type
+
+  if (can_validate_id_type('mgi_id') {
+     print STDERR "We know how to check an mgi_id 
+  } else {
+    # Do something else
+  }
+  
+  validate_id_type('mgi_id', $id, 'not_fatal'); #Non-fatal check
+
+The check of the passed id_type is case insensitive
+
+=cut 
+    
+    sub can_validate_id_type {
+        my ( $id_type ) = @_;
+
+        _init_validate_id_type() unless $regex_for_ids;
+
+        unless ($id_type) {
+            confess "Must pass the type of id e.g. 'mgi_id'";
+        }
+        $id_type = lc($id_type);
+        
+        return (
+            $regex_for_ids->{$id_type}
+        );    
+    }    
+}
 
 =head1 check_or_translate_ids_in_file
 
@@ -1044,41 +1132,6 @@ sub parse_hgnc_all_file_entry {
     
     return $entry;
 }
-=head2 parse_rgd_genes_file 
-
-Looks for a file in $ENV{RGD_dir} called 'GENES_RAT.txt'
-
-my ($parsed_by_rgd_symbol, $parsed_by_rgd_id, $approved_name_by_rgdd_id)
-    = parse_rgd_genes_file();
-
-An optional parameter allows the case of the gene symbols parsed to be
-modified, pass 'lc' or 'uc' to convert all the parsed symbols used as
-keys returned in $parsed_by_rgd_symbol, to upper or lower case.
-
-=cut
-
-sub parse_rgd_rat_genes_file {
-    my ( $case ) = @_;
-    
-    return(
-       _parse_symbols_ids_names_type_file( 'GENES_RAT.txt', 'RGD_dir', $case,
-        '^\d+\s', 2, 1, 3,  'WITHDRAWN', 'eq', 34)
-    );
-}        
-
-=head2 parse_rgd_rat_genes_file_deep
-
-  my $parsed_by_rgd_id = parse_rgd_rat_genes_file_full();
-
-=cut 
-
-sub parse_rgd_rat_genes_file_full {
-    
-    my $file = 'GENES_RAT.txt';
-    return(
-       (_raw_parse_by_id_column($file, 'RGD_dir', '^\d+\s', '^\d+$', 1), $file)
-    );
-}        
 
 ### _parse_symbols_ids_names_type_file
 #
@@ -1160,45 +1213,6 @@ sub _parse_symbols_ids_names_type_file {
     
     return ($parsed_by_symbol, $parsed_by_id, $approved_name_by_id);
 }        
-
-### _raw_parse_by_id_column
-
-sub _raw_parse_by_id_column {
-    my ( $file, $dir, $regex_for_line, $regex_for_id, $id_column ) = @_;
-    
-    my $file_spec = check_for_file($dir, $file);
-
-    my $parsed_by_id        = {};
-    
-    open_data_file('file', $file_spec);
-    while (my $line = read_next_line_from_data_file('file')) {
-        
-        chomp($line);
-        
-        $line =~ s/^\s+//;
-        $line =~ s/\s$//;
-        next unless $line =~ /$regex_for_line/;
-
-        my @fields = split(/\t/, $line);
-        clean_array_elements_of_whitespace(\@fields);
-        
-        my $id     = $fields[$id_column - 1];
-        unless ($id =~ /$regex_for_id/) {
-            confess "Error validating ID '$id' with '$regex_for_id'";
-        }
-        
-        $parsed_by_id->{$id} = \@fields;
-    }
-    close_data_files();
-    
-    my $file_modified = ctime(stat($file_spec)->mtime);
-    print STDERR "Parsed         : $file_spec\n";
-    print STDERR "File Date      : $file_modified\n";
-    print STDERR "Parsed IDs     : ", scalar(keys(%$parsed_by_id)), "\n";
-    print STDERR "\n";
-    
-    return ($parsed_by_id);
-}
 
 =head2 parse_mgi_list_2_file
 

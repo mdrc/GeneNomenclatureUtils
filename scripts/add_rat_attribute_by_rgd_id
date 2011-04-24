@@ -40,12 +40,11 @@ use DPStore::Utils qw(
 );
 use DPStore::Utils::SeqIDNomenclature qw(
     check_or_translate_ids_in_file
-    parse_rgd_rat_genes_file_full
 );
 use DPStore::Utils::TabFileParser qw(
     parse_tab_delimited_file_to_array
 );
-use GeneNomenclatureUtils::ColumnParser;
+use GeneNomenclatureUtils::Parser;
 use Getopt::Long;
 
 {
@@ -62,17 +61,13 @@ use Getopt::Long;
         "help"              => \$help
     ) or show_perldoc();
     
-    ### Parse the nomenclature file(s)
-    my ($parsed_by_rgd_id, $parser_name) = parse_rgd_rat_genes_file_full();
-    
-    
-    ### Set up the column parser module, get valid attributes
-    GeneNomenclatureUtils::ColumnParser::configure();
-    my $valid_attributes
-        = GeneNomenclatureUtils::ColumnParser::get_attribute_names($parser_name);
+    my $parser = GeneNomenclatureUtils::Parser->new(
+        'RGD_dir', 'GENES_RAT.txt', 'gene_rgd_id');
     
     if ($help) {
-        validate_output_attrib($valid_attributes);
+        print STDERR "Set --output_attrib to one of: "
+            , join(", ", sort {$a cmp $b} keys(%{$parser->get_attributes})). "\n";
+        exit;
     }
     unless ($file) {
         show_perldoc('Must set --file');
@@ -83,13 +78,16 @@ use Getopt::Long;
     unless ($output_column and $output_column >= 1) {
         show_perldoc('Must set --output_column >= 1');
     }
+    unless ($output_attrib) {
+        show_perldoc('Must set --output_attribute');
+    }
+    $parser->validate_attribute($output_attrib);
     
-    ### Check the specified output attribute
-    GeneNomenclatureUtils::ColumnParser::validate_output_attrib(
-        $valid_attributes, $output_attrib, 'Must set --output_attrib to one of: ');
-    set_lookup_params($parser_name, $output_attrib);
+    set_lookup_params($parser->name, $output_attrib);
     
     my $code_ref = init_lookup();
+    my $parsed_by_rgd_id = $parser->get_parsed();
+    
     my $column_title = uc($output_attrib);
     $column_title =~ tr/_/ /;
     

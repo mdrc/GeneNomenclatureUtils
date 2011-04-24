@@ -19,9 +19,10 @@ use warnings;
 use Carp;
 use Data::Dumper;
 use Exporter;
+use File::stat;
 use IO::File;
+use Time::localtime;
 use vars qw{ @ISA @EXPORT_OK };
-
 
 @ISA = ('Exporter');
 @EXPORT_OK = qw(
@@ -37,6 +38,7 @@ use vars qw{ @ISA @EXPORT_OK };
     output_array_of_arrays
     output_hash_of_arrays
     output_tab_delimited_txt_from_hash_of_arrays
+    parse_file_by_column_to_hash_with_validation
     parse_columns_from_parameter
     parse_tab_delimited_file_to_array
     parse_tab_delimited_file_to_hash_keyed_by_column
@@ -49,6 +51,114 @@ use vars qw{ @ISA @EXPORT_OK };
     find_keys_not_in_second_hash
     verify_cell
 );
+
+sub parse_file_by_column_to_hash_with_validation {
+    my ( $file, $column_num, $regex_for_column, $regex_for_line
+        , $regex_type, $split_by, $attrib_name, $allow_duplicate_ids ) = @_;
+    
+    print STDERR "Parsing                    : $file\n";
+    print STDERR "Parsing by column          : $column_num ";
+    if ($attrib_name) {
+        print STDERR "($attrib_name)";
+    }
+    print "\n";
+    
+    my $parsed_by_column          = {};
+    my $line_count                = 0;
+    my $lines_skipped_by_regex    = 0;
+    my $lines_skipped_by_no_id    = 0;
+    my $lines_with_multiple_ids   = 0;
+    my $duplicate_ids             = 0;
+    
+    open_data_file('file', $file);
+    while (my $line = read_next_line_from_data_file('file')) {
+
+        $line_count++;
+
+        chomp($line);
+        $line =~ s/^\s+//;
+        $line =~ s/\s$//;
+        
+        if ($regex_for_line) {
+            confess "Must specify match operator" unless $regex_type;
+            if ($regex_type eq '~') {
+                unless ($line =~ /$regex_for_line/) {
+                    $lines_skipped_by_regex++;
+                    next;
+                }
+            } elsif ($regex_type eq '!') {
+                unless ($line !~ /$regex_for_line/) {
+                    $lines_skipped_by_regex++;
+                    next;
+                }
+            } else {
+                confess "Dont understand '$regex_type' match type must be '~' or '!'";
+            }
+        }
+        
+        my @fields = split(/\t/, $line);
+        clean_array_elements_of_whitespace(\@fields);
+        
+        my $id     = $fields[$column_num - 1];
+        unless ($id) {
+            $lines_skipped_by_no_id++;
+            next;
+        }
+        
+        ### Does the column potentially hold multiple IDs?
+        my @ids;
+        if ($split_by) {
+            @ids = split(/$split_by/, $id);
+            if (@ids > 1) {
+                $lines_with_multiple_ids++;
+            }
+        } else {
+            push(@ids, $id);
+        }
+        
+        foreach my $final_id (@ids) {
+            if ($regex_for_column) {
+                unless ($final_id =~ /$regex_for_column/) {
+                    confess "Error validating ID '$final_id' with '$regex_for_column'";
+                }
+            }
+            if ($parsed_by_column->{$final_id}) {
+                $duplicate_ids++;
+            }
+        }
+        $parsed_by_column->{$id} = \@fields;
+    }
+    close_data_files();
+    
+    my $file_modified = ctime(stat($file)->mtime);
+    print STDERR "File date                  : $file_modified\n";
+    print STDERR "Parsed keys/IDs            : ", scalar(keys(%$parsed_by_column)), "\n";
+    print STDERR "Lines skipped by regex     : ";
+    if ($regex_for_line) {
+        if ($regex_type eq '!') {
+            $regex_type = '~';
+        } else {
+            $regex_type = '!';
+        }
+        print STDERR "$lines_skipped_by_regex (by line =$regex_type /$regex_for_line/)\n";
+    } else {
+        print STDERR 'n/a', "\n";
+    }
+    print STDERR "Lines parsed               : $line_count\n";
+    print STDERR "Lines with no key/ID in col: $lines_skipped_by_no_id\n";
+    if ($split_by) {
+        print STDERR "Lines with multiple IDs in column: $lines_with_multiple_ids (split on /$split_by/)\n";
+    }
+    print STDERR "Duplicate key/IDs          : $duplicate_ids";
+    if ($duplicate_ids) {
+        print STDERR " (these will have been overwritten)";
+    }
+    print STDERR "\n\n";
+    if ($duplicate_ids and !$allow_duplicate_ids) {
+        confess "Exiting as duplicate keys/IDs detected";
+    }
+    return ($parsed_by_column);
+}
 
 sub parse_columns_from_parameter {
     my ( $param, $geometry ) = @_;
