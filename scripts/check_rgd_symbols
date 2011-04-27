@@ -69,9 +69,10 @@ use Getopt::Long;
     ### Parse nomenclature file(s)
     my $parser = GeneNomenclatureUtils::Parser->new(
         'RGD_dir', 'GENES_RAT.txt', 'symbol');
-    my $parsed_by_rgd_symbol = $parser->get_parsed();
+    $parser->output_attribute('symbol'); #Parser needs one specified
+    $parser->parse;
  
     ### Do the check
-    check_or_translate_ids_in_file($file, $parsed_by_rgd_symbol, 'RGD SYMBOL CHECK'
-        , '^\S+$', $rgd_symbol_column, $output_column, $skip_title);
+    check_or_translate_ids_in_file($file, $parser, 'RGD SYMBOL CHECK'
+        , undef, $rgd_symbol_column, $output_column, $skip_title);
 }

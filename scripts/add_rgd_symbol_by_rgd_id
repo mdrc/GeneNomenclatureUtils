@@ -68,35 +68,13 @@ use Getopt::Long;
 
     my $parser = GeneNomenclatureUtils::Parser->new(
         'RGD_dir', 'GENES_RAT.txt', 'gene_rgd_id');
-    set_lookup_params($parser->name, 'symbol');
+    $parser->output_attribute('symbol');
+    $parser->parse;
 
-    my $code_ref = init_lookup();
-    my $parsed_by_rgd_id = $parser->get_parsed();
-    
+
     ### Do the translation
-    check_or_translate_ids_in_file($file, $parsed_by_rgd_id, 'RGD SYMBOL'
-        , '^\d+$', $rgd_column, $output_column, $skip_title, 'translate'
-        , $code_ref);
+    check_or_translate_ids_in_file($file, $parser, 'RGD SYMBOL'
+        , undef, $rgd_column, $output_column, $skip_title, 'translate'
+        , $parser->get_no_match_symbols
+    );
 }
-
-{
-    my ($parser_name, $attribute);
-    sub set_lookup_params {
-        ( $parser_name, $attribute ) = @_;
-    }
-
-    sub init_lookup {
-        my $code = sub {
-            my ( $id, $hash ) = @_;
-
-            my $entry = $hash->{$id} or return;
-            my $parsed_entry = 
-                GeneNomenclatureUtils::ColumnParser::parse_row_to_named_attributes(
-                    $parser_name, $entry);
-            
-            my $value = $parsed_entry->{$attribute};      
-            return $value;
-        }
-    }
-}
-

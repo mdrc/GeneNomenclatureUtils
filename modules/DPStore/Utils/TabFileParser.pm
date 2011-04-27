@@ -32,6 +32,7 @@ use vars qw{ @ISA @EXPORT_OK };
     close_data_files
     close_output_files
     confirm_keys_are_present
+    convert_case_by_mode
     get_tab_file_geometry
     open_data_file
     open_output_file
@@ -52,12 +53,89 @@ use vars qw{ @ISA @EXPORT_OK };
     verify_cell
 );
 
+=head2 convert_case_by_mode 
+
+Converts the casee on the passed string to one of '^upper.*', '^lower.*'
+or '^capital.*', as specified by the second parameter which is case
+insensitive. 
+
+  my $converted = convert_case_by_mode($string, 'upper');
+  
+Returns '' if no string is passed. Returns the string unchanged
+if no mode is passed.
+
+=cut
+
+sub convert_case_by_mode {
+    my ( $string, $mode ) = @_;
+    
+    $string = '' unless $string;
+    unless ($mode) {
+        return $string;
+    }
+    if ($mode =~ /^upper/i) {
+        $string = uc($string);
+    } elsif ($mode =~ /^lower/i) {
+        $string = lc($string);
+    } elsif ($mode =~ /^capital/i) {
+        $string = lc($string);
+        substr($string, 0, 1) = uc(substr($string, 0, 1));
+    } else {
+        confess "Error with '$mode'";
+    }
+    return $string;
+}
+
+sub _filter_fields {
+    my ( $fields, $filters ) = @_;
+    
+    my $filter_result;
+    foreach my $filter_name (keys(%$filters)) {
+        
+        my $filter = $filters->{$filter_name};
+        my $regex  = $filter->{regex}
+            or confess "regex not set in " . Dumper($filter);
+        my $match_type = $filter->{match_type}
+            or confess "match_type not set in ". Dumper($filter);
+        my $column     = $filter->{column}
+            or confess "column not set in " . Dumper($filter);
+        
+        my $value = $fields->[$column - 1];
+        next unless ($value);
+        
+        if ($match_type eq 'match') {
+            if ($value =~ /$regex/) {
+                $filter_result++;
+                last;
+            }
+        } elsif ($match_type eq 'nomatch') {
+            if ($value !~ /$regex/) {
+                $filter_result++;
+                last;
+            }
+        } else {
+            confess "Don't understand match_type '$match_type'";
+        }
+    }
+    return $filter_result;
+}   
+
 sub parse_file_by_column_to_hash_with_validation {
     my ( $file, $column_num, $regex_for_column, $regex_for_line
-        , $regex_type, $split_by, $attrib_name, $allow_duplicate_ids ) = @_;
+        , $regex_type, $split_by, $attrib_name, $allow_duplicate_ids
+        , $filters, $convert_key_case ) = @_;
+
+    print STDERR "DUPLICATES : ";
+    if ($allow_duplicate_ids) {
+        unless ($allow_duplicate_ids =~ /^allow$|^delete$/) {
+            confess "Invalid 'allow_duplicate_ids' pass to allow|delete";
+        }
+        print STDERR "$allow_duplicate_ids\n";
+    } else {
+        print STDERR "forbidden\n";
+    }
     
-    print STDERR "Parsing                    : $file\n";
-    print STDERR "Parsing by column          : $column_num ";
+    print STDERR "PARSING BY COLUMN           : $column_num ";
     if ($attrib_name) {
         print STDERR "($attrib_name)";
     }
@@ -68,7 +146,10 @@ sub parse_file_by_column_to_hash_with_validation {
     my $lines_skipped_by_regex    = 0;
     my $lines_skipped_by_no_id    = 0;
     my $lines_with_multiple_ids   = 0;
-    my $duplicate_ids             = 0;
+    my $duplicate_id_count        = 0;
+    
+    my $filtered_lines            = [];
+    my $duplicated_ids            = {};
     
     open_data_file('file', $file);
     while (my $line = read_next_line_from_data_file('file')) {
@@ -79,6 +160,7 @@ sub parse_file_by_column_to_hash_with_validation {
         $line =~ s/^\s+//;
         $line =~ s/\s$//;
         
+        ### First check if the line matches (or is a comment, or a title)
         if ($regex_for_line) {
             confess "Must specify match operator" unless $regex_type;
             if ($regex_type eq '~') {
@@ -98,6 +180,16 @@ sub parse_file_by_column_to_hash_with_validation {
         
         my @fields = split(/\t/, $line);
         clean_array_elements_of_whitespace(\@fields);
+        
+        ### Do the filtering before anything else
+        if ($filters and keys(%$filters)) {
+            my $filtered = _filter_fields(\@fields, $filters);
+            if ($filtered) {
+                push(@$filtered_lines, \@fields);
+                next;
+            }
+        }
+        
         
         my $id     = $fields[$column_num - 1];
         unless ($id) {
@@ -122,18 +214,29 @@ sub parse_file_by_column_to_hash_with_validation {
                     confess "Error validating ID '$final_id' with '$regex_for_column'";
                 }
             }
-            if ($parsed_by_column->{$final_id}) {
-                $duplicate_ids++;
+            
+            ### Do we need to convert case ?
+            if ($convert_key_case) {
+                $final_id = convert_case_by_mode($final_id, $convert_key_case);
             }
+            if ($parsed_by_column->{$final_id}) {
+                $duplicate_id_count++;
+                if ($duplicated_ids->{$final_id}) {
+                    $duplicated_ids->{$final_id}++;
+                } else {
+                    $duplicated_ids->{$final_id} = 2;
+                }
+            }
+            
+            $parsed_by_column->{$final_id} = \@fields;
         }
-        $parsed_by_column->{$id} = \@fields;
     }
     close_data_files();
     
     my $file_modified = ctime(stat($file)->mtime);
-    print STDERR "File date                  : $file_modified\n";
-    print STDERR "Parsed keys/IDs            : ", scalar(keys(%$parsed_by_column)), "\n";
-    print STDERR "Lines skipped by regex     : ";
+    print STDERR "File date                   : $file_modified\n";
+    print STDERR "Parsed unique keys/IDs      : ", scalar(keys(%$parsed_by_column)), "\n";
+    print STDERR "Lines skipped by regex      : ";
     if ($regex_for_line) {
         if ($regex_type eq '!') {
             $regex_type = '~';
@@ -144,20 +247,33 @@ sub parse_file_by_column_to_hash_with_validation {
     } else {
         print STDERR 'n/a', "\n";
     }
-    print STDERR "Lines parsed               : $line_count\n";
-    print STDERR "Lines with no key/ID in col: $lines_skipped_by_no_id\n";
+    print STDERR "Lines filtered by column    : ", scalar(@$filtered_lines), "\n";
+    print STDERR "Total lines parsed          : $line_count\n";
+    print STDERR "Lines with no key/ID in col : $lines_skipped_by_no_id\n";
     if ($split_by) {
         print STDERR "Lines with multiple IDs in column: $lines_with_multiple_ids (split on /$split_by/)\n";
     }
-    print STDERR "Duplicate key/IDs          : $duplicate_ids";
-    if ($duplicate_ids) {
-        print STDERR " (these will have been overwritten)";
-    }
-    print STDERR "\n\n";
-    if ($duplicate_ids and !$allow_duplicate_ids) {
-        confess "Exiting as duplicate keys/IDs detected";
-    }
-    return ($parsed_by_column);
+
+    ### Deal with duplicates if were found
+    
+    print STDERR "Total duplicate key/IDs seen: $duplicate_id_count ";
+    if ($duplicate_id_count) {
+        unless ($allow_duplicate_ids) {
+            confess "\n - Exiting as duplicate keys/IDs detected - ", Dumper($duplicated_ids);
+        }
+        if ($allow_duplicate_ids eq 'delete') {
+            print STDERR "- deleted\n";
+            delete @{$parsed_by_column}{keys(%$duplicated_ids)};
+        } else {
+            print STDERR "- overwritten - last entry kept\n";
+            print STDERR "Final ID/key count          : ",  scalar(keys(%$parsed_by_column)), "\n";
+        }
+    } else {
+        print STDERR "\n";
+    }  
+    print STDERR "\n";
+
+    return ($parsed_by_column, $filtered_lines, $duplicated_ids);
 }
 
 sub parse_columns_from_parameter {

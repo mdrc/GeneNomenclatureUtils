@@ -59,7 +59,6 @@ our $debug;
         # Mandatory validated columns are: 1,2,3
         
         ### format [attribute_name, mandatory, id_type, split_on]
-         
         $parsers->{'RGD_dir_GENES_RAT.txt'} = {
             line_pattern => ['^#|^GENE_RGD_ID', '!'],
             
@@ -203,8 +202,8 @@ anonymous arrays for subsequent use.
         }
         
         my $parser = _get_parser($file_name);
-        
         my $parsed = {};
+        
         foreach my $column (keys(%$parser)) {
             next if $column eq 'line_pattern';
         
@@ -227,27 +226,40 @@ anonymous arrays for subsequent use.
                     next;
                 }
             }
-            
-            ### Do we need to validate the column contents?
-            if ($id_type) {
-                unless (validate_id_type($id_type, $value, $warn)) {
-                
-                    print STDERR "Validation error for '$value' (col: $column) as '$id_type'\n";
-                    print STDERR Dumper($row), "\n";
-                       
+
+            ### Do we need to split the column into a list of values
+            if ($value) {
+                if ($split) {
+                    my @values = split(/$split/, $value);
+                    $parsed->{$attrib} = \@values;
+                    print STDERR "We split '$attrib' to ", Dumper(\@values), "\n" if $debug;
+
+                    if ($id_type) {
+                        foreach my $id (@{$parsed->{$attrib}}) {
+                            unless (validate_id_type($id_type, $id, $warn)) {
+
+                                print STDERR "Validation error for '$id' (col: $column) as '$id_type'\n";
+                                print STDERR Dumper($row), "\n";
+                            } else {
+                                print STDERR "Validated '$id' as '$id_type'\n" if $debug;
+                            } 
+                        }
+                    }
                 } else {
-                    print STDERR "Validated '$value' as '$id_type'\n" if $debug; 
+                    $parsed->{$attrib} = $value;
+                    if ($id_type) {
+                        unless (validate_id_type($id_type, $value, $warn)) {
+                            print STDERR "Validation error for '$value' (col: $column) as '$id_type'\n";
+                            print STDERR Dumper($row), "\n";
+                        } else {
+                            print STDERR "Validated '$value' as '$id_type'\n" if $debug;
+                        } 
+                    }
                 }
             }
             
-            ### Do we need to split the column into a list of values
-            if ($value and $split) {
-                my @values = split(/$split/, $value);
-                $parsed->{$attrib} = \@values;
-                print STDERR "We split '$attrib' to ", Dumper(\@values), "\n" if $debug; 
-            } else {
-                $parsed->{$attrib} = $value;
-            }
+            ### Do we need to validate the column contents?
+            
         }
         return $parsed;
     }
@@ -306,7 +318,7 @@ GeneNomenclatureUtils::ColumnParser::configure
         my $parser = _get_parser($file_name);
         my $line_pattern = $parser->{line_pattern};
         
-        unless ( $line_pattern and ref($line_pattern) eq 'ARRAY' and @$line_pattern == 2) {
+        unless ($line_pattern and ref($line_pattern) eq 'ARRAY' and @$line_pattern == 2) {
             confess "Invalid line_pattern for parser '$file_name'";
         }
         return @$line_pattern;

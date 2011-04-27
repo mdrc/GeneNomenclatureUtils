@@ -68,9 +68,10 @@ use Getopt::Long;
 
     my $parser = GeneNomenclatureUtils::Parser->new(
         'RGD_dir', 'GENES_RAT.txt', 'gene_rgd_id');
-    my $parsed_by_rgd_id = $parser->get_parsed();
+    $parser->output_attribute('gene_rgd_id'); #Parser needs one specified
+    $parser->parse;
         
     ### Do the check
-    check_or_translate_ids_in_file($file, $parsed_by_rgd_id, 'RGD ID CHECK'
-        , '^\d+$', $rgd_id_column, $output_column, $skip_title);
+    check_or_translate_ids_in_file($file, $parser, 'RGD ID CHECK'
+        , undef, $rgd_id_column, $output_column, $skip_title);
 }

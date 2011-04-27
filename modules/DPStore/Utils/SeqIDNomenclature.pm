@@ -181,7 +181,42 @@ Take at init_lookup() in GeneNomenclatures/scripts/add_mgi_id_by_rgd_id
 sub check_or_translate_ids_in_file {
     my ( $file, $valid_ids, $check_name, $validation_pattern
         , $column_to_check, $output_column, $skip_title, $translate
-        , $lookup_sub ) = @_;
+        , $no_match_symbols ) = @_;
+
+
+    ### Check or set-up the failed look-up symbols
+    if ($no_match_symbols) {
+        unless (ref($no_match_symbols) and ref($no_match_symbols) =~ /HASH/) {
+            confess '$no_match_symbols must be a hash reference';
+        }
+        unless ($no_match_symbols->{'notfound'}) {
+            $no_match_symbols->{'notfound'} = 'NOT_FOUND';
+        }
+        unless ($no_match_symbols->{'ambiguous'}) {
+            $no_match_symbols->{'ambiguous'} = 'AMBIGUOUS';
+        }
+        unless ($no_match_symbols->{'invalid'}) {
+            $no_match_symbols->{'invalid'} = 'INVALID';
+        }
+        unless ($no_match_symbols->{'nothingtocheck'}) {
+            $no_match_symbols->{'nothingtocheck'} = 'NOTHING_TO_CHECK';
+        }
+        unless ($no_match_symbols->{'pass'}) {
+            $no_match_symbols->{'pass'} = 'PASS';
+        }
+        unless ($no_match_symbols->{'fail'}) {
+            $no_match_symbols->{'fail'} = 'FAIL';
+        }
+    } else {
+        $no_match_symbols = {
+            'notfound'          => 'NOT_FOUND',
+            'ambiguous'         => 'AMBIGUOUS',
+            'invalid'           => 'INVALID',
+            'nothingtocheck'    => 'NOTHING_TO_CHECK',
+            'pass'              => 'PASS',
+            'fail'              => 'FAIL'
+        };
+    }
 
     my $entries = parse_tab_delimited_file_to_array($file, 'clean');
     if ($skip_title) {
@@ -204,29 +239,25 @@ sub check_or_translate_ids_in_file {
     
         my $output;
         my $successful_lookup;
-        
+    
+        #First check we have something to lookup, and that it matches specified pattern    
         my $id = $entry->[$column_to_check - 1];
         unless ($id) {
-            $output = 'NOTHING_TO_CHECK';
+            $output = $no_match_symbols->{nothingtocheck};
             $nothing_to_lookup++;
-        } else {
-            unless ($id =~ /$validation_pattern/) {
-                $output = 'INVALID';
-                $invalid_ids->{$id}++;
-                $invalid++;
-            }
+        } elsif ($validation_pattern and $id !~ /$validation_pattern/) {
+            $output = $no_match_symbols->{invalid};
+            $invalid_ids->{$id}++;
+            $invalid++;
         }
         
+        #Lets try to do the lookup
         unless ($output) {
             my $val;
             
-            ### Straight hash lookup, or call code ? 
-            if ($lookup_sub) {
-                $val = $lookup_sub->($id, $valid_ids);
-                if ($val and ref($val) =~ /ARRAY/) {
-                    $val = join(", ", @$val);
-                }
-            } else {
+            if (ref($valid_ids) and ref($valid_ids) =~ /^GeneNomenclatureUtils::Parser/) {
+                $val = $valid_ids->lookup($id);
+            } elsif (ref($valid_ids) and ref($valid_ids) eq 'HASH') {
                 $val = $valid_ids->{$id}
             }
         
@@ -234,12 +265,12 @@ sub check_or_translate_ids_in_file {
                 if ($translate) {
                     $output = $val;
                 } else {
-                    $output = 'PASS';
+                    $output = $no_match_symbols->{pass};
                 }
                 $successful_lookup++;
                 $found++;
             } else {
-                $output = 'FAIL';
+                $output = $no_match_symbols->{fail};
                 $not_found_ids->{$id}++;
                 $not_found++;
             }
@@ -247,7 +278,7 @@ sub check_or_translate_ids_in_file {
         
         ### 
         if ($translate and !$successful_lookup) {
-            $output = 'NOT_FOUND';
+            $output = $no_match_symbols->{notfound};
         }
         
         splice (@$entry, $output_column - 1, 0, $output);
@@ -1332,13 +1363,12 @@ sub check_for_file {
     unless ($ENV{$env_dir}) {
         confess "Set environment variable '$env_dir'";
     }
-
     my $path = $ENV{$env_dir};
     unless (-d $path) {
         confess "Can't read directory '$path'";
     }
-    
     $path .= '/' unless $path =~ /\/$/;
+    
     my $file_spec = $path . $file;
     
     unless (-e $file_spec and -s $file_spec) {
