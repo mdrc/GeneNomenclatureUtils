@@ -64,7 +64,7 @@ use vars qw{ @ISA @EXPORT_OK };
 
 {
     my $regex_for_ids;
-    sub _init_validate_id_type {
+    sub _init_validate_id_types {
         $regex_for_ids = {
             'anything'                      => '.',
             'ensembl_rat_gene_id'           => '^ENSRNOG\d{11}$',
@@ -96,7 +96,7 @@ or
     sub validate_id_type {
         my ( $id_type, $id, $not_fatal ) = @_;
 
-        _init_validate_id_type() unless $regex_for_ids;
+        _init_validate_id_types() unless $regex_for_ids;
 
         unless ($id_type) {
             confess "Must pass the type of id e.g. 'mgi_id'";
@@ -128,22 +128,17 @@ or
   } else {
     # Do something else
   }
-  
-  validate_id_type('mgi_id', $id, 'not_fatal'); #Non-fatal check
 
-The check of the passed id_type is case insensitive
-
-=cut 
+=cut
     
     sub can_validate_id_type {
         my ( $id_type ) = @_;
 
-        _init_validate_id_type() unless $regex_for_ids;
+        _init_validate_id_types() unless $regex_for_ids;
 
         unless ($id_type) {
             confess "Must pass the type of id e.g. 'mgi_id'";
         }
-        $id_type = lc($id_type);
         
         return (
             $regex_for_ids->{$id_type}

@@ -120,6 +120,10 @@ sub _filter_fields {
     return $filter_result;
 }   
 
+=head2 parse_file_by_column_to_hash_with_validation
+
+=cut 
+
 sub parse_file_by_column_to_hash_with_validation {
     my ( $file, $column_num, $regex_for_column, $regex_for_line
         , $regex_type, $split_by, $attrib_name, $allow_duplicate_ids
@@ -163,12 +167,12 @@ sub parse_file_by_column_to_hash_with_validation {
         ### First check if the line matches (or is a comment, or a title)
         if ($regex_for_line) {
             confess "Must specify match operator" unless $regex_type;
-            if ($regex_type eq '~') {
+            if ($regex_type eq 'match') {
                 unless ($line =~ /$regex_for_line/) {
                     $lines_skipped_by_regex++;
                     next;
                 }
-            } elsif ($regex_type eq '!') {
+            } elsif ($regex_type eq 'nomatch') {
                 unless ($line !~ /$regex_for_line/) {
                     $lines_skipped_by_regex++;
                     next;

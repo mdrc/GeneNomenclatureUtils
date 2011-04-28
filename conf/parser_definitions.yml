@@ -1,0 +1,62 @@
+files:
+    RGD_dir_RGD_ORTHOLOGS:
+        line_pattern: '^#|^RAT_GENE_SYMBOL'
+        line_pattern_match_type: nomatch
+
+        columns:
+            1:  {name: rat_gene_symbol, mandatory: yes, validate: rgd_symbol}
+            2:  {name: rat_gene_rgd_id, mandatory: yes, validate: rgd_id}
+            3:  {name: rat_gene_entrez_gene_id, validate: entrez_gene_id}
+            4:  {name: human_ortholog_symbol, split: '\|'}
+            5:  {name: human_ortholog_rgd_id, validate: rgd_id}
+            6:  {name: human_ortholog_entrez_gene_id, validate: entrez_gene_id}
+            7:  {name: human_ortholog_source}
+            8:  {name: mouse_ortholog_symbol, split: '\|'}
+            9:  {name: mouse_ortholog_rgd_id, validate: rgd_id}
+            10: {name: mouse_ortholog_entrez_gene_id, validate: entrez_gene_id}
+            11: {name: mouse_ortholog_mgi_id, validate: mgi_id}
+            12: {name: mouse_ortholog_source}
+
+    RGD_dir_GENES_RAT.txt:
+        line_pattern: '^#|^GENE_RGD_ID'
+        line_pattern_match_type: nomatch
+        
+        columns:    
+            1:  {name: gene_rgd_id, mandatory: yes, validate: rgd_id}
+            2:  {name: symbol, mandatory: yes, validate: rgd_symbol}
+            3:  {name: name, mandatory: yes}
+            4:  {name: gene_desc}
+            5:  {name: chromosome_celera}
+            6:  {name: chromosome_old_ref}
+            7:  {name: chromosome_new_ref}
+            8:  {name: fish_band}
+            9:  {name: start_pos_celera}
+            10: {name: stop_pos_celera}
+            11: {name: strand_celera}
+            12: {name: start_pos_old_ref}
+            13: {name: stop_pos_old_ref}
+            14: {name: strand_old_ref}
+            15: {name: start_pos_new_ref}
+            16: {name: stop_pos_new_ref}
+            17: {name: strand_new_ref}
+            18: {name: curated_ref_rgd_id, split: ;}
+            19: {name: curated_ref_pubmed_id, split: ;}
+            20: {name: uncurated_pubmed_id, split: ;}
+            21: {name: entrez_gene, validate: entrez_gene_id}
+            22: {name: uniprot_id, split: ;}
+            23: {name: uncurated_ref_medline_id}
+            24: {name: genbank_nucleotide, split: ;}
+            25: {name: tigr_id, split: ;}
+            26: {name: genbank_protein, split: ;}
+            27: {name: unigene_id, split: ;}
+            28: {name: sslp_rgd_id, split: ;}
+            29: {name: sslp_symbol, split: ;}
+            30: {name: old_symbol, split: ;}
+            31: {name: old_name, split: ;}
+            32: {name: qtl_rgd_id, split: ;}
+            33: {name: qtl_symbol}
+            34: {name: nomenclature_status}
+            35: {name: splice_rgd_id, split: ;}
+            36: {name: splice_symbol}
+            37: {name: gene_type}
+            38: {name: ensembl_id, validate: ensembl_rat_gene_id, split: ;}

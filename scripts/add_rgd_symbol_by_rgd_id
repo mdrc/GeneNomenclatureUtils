@@ -69,12 +69,10 @@ use Getopt::Long;
     my $parser = GeneNomenclatureUtils::Parser->new(
         'RGD_dir', 'GENES_RAT.txt', 'gene_rgd_id');
     $parser->output_attribute('symbol');
+    $parser->file_process_mode('translate');
     $parser->parse;
 
 
-    ### Do the translation
-    check_or_translate_ids_in_file($file, $parser, 'RGD SYMBOL'
-        , undef, $rgd_column, $output_column, $skip_title, 'translate'
-        , $parser->get_no_match_symbols
-    );
+    $parser->process_file($file, $rgd_column, $output_column
+        , $skip_title,  'RGD SYMBOL');
 }

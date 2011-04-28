@@ -80,13 +80,12 @@ use Getopt::Long;
     }
     $parser->output_attribute($output_attrib);
     $parser->output_allow_lists('tostring');
+    $parser->file_process_mode('translate');
     $parser->parse;
      
     my $column_title = uc($output_attrib);
     $column_title =~ tr/_/ /;
     
-    check_or_translate_ids_in_file($file, $parser, $column_title
-        , undef, $rgd_id_column, $output_column, $skip_title, 'translate'
-        , $parser->get_no_match_symbols
-    );
+    $parser->process_file($file, $rgd_id_column, $output_column
+        , $skip_title, $column_title);
 }

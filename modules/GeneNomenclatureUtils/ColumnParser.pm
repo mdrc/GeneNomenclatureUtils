@@ -39,117 +39,34 @@ use Carp;
 use Data::Dumper;
 use DPStore::Utils::SeqIDNomenclature qw(
     can_validate_id_type
+    check_for_file
     validate_id_type
 );
-
+use YAML qw(
+    LoadFile
+);
 
 our $debug;
 
 {
     my $parsers;
 
-    ### These column numbers are 1 based (like the script params)
-    
     sub _configure {
+        my $config_file = check_for_file('DPStoreConfDir', 'parser_definitions.yml');
+        $parsers        = LoadFile($config_file);
         
-        ### GENES_RAT.txt
-        #
-        # All columns (23/04/11)
-        #
-        # Mandatory validated columns are: 1,2,3
+        unless ($parsers->{files} and ref($parsers->{files}) eq 'HASH') {
+            confess "No 'files:' specified in '$config_file'";
+        }
+ 
+        my @parser_names = keys(%{$parsers->{files}});
+        foreach my $parser_name (@parser_names) {
         
-        ### format [attribute_name, mandatory, id_type, split_on]
-        $parsers->{'RGD_dir_GENES_RAT.txt'} = {
-            line_pattern => ['^#|^GENE_RGD_ID', '!'],
+            my $parser_def = $parsers->{files}->{$parser_name};
+            _validate_parser_definition($parser_name, $parser_def);
             
-            1   => ['gene_rgd_id'                   , 'mandatory', 'rgd_id'],
-            2   => ['symbol'                        , 'mandatory', 'rgd_symbol'],
-            3   => ['name'                          , 'mandatory', 'anything'],
-            4   => ['gene_desc'],
-            5   => ['chromosome_celera'],
-            6   => ['chromosome_old_ref'],
-            7   => ['chromosome_new_ref'],
-            8   => ['fish_band'],
-            9   => ['start_pos_celera'],
-            10  => ['stop_pos_celera'],
-            11  => ['strand_celera'],
-            12  => ['start_pos_old_ref'],
-            13  => ['stop_pos_old_ref'],
-            14  => ['strand_old_ref'],
-            15  => ['start_pos_new_ref'],
-            16  => ['stop_pos_new_ref'],
-            17  => ['strand_new_ref'],
-            18  => ['curated_ref_rgd_id'            , undef, undef           , ';'],
-            19  => ['curated_ref_pubmed_id'         , undef, undef           , ';'],
-            20  => ['uncurated_pubmed_id'           , undef, undef           , ';'],
-            21  => ['entrez_gene'                   , undef,'entrez_gene_id'],
-            22  => ['uniprot_id'                    , undef, undef           , ';'],
-            23  => ['uncurated_ref_medline_id'],
-            24  => ['genbank_nucleotide'            , undef, undef           , ';'],
-            25  => ['tigr_id'                       , undef, undef           , ';'],
-            26  => ['genbank_protein'               , undef, undef           , ';'],
-            27  => ['unigene_id'                    , undef, undef           , ';'],
-            28  => ['sslp_rgd_id'                   , undef, undef           , ';'],
-            29  => ['sslp_symbol'                   , undef, undef           , ';'],
-            30  => ['old_symbol'                    , undef, undef           , ';'],
-            31  => ['old_name'                      , undef, undef           , ';'],
-            32  => ['qtl_rgd_id'                    , undef, undef           , ';'],
-            33  => ['qtl_symbol'],
-            34  => ['nomenclature_status'],
-            35  => ['splice_rgd_id'                 , undef, undef, ';'],
-            36  => ['splice_symbol'],
-            37  => ['gene_type'],
-            38  => ['ensembl_id'                    , undef, 'ensembl_rat_gene_id', ';']
-        };
-
-        $parsers->{'RGD_dir_RGD_ORTHOLOGS'} = {
-            line_pattern => ['^#|^RAT_GENE_SYMBOL', '!'],
-
-            1   => ['rat_gene_symbol'              ,'rgd_symbol'],
-            2   => ['rat_gene_rgd_id'              ,'rgd_id'],
-            3   => ['rat_gene_entrez_gene_id'      , undef       , 'entrez_gene_id'],
-            4   => ['human_ortholog_symbol'        , undef       , undef            , '\|'],
-            5   => ['human_ortholog_rgd_id'        , undef       , 'rgd_id'],
-            6   => ['human_ortholog_entrez_gene_id', undef       , 'entrez_gene_id'],
-            7   => ['human_ortholog_source'],
-            8   => ['mouse_ortholog_symbol'        , undef       , undef            , '\|'],
-            9   => ['mouse_ortholog_rgd_id        ', undef       , 'rgd_id'],
-            10  => ['mouse_ortholog_entrez_gene_id', undef       , 'entrez_gene_id'],
-            11  => ['mouse_ortholog_mgi_id'        , undef       , 'mgi_id'],
-            12  => ['mouse_ortholog_source']
-        };        
-
-        $parsers->{'MGI_dir_MRK_List2.rpt'} = {
-            line_pattern => ['^MGI\sAccession', '!'],
-
-            1   => ['mgi_id'        , 'mandatory', 'mgi_id'],
-            2   => ['chr'],
-            3   => ['cm_position'],   
-            4   => ['symbol'        , 'mandatory'],
-            5   => ['status'],
-            6   => ['name'],
-            7   => ['type'],
-        };        
-
-        $parsers->{'MGI_dir_HMD_HGNC_Accession.rpt'} = {
-            line_pattern => ['.', '~'],
-
-            1   => ['mgi_id'                    , 'mandatory'   , 'mgi_id'],
-            2   => ['mouse_marker_symbol'       , 'mandatory'],
-            3   => ['mouse_marker_name'],
-            4   => ['mouse_entrez_gene_id'      , undef         , 'entrez_gene_id'],
-            5   => ['hgnc_id'                   , undef         , 'hgnc_id'],
-            6   => ['hgnc_human_marker_symbol'],
-            7   => ['human_entrez_gene_id'      , undef         , 'entrez_gene_id']
-        };        
-        
-        ### Do some simple validation on the parsers, check
-        ### attribute names are not duplicated
-        
-        foreach my $parser_name (keys(%$parsers)) {
-            
-            my $attributes = get_attribute_names($parser_name);
-            get_line_pattern($parser_name);
+            $parser_def->{attributes_by_name}
+                = _make_attributes_by_name($parser_def);
         }
     }
     
@@ -166,15 +83,86 @@ our $debug;
         }
         _configure() unless $parsers;
         
-        unless ($parsers->{$parser}) {
+        my $parser_def;
+        unless ($parser_def = $parsers->{files}->{$parser}) {
             confess "No parser for '$parser'";
-        } else {
-            if ($parsers->{$parser}->{0}) {
-                confess "Invalid parser '$parser' has a column 0 specified";
-            }
-            return $parsers->{$parser};
         }
+        return $parser_def;
     }
+}
+
+### _validate_parser_definition
+
+sub _validate_parser_definition {
+    my ( $parser_name, $parser_def ) = @_;
+    
+    ### line_pattern specification
+    unless ($parser_def->{line_pattern}) {
+        confess "Must set 'line_pattern:' in $parser_name";
+    }
+    unless ($parser_def->{line_pattern_match_type}
+        and $parser_def->{line_pattern_match_type} =~ /^match$|^nomatch$/) {
+    
+        confess "Must set 'line_pattern_match_type:' in $parser_name" 
+            . " to 'match' or 'nomatch'";
+    }
+    
+    ### columns
+    unless ($parser_def->{columns} and ref($parser_def->{columns}) eq 'HASH') {
+        confess "No 'columns:' specified in '$parser_name'";
+    }
+    
+    my $column_names_seen = {};
+    
+    my @column_numbers = keys(%{$parser_def->{columns}});
+    foreach my $column_number (@column_numbers) {
+        unless ($column_number =~ /^\d+/) {
+            confess "Invalid column_number '$column_number' in '$parser_name'";
+        }
+        if ($column_number == 0) {
+            confess "Invalid column number '0' in '$parser_name'"
+                . " columns are numbered from 1";
+        }
+        
+        my $column = $parser_def->{columns}->{$column_number};
+        unless ($column and ref($column) eq 'HASH') {
+            confess "Invalid column '$column_number' specification in '$parser_name'";
+        }
+        my $name = $column->{name}
+            or confess "'name:' not set in column '$column_number' in '$parser_name'";
+    
+        if ($column_names_seen->{$name}) {
+            confess "Duplicated column name '$name' in '$parser_name'";
+        }
+        $column_names_seen->{$name}++;
+        
+        ### check for the mandatory property
+        my $mandatory = $column->{mandatory};
+        if ($mandatory) {
+            unless ($mandatory =~ /^yes$|^no$/) {
+                confess "Invalid '$mandatory' for mandatory (must be 'yes' "
+                    . "or 'no') in column '$column_number' of '$parser_name'";
+            }
+        }
+        
+        ### check for validate property
+        my $validate = $column->{validate};
+        if ($validate) {
+            unless (can_validate_id_type($validate)) {
+                confess "Don't understand id_type '$validate' in column "
+                    . " '$column_number' of '$parser_name'";
+            }
+        }
+        
+        ### check for superfluous 
+        foreach my $property (keys(%$column)) {
+            unless ($property =~ /^name$|^mandatory$|^validate$|^split$/) {
+                confess "Invalid property '$property' in column '$column_number'"
+                    . " of '$parser_name'";
+            }
+        } 
+    }
+}
 
 =head2 parse_row_to_named_attributes
 
@@ -191,157 +179,134 @@ anonymous arrays for subsequent use.
 
 =cut
 
-    sub parse_row_to_named_attributes {
-        my ( $file_name, $row, $warn ) = @_;
-        
-        unless ($file_name) {
-            confess "Must pass a file_name";
-        }
-        unless ($row and ref($row) =~ /ARRAY/) {
-            confess "Must pass a row from the file as an ARRAY reference";
-        }
-        
-        my $parser = _get_parser($file_name);
-        my $parsed = {};
-        
-        foreach my $column (keys(%$parser)) {
-            next if $column eq 'line_pattern';
-        
-            my ($attrib, $mandatory, $id_type, $split) = @{$parser->{$column}};
-            
-            my $adjusted_column = $column - 1;
-            confess "Error in parser '$file_name'" if $adjusted_column < 0;
-            my $value = $row->[$adjusted_column];
-            
-            ### Is the value of the column mandatory
-            if ($mandatory) {
-                unless ($value) {
-                    if ($warn) {
-                        print STDERR "No '$attrib' parsed from col: $column on\n";
-                        print STDERR Dumper($row), "\n";
-                    } else {
-                        confess "No '$attrib' parsed from col: $column on\n"
-                            . Dumper($row);
-                    }
-                    next;
-                }
-            }
+sub parse_row_to_named_attributes {
+    my ( $name, $row, $warn ) = @_;
 
-            ### Do we need to split the column into a list of values
-            if ($value) {
-                if ($split) {
-                    my @values = split(/$split/, $value);
-                    $parsed->{$attrib} = \@values;
-                    print STDERR "We split '$attrib' to ", Dumper(\@values), "\n" if $debug;
+    unless ($name) {
+        confess "Must pass a parser name";
+    }
+    unless ($row and ref($row) =~ /ARRAY/) {
+        confess "Must pass a row from the file as an ARRAY reference";
+    }
 
-                    if ($id_type) {
-                        foreach my $id (@{$parsed->{$attrib}}) {
-                            unless (validate_id_type($id_type, $id, $warn)) {
+    my $parser_def = _get_parser($name);
+    my $attributes = get_attributes($name) or confess "";
+  
+    my $parsed = {};
 
-                                print STDERR "Validation error for '$id' (col: $column) as '$id_type'\n";
-                                print STDERR Dumper($row), "\n";
-                            } else {
-                                print STDERR "Validated '$id' as '$id_type'\n" if $debug;
-                            } 
-                        }
-                    }
+    foreach my $attrib_name (keys(%$attributes)) {
+
+        my $attribute       = $attributes->{$attrib_name}
+            or confess "Couldnt get attribute '$attrib_name'";
+        my $column_num      = $attribute->{column} or confess "No column";
+        my $mandatory       = $attribute->{mandatory};
+        my $id_type         = $attribute->{id_type};
+        my $split           = $attribute->{split};
+
+        my $value           = $row->[$column_num - 1];        
+
+        ### Is the value of the column mandatory
+        if ($mandatory and $mandatory eq 'yes') {
+            unless ($value) {
+                if ($warn) {
+                    print STDERR "No '$attrib_name' parsed from col: $column_num on\n";
+                    print STDERR Dumper($row), "\n";
                 } else {
-                    $parsed->{$attrib} = $value;
-                    if ($id_type) {
-                        unless (validate_id_type($id_type, $value, $warn)) {
-                            print STDERR "Validation error for '$value' (col: $column) as '$id_type'\n";
+                    confess "No 'attrib_name' parsed from col: $column_num on\n"
+                        . Dumper($row);
+                }
+                next;
+            }
+        }
+
+        ### Do we need to split the column into a list of values
+        if ($value) {
+            if ($split) {
+                my @values = split(/$split/, $value);
+                $parsed->{$attrib_name} = \@values;
+                print STDERR "We split '$attrib_name' to ", Dumper(\@values), "\n" if $debug;
+
+                if ($id_type) {
+                    foreach my $id (@{$parsed->{$attrib_name}}) {
+                        unless (validate_id_type($id_type, $id, $warn)) {
+
+                            print STDERR "Validation error for '$id' (col: $column_num) as '$id_type'\n";
                             print STDERR Dumper($row), "\n";
                         } else {
-                            print STDERR "Validated '$value' as '$id_type'\n" if $debug;
+                            print STDERR "Validated '$id' as '$id_type'\n" if $debug;
                         } 
                     }
                 }
+            } else {
+                $parsed->{$attrib_name} = $value;
+                if ($id_type) {
+                    unless (validate_id_type($id_type, $value, $warn)) {
+                        print STDERR "Validation error for '$value' (col: $column_num) as '$id_type'\n";
+                        print STDERR Dumper($row), "\n";
+                    } else {
+                        print STDERR "Validated '$value' as '$id_type'\n" if $debug;
+                    } 
+                }
             }
-            
-            ### Do we need to validate the column contents?
-            
         }
-        return $parsed;
     }
+    return $parsed;
+}
 
-=head2 get_attribute_names
+=head2 get_attributes
 
-Given a file/parser name return a hash of the attributes available from
+Given a parser name returns a hash of the attributes available from
 it on parsing a row with parse_row_to_named_attributes
 
-  my $attributes = GeneNomenclatureUtils::ColumnParser::get_attribute_names(
-     'GENES_RAT.txt');
-
-Checks for duplications in atrribute names in the parser specifications. This
-is performed automatically as part of the initial call to:
-GeneNomenclatureUtils::ColumnParser::configure
+  my $attributes = GeneNomenclatureUtils::ColumnParser::get_attributes(
+     'RGD_dir_GENES_RAT.txt');
 
 =cut
 
-    sub get_attribute_names {
-        my ( $file_name ) = @_;
-        
-        my $parser = _get_parser($file_name);
-                
-        my $attributes   = {};
-        foreach my $column (keys(%$parser)) {
-            next if $column eq 'line_pattern';
-        
-            my $name      = $parser->{$column}->[0];
-            my $mandatory = $parser->{$column}->[1];
-            my $id_type   = $parser->{$column}->[2];
-            my $split_by  = $parser->{$column}->[3];
-            
-            if ($id_type) {
-                unless (can_validate_id_type($id_type)) {
-                    confess "Don't know how to check '$id_type' in '$parser'";
-                }
-            }
-            if ($attributes->{$name}) {
-                confess "Duplicate attribute name in parser: '$name' on col: $column\n";
-            }
-            
-            my $attribute = {};
-            $attribute->{column}    = $column;
-            $attribute->{id_type}   = $id_type;
-            $attribute->{mandatory} = $mandatory;
-            $attribute->{split_by}  = $split_by;
-            
-            $attributes->{$name}    = $attribute;
-        }
-        return $attributes;
-    }
-    
-    sub get_line_pattern {
-        my ( $file_name ) = @_;
-        
-        my $parser = _get_parser($file_name);
-        my $line_pattern = $parser->{line_pattern};
-        
-        unless ($line_pattern and ref($line_pattern) eq 'ARRAY' and @$line_pattern == 2) {
-            confess "Invalid line_pattern for parser '$file_name'";
-        }
-        return @$line_pattern;
-    }    
+sub get_attributes {
+    my ( $parser_name ) = @_;
+
+    my $parser_def = _get_parser($parser_name);
+    return $parser_def->{attributes_by_name};
 }
 
-sub validate_output_attrib {
-    my ( $valid, $attrib, $msg ) = @_;
+### _make_attributes_by_name
 
-    my $valid_string = join(", ", sort {$a cmp $b} keys(%$valid));
-    $msg = '' unless $msg;
+sub _make_attributes_by_name {
+    my ( $parser_def ) = @_;
     
-    if ($attrib) {
-        $attrib = lc($attrib);
-        unless ($valid->{$attrib}) {
-            confess "Invalid '$attrib', $msg \n$valid_string\n\n";
-        } else {
-            return $attrib;
-        }
-    } else {
-        confess "$msg\n$valid_string\n\n";
+    my $attributes   = {};
+    
+    my @column_numbers = keys(%{$parser_def->{columns}});
+    foreach my $column_num (@column_numbers) {
+
+        my $column = $parser_def->{columns}->{$column_num};
+        
+        my $attribute = {
+            column    => $column_num,
+            id_type   => $column->{validate},
+            mandatory => $column->{mandatory},
+            split     => $column->{split}
+        };
+        $attributes->{$column->{name}} = $attribute;    
     }
+    return $attributes;
 }
 
+=head2 get_line_pattern
+
+    my ($regex, $match_type) = get_line_pattern('RGD_dir_GENES_RAT.txt');
+    
+=cut
+    
+sub get_line_pattern {
+    my ( $name ) = @_;
+
+    my $parser_def = _get_parser($name);
+    my $line_pattern = [$parser_def->{line_pattern}
+                      , $parser_def->{line_pattern_match_type}];
+
+    return @$line_pattern;
+}
 
 1;
