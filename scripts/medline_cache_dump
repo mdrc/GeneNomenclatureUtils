@@ -38,8 +38,6 @@ If the
 use strict;
 use warnings;
 use Carp;
-use DBI;
-use DPStore::Utils::Config;
 use GeneNomenclatureUtils::Counts;
 use GeneNomenclatureUtils::TabFileParser qw(
     parse_tab_delimited_file_to_array
