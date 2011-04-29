@@ -2,7 +2,7 @@
 
 =pod
 
-=head1 NAME - DPStore::Utils::Spreadsheet
+=head1 NAME - GeneNomenclatureUtils::Spreadsheet
 
 =head1 SYNOPSIS
 
@@ -14,7 +14,7 @@ webmaster@genes2cognition.org
 
 =cut
 
-package DPStore::Utils::Spreadsheet;
+package GeneNomenclatureUtils::Spreadsheet;
 
 use strict;
 use warnings;

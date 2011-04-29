@@ -38,7 +38,7 @@ GeneNomenclatureUtils/conf/medline_cache_db.in
 use strict;
 use warnings;
 use Carp;
-use DPStore::Utils::Counts;
+use GeneNomenclatureUtils::Counts;
 use GeneNomenclatureUtils::TabFileParser qw(
     parse_tab_delimited_file_to_array
     show_perldoc
@@ -90,7 +90,7 @@ sub initialise_counts {
         pmids_with_error
         medline_entries_fetched
     );
-    $counts = DPStore::Utils::Counts->new(@counts);
+    $counts = GeneNomenclatureUtils::Counts->new(@counts);
 }
 
 sub load_file {

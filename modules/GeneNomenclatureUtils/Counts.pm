@@ -2,13 +2,13 @@
 
 =pod
 
-=head1 NAME - DPStore::Utils::Counts
+=head1 NAME - GeneNomenclatureUtils::Counts
 
 =head1 SYNOPSIS
 
 =head2 Constructor:
 
-my $counts = DPStore::Utils::Counts->new(@counts);
+my $counts = GeneNomenclatureUtils::Counts->new(@counts);
 
 =head1 DESCRIPTION
 
@@ -17,13 +17,11 @@ at runtime. Each count gets its own method calls. These are auto-generated
 by _make_count_get_set_methods(). $Count->name is a get/set, and an
 increment method is named $Count->increment_name.
 
-=head1 AUTHOR 
-
-webmaster@genes2cognition.org
+=head1 AUTHOR - mike_croning@hotmail.com
 
 =cut
 
-package DPStore::Utils::Counts;
+package GeneNomenclatureUtils::Counts;
 
 use strict;
 use warnings;

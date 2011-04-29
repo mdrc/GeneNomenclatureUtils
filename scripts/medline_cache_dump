@@ -40,7 +40,7 @@ use warnings;
 use Carp;
 use DBI;
 use DPStore::Utils::Config;
-use DPStore::Utils::Counts;
+use GeneNomenclatureUtils::Counts;
 use GeneNomenclatureUtils::TabFileParser qw(
     parse_tab_delimited_file_to_array
     show_perldoc
@@ -95,7 +95,7 @@ sub initialise_counts {
         pmids_not_available
         cache_retrieval_failures
     );
-    $counts = DPStore::Utils::Counts->new(@counts);
+    $counts = GeneNomenclatureUtils::Counts->new(@counts);
 }
 
 sub dump_from_cache {

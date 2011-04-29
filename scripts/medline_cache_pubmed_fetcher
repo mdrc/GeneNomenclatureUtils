@@ -46,7 +46,7 @@ use strict;
 use warnings;
 use Carp;
 use Data::Dumper;
-use DPStore::Utils::Counts;
+use GeneNomenclatureUtils::Counts;
 use GeneNomenclatureUtils::TabFileParser qw(
     show_perldoc
 );
@@ -86,7 +86,7 @@ sub initialise_counts {
         pmids_cached
         pmids_remaining
     );
-    $counts = DPStore::Utils::Counts->new(@counts);
+    $counts = GeneNomenclatureUtils::Counts->new(@counts);
 }
 
 sub do_pubmed_fetch {

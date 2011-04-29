@@ -137,3 +137,4 @@ txt/sort_file_by_column --file=../data/my_list_of_genes_2.txt --column=3 --ascen
 
 txt/txt_file_format_sniffer --file=../data/my_list_of_genes_1.txt
 
+txt/write_spreadsheet --file=../data/my_list_of_genes_1.txt
