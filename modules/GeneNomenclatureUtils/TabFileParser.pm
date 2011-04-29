@@ -653,7 +653,7 @@ sub parse_tab_delimited_file_to_array {
         my @fields = split(/\t/, $line);
         unless (@fields >= 1) {
             carp "Parsed no columns from line '$line'"
-                unless $DPStore::Utils::TabFileParser::quiet;
+                unless $GeneNomenclatureUtils::TabFileParser::quiet;
             next;
         }
         if ($clean) {
@@ -706,7 +706,7 @@ sub parse_tab_delimited_file_to_hash_keyed_by_column {
         my @fields = split(/\t/, $line);
         unless (@fields >= 1) {
             carp "Parsed no columns from line '$line'"
-                unless $DPStore::Utils::TabFileParser::quiet;
+                unless $GeneNomenclatureUtils::TabFileParser::quiet;
             next;
         }
 
@@ -715,7 +715,7 @@ sub parse_tab_delimited_file_to_hash_keyed_by_column {
                 confess "Cant parse a key on column $column for '$line'";
             } else {
                 print STDERR "Can't parse a key on column $column for '$line'\n"
-                    unless $DPStore::Utils::TabFileParser::quiet;
+                    unless $GeneNomenclatureUtils::TabFileParser::quiet;
                 next;
             }
         } else {
@@ -725,7 +725,7 @@ sub parse_tab_delimited_file_to_hash_keyed_by_column {
         if ($tab_file_hash{$key}) {
             if ($allow_duplicates) {
                 print STDERR "[WARN] Duplicate key for: '$key'\n"
-                    unless $DPStore::Utils::TabFileParser::quiet;
+                    unless $GeneNomenclatureUtils::TabFileParser::quiet;
             } else {
                 confess "Duplicate key for: '$key'";
             }
@@ -768,7 +768,7 @@ sub clean_line_of_trailing_whitespace {
         return $line;
     } else {
         carp "Caution you passed a null line"
-            unless $DPStore::Utils::TabFileParser::quiet;
+            unless $GeneNomenclatureUtils::TabFileParser::quiet;
     }
 }
 

@@ -3,7 +3,7 @@
 
 =pod
 
-=head1 NAME - remove_trailing_whitespace
+=head1 NAME - remove_whitespace
 
 =head1 COMMAND LINE PARAMETERS 
 
@@ -11,8 +11,7 @@
 
 =head1 DESCRIPTION
 
-Removes trailing white space from lines in a tab_delimited 
-file. 
+Removes white space around the 'columns' in a tab_delimited file. 
 
 =head1 AUTHOR - mike_croning@hotmail.com
 

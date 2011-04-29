@@ -131,7 +131,7 @@ txt/pad_tabs_to_column_width --file=../data/my_list_of_genes_6.txt --width=6
 
 txt/rearrange_and_cut_columns --file=../data/my_list_of_genes_2.txt --columns=2,1
 
-txt/remove_trailing_whitespace --file=../data/my_list_of_genes_1.txt
+txt/remove_whitespace --file=../data/my_list_of_genes_1.txt
 
 txt/sort_file_by_column --file=../data/my_list_of_genes_2.txt --column=3 --ascending --mode=string --skip_title
 

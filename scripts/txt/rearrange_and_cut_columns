@@ -29,8 +29,6 @@ Example command line
 use strict;
 use warnings;
 use Carp;
-use DPStore::Utils qw(
-);
 use GeneNomenclatureUtils::TabFileParser qw(
     get_tab_file_geometry
     parse_columns_from_parameter
