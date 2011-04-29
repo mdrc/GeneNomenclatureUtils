@@ -3,3 +3,4 @@ Entrez Gene	Symbol	Expt 1	Expt2
 23043	TNIK	no	no
 1740	DLG2	yes	no
 1848	DUSP6	no	yes
+FAKE	FAKE	no	yes

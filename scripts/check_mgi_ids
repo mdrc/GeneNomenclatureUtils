@@ -73,5 +73,5 @@ use Getopt::Long;
 
     ### Do the check
     check_or_translate_ids_in_file($file, $parsed_by_mgi_id, 'MGI ID CHECK'
-        , '^MGI:\d+$', $mgi_id_column, $output_column, $skip_title);
+        , 'mgi_id', $mgi_id_column, $output_column, $skip_title);
 }

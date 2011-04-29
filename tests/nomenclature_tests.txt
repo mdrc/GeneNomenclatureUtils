@@ -40,7 +40,6 @@
 
 ./check_rgd_symbols --file=../data/my_list_of_genes_3.txt --rgd_symbol_column=2 --output_column=1 --skip_title
 
-./check_hgnc_ids --file=../data/my_list_of_genes_4.txt --hgnc_id_column=1 --skip_title --output_column=3
 
 
 
@@ -58,6 +57,7 @@
 
 ./add_mgi_id_by_hgnc_id --file=../data/my_list_of_genes_4.txt --hgnc_id_column=1 --skip_title --output_column=3
 
+./check_hgnc_ids --file=../data/my_list_of_genes_4.txt --hgnc_id_column=1 --skip_title --output_column=3
 
 
 ## OMIM

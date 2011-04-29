@@ -258,7 +258,6 @@ sub parse_file_by_column_to_hash_with_validation {
                     $duplicated_ids->{$final_id} = 2;
                 }
             }
-            
             $parsed_by_column->{$final_id} = \@fields;
         }
     }

@@ -68,5 +68,5 @@ use Data::Dumper;
 
     ### Do the translation
     check_or_translate_ids_in_file($file, $parsed_by_symbol, 'HGNC ID'
-        , '^\w+$', $hgnc_symbol_column, $output_column, $skip_title, 'translate');
+        , 'hgnc_symbol', $hgnc_symbol_column, $output_column, $skip_title, 'translate');
 }

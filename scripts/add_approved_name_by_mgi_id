@@ -67,5 +67,5 @@ use Getopt::Long;
         
     ### Do the translation
     check_or_translate_ids_in_file($file, $approved_name_by_mgi_id, 'Appr. NAME'
-        , '^MGI:\d+$', $mgi_column, $output_column, $skip_title, 'translate');
+        , 'mgi_id', $mgi_column, $output_column, $skip_title, 'translate');
 }

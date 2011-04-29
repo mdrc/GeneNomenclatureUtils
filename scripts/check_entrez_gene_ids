@@ -108,5 +108,5 @@ sub do_file {
 
     ### Do the check
     check_or_translate_ids_in_file($file, $entrez_genes, 'ENTREZ ID CHECK'
-        , '^\d+$', $column_num, $output_column, $skip_title);
+        , 'entrez_gene_id', $column_num, $output_column, $skip_title);
 }

@@ -28,6 +28,9 @@ use GeneNomenclatureUtils::TabFileParser qw(
     read_next_line_from_data_file
 );
 use Time::localtime;
+use YAML qw(
+    LoadFile
+);
 use vars qw{ @ISA @EXPORT_OK };
 
 @ISA = qw(Exporter);
@@ -62,18 +65,15 @@ use vars qw{ @ISA @EXPORT_OK };
     validate_id_type
 );
 
+### Global;
+our $debug;
+
 {
     my $regex_for_ids;
     sub _init_validate_id_types {
-        $regex_for_ids = {
-            'anything'                      => '.',
-            'ensembl_rat_gene_id'           => '^ENSRNOG\d{11}$',
-            'entrez_gene_id'                => '^\d+$',
-            'hgnc_id'                       => '^HGNC:\d+$',
-            'mgi_id'                        => '^MGI:\d+$',
-            'rgd_id'                        => '^\d+$',
-            'rgd_symbol'                    => '^.*$',
-        }
+        my $config_file = check_for_file(
+            'DPStoreConfDir', 'id_type_definitions.yml');
+        $regex_for_ids = LoadFile($config_file);
     }
     
 =head1 validate_id_type
@@ -94,8 +94,9 @@ or
 =cut 
 
     sub validate_id_type {
-        my ( $id_type, $id, $not_fatal ) = @_;
+        my ( $id_type, $id, $not_fatal, $quiet ) = @_;
 
+        print STDERR "--- validating '$id' as '$id_type'\n" if $debug;
         _init_validate_id_types() unless $regex_for_ids;
 
         unless ($id_type) {
@@ -111,7 +112,9 @@ or
         
         unless ($id =~ /$regex/) {
             if ($not_fatal) {
-                print STDERR "Failed to validate id_form '$id' with '$regex'";
+                unless ($quiet) {
+                    print STDERR "Failed to validate id_form '$id' with '$regex'";
+                }
                 return;
             } else {
                 confess "Failed to validate id_form '$id' with '$regex'";
@@ -156,12 +159,12 @@ the id, in addition to check it in the hash of IDs passed by reference.
 
 Example call (to check)
 
-check_or_translate_ids_in_file($file, $valid_ids_hash, 'CHECK NAME', $reg_ex
+check_or_translate_ids_in_file($file, $valid_ids_hash, 'CHECK NAME', $id_type
         , $id_column, $output_column, $skip_title);
 
 Example call (to translate)
 
-check_or_translate_ids_in_file($file, $valid_ids_hash, 'CHECK NAME', $reg_ex
+check_or_translate_ids_in_file($file, $valid_ids_hash, 'CHECK NAME', $id_type
         , $id_column, $output_column, $skip_title, 'translate');
 
 A final optional parameter allows to pass a code reference for a subroutine
@@ -169,15 +172,20 @@ called as $code->($id, $valid_ids), where $id is the ID parsed from the
 specified column of the file, and $valid_ids is the parsed nomenclature file
 hash, this is useful when the values of the latter are not simply scalars.
 
-Take at init_lookup() in GeneNomenclatures/scripts/add_mgi_id_by_rgd_id
-
 =cut
 
 sub check_or_translate_ids_in_file {
-    my ( $file, $valid_ids, $check_name, $validation_pattern
+    my ( $file, $valid_ids, $check_name, $id_type
         , $column_to_check, $output_column, $skip_title, $translate
         , $no_match_symbols ) = @_;
 
+    my $validation_pattern;
+    if ($id_type) {
+        unless ($validation_pattern = can_validate_id_type($id_type)) {
+            confess "Don't understand id_type '$id_type'";
+        }
+        print STDERR "Validating IDs with : '$validation_pattern'\n";
+    }
 
     ### Check or set-up the failed look-up symbols
     if ($no_match_symbols) {
@@ -240,7 +248,7 @@ sub check_or_translate_ids_in_file {
         unless ($id) {
             $output = $no_match_symbols->{nothingtocheck};
             $nothing_to_lookup++;
-        } elsif ($validation_pattern and $id !~ /$validation_pattern/) {
+        } elsif ($id_type and ! validate_id_type($id_type, $id, 'not_fatal', 'quiet')) {
             $output = $no_match_symbols->{invalid};
             $invalid_ids->{$id}++;
             $invalid++;
@@ -295,7 +303,8 @@ sub check_or_translate_ids_in_file {
     }
     
     if ($invalid) {
-        print STDERR "\nINVALID IDs: (not matching '$validation_pattern')\n";
+        print STDERR "\nINVALID IDs: (not matching id_type: '$id_type'";
+        print STDERR "  = '$validation_pattern'\n";
         foreach my $id (keys(%$invalid_ids)) {
             print STDERR "  $id", ' ' x (20 - length($id))
                 , $invalid_ids->{$id}, " occurrences\n";

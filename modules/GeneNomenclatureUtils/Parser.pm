@@ -78,9 +78,9 @@ sub new {
     
     
     my $file_spec  = check_for_file($dir, $file);
-    print "FILE SPEC  : $file_spec\n";
+    print STDERR "FILE SPEC  : $file_spec\n";
     my $parser_name = $dir . '_' . $file ;
-    print "PARSER NAME: $parser_name\n";
+    print STDERR "PARSER NAME: $parser_name\n";
     
     ### Check the requested attribute to parse by are valid
     my $parsing_attribs = GeneNomenclatureUtils::ColumnParser::get_attributes(
@@ -88,6 +88,8 @@ sub new {
     $parser->attributes($parsing_attribs);
     $parsing_attrib = $parser->validate_attribute_name($parsing_attrib); #Does case conversion
     $parser->parsed_by($parsing_attrib);
+    my $attribute = $parser->get_attribute($parsing_attrib);
+    $parser->file_process_id_type($attribute->{id_type});
     $parser->file_spec($file_spec);
     $parser->name($parser_name);
     $parser->_init_no_match_symbols();
@@ -125,6 +127,7 @@ sub parse {
     my ($id_type, $id_regex);
     if ($id_type = $attribute->{id_type}) {
         $id_regex = can_validate_id_type($id_type);    
+        print STDERR "  -  Checking id_type: '$id_type' with '$id_regex'\n";
     }
         
     my $file_spec        = $self->file_spec() or confess "file_spec not set";
@@ -218,9 +221,10 @@ sub process_file {
     unless ($output_title) {
         $output_title = $self->output_attribute;
     }
+    
     check_or_translate_ids_in_file($file, $self, $output_title
-        , undef, $input_column, $output_column, $skip_title, $mode
-        , $self->get_no_match_symbols
+        , $self->file_process_id_type, $input_column, $output_column
+        , $skip_title, $mode, $self->get_no_match_symbols
     );
 }
 
@@ -246,13 +250,35 @@ sub file_process_mode {
     return $self->{_file_process_mode};
 }
 
+=head2  file_process_id_type
+
+Used to request validation on the IDs processed by a call
+to parser->process_file();
+
+  $parser->file_process_id_type('mgi_id');
+
+=cut 
+
+sub file_process_id_type {
+    my ( $self, $id_type ) = @_;
+    
+    if ($id_type) {
+        unless (can_validate_id_type($id_type)) {
+            confess "Don't know how to check id_type '$id_type'"; 
+        }
+        $self->{_file_process_id_type} = $id_type;
+    }
+    return $self->{_file_process_id_type};
+}
+
+
 =head2 lookup
 
-Looks-up the passed value in the parser. If successful, returns the column/atrribute
-specified by $parser->output_attribute. 
+Looks-up the passed value in the parser. If successful, returns the
+column/atrribute specified by $parser->output_attribute. 
 
   my $results = $parser->lookup('grin1');
-  
+
 =cut
 
 sub lookup {
@@ -276,10 +302,15 @@ sub lookup {
             
     my $result = $parsed_entry->{$output_attrib};
     if ($result) {
-        if (ref($result) and ref($result) eq 'ARRAY' and @$result <= 1) {
-            $result = $result->[0];
+        if (ref($result) and ref($result) eq 'ARRAY') {
+            if  (@$result == 1) {
+                $result = $result->[0];
+            } elsif (@$result == 0) {
+                $result = undef;
+            }
         }
     
+        #Do we have a list, with more than one element?
         if (ref($result)) {
             if (my $mode = $self->output_allow_lists) {
                 my @final;

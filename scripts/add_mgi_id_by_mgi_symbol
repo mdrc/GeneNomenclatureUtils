@@ -78,5 +78,5 @@ use Data::Dumper;
     
     ### Do the translation
     check_or_translate_ids_in_file($file, $parsed_by_mgi_symbol, 'MGI ID'
-        , '^\S+$', $mgi_column, $output_column, $skip_title, 'translate');
+        , 'mgi_symbol', $mgi_column, $output_column, $skip_title, 'translate');
 }

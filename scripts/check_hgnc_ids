@@ -72,5 +72,5 @@ use Getopt::Long;
 
     ### Do the check
     check_or_translate_ids_in_file($file, $parsed_by_hgnc_id, 'HGNC ID CHECK'
-        , '^HGNC:\d+$', $hgnc_id_column, $output_column, $skip_title);
+        , 'hgnc_id', $hgnc_id_column, $output_column, $skip_title);
 }
