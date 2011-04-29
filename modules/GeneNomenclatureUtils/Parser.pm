@@ -19,7 +19,8 @@ use strict;
 use warnings;
 use Carp;
 use Data::Dumper;
-use DPStore::Utils::SeqIDNomenclature qw(
+use GeneNomenclatureUtils::ColumnParser;
+use GeneNomenclatureUtils::SeqIDNomenclature qw(
     can_validate_id_type
     check_for_file
     check_or_translate_ids_in_file
@@ -28,7 +29,6 @@ use GeneNomenclatureUtils::TabFileParser qw(
     convert_case_by_mode
     parse_file_by_column_to_hash_with_validation
 );
-use GeneNomenclatureUtils::ColumnParser;
 
 ### Global
 my $debug;

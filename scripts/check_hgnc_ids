@@ -37,7 +37,7 @@ check.
 use strict;
 use warnings;
 use Carp;
-use DPStore::Utils::SeqIDNomenclature qw(
+use GeneNomenclatureUtils::SeqIDNomenclature qw(
     check_or_translate_ids_in_file
     parse_hgnc_core_file
 );   

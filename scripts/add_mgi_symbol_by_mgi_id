@@ -42,7 +42,7 @@ use Carp;
 use GeneNomenclatureUtils::TabFileParser qw(
     show_perldoc
 );
-use DPStore::Utils::SeqIDNomenclature qw(
+use GeneNomenclatureUtils::SeqIDNomenclature qw(
     check_or_translate_ids_in_file
     parse_mgi_list_2_file
 );   

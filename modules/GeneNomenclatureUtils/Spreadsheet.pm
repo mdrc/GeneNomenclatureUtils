@@ -19,8 +19,8 @@ package GeneNomenclatureUtils::Spreadsheet;
 use strict;
 use warnings;
 use Carp;
-use Spreadsheet::WriteExcel;
 use Exporter;
+use Spreadsheet::WriteExcel;
 use vars qw{ @ISA @EXPORT_OK };
 
 @ISA = ('Exporter');

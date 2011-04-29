@@ -27,7 +27,7 @@ use strict;
 use warnings;
 use Carp;
 use GeneNomenclatureUtils::Counts;
-use DPStore::Utils::SeqIDNomenclature qw(
+use GeneNomenclatureUtils::SeqIDNomenclature qw(
     get_swissprot_or_trembl_acc
     parse_hmd_human_sequence_file
     parse_hmd_human_sequence_file_entry

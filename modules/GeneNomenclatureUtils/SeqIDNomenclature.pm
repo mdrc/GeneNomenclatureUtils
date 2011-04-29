@@ -2,7 +2,7 @@
 
 =pod
 
-=head1 NAME - DPStore::Utils::SeqIDNomenclature
+=head1 NAME - GeneNomenclatureUtils::SeqIDNomenclature
 
 =head1 DESCRIPTION
 
@@ -10,7 +10,7 @@
 
 =cut
 
-package DPStore::Utils::SeqIDNomenclature;
+package GeneNomenclatureUtils::SeqIDNomenclature;
 
 use strict;
 use warnings;

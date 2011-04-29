@@ -52,7 +52,7 @@ use GeneNomenclatureUtils::TabFileParser qw(
     write_line_to_output_file
     write_lines_to_output_file
 );
-use DPStore::Utils::SeqIDNomenclature qw(
+use GeneNomenclatureUtils::SeqIDNomenclature qw(
     parse_mim2gene
     parse_omim_titles
 );

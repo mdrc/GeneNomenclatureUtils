@@ -37,7 +37,7 @@ use strict;
 use warnings;
 use Carp;
 use Data::Dumper;
-use DPStore::Utils::SeqIDNomenclature qw(
+use GeneNomenclatureUtils::SeqIDNomenclature qw(
     can_validate_id_type
     check_for_file
     validate_id_type
