@@ -27,30 +27,13 @@ Uses wget for this purpose. Ensure $http_proxy is set (if necessary)
 use strict;
 use warnings;
 use Carp;
-use DPStore::Utils qw(
-    show_perldoc
-);
-use DPStore::Utils::TabFileParser qw(
-    clean_array_elements_of_whitespace
-    clean_line_of_trailing_whitespace
-    clean_tab_delimited_file
-    close_data_files
-    close_output_files
-    confirm_keys_are_present
-    open_data_file
-    open_output_file
-    output_array_of_arrays
-    output_hash_of_arrays
-    output_tab_delimited_txt_from_hash_of_arrays
-    parse_tab_delimited_file_to_array
-    parse_tab_delimited_file_to_hash_keyed_by_column
-    read_next_line_from_data_file 
-    set_tabfileparser_clobber
-    set_tabfile_parser_path_root
-    write_line_to_output_file
-    write_lines_to_output_file
-);   
 use Data::Dumper;
+use GeneNomenclatureUtils::TabFileParser qw(
+    close_data_files
+    open_data_file
+    read_next_line_from_data_file
+    show_perldoc
+);   
 use Getopt::Long;
 
 my $errors            = 0;

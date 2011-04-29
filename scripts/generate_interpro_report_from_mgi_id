@@ -28,47 +28,16 @@ matches, either 'by_gene' or 'by_abundance'
 use strict;
 use warnings;
 use Carp;
-use DPStore::Utils qw(
-    show_perldoc
-);
-use DPStore::Utils::TabFileParser qw(
-    clean_array_elements_of_whitespace
-    clean_line_of_trailing_whitespace
-    clean_tab_delimited_file
-    close_data_files
-    close_output_files
-    confirm_keys_are_present
-    open_data_file
-    open_output_file
-    output_array_of_arrays
-    output_hash_of_arrays
-    output_tab_delimited_txt_from_hash_of_arrays
-    parse_tab_delimited_file_to_array
-    parse_tab_delimited_file_to_hash_keyed_by_column
-    read_next_line_from_data_file 
-    set_tabfileparser_clobber
-    set_tabfile_parser_path_root
-    write_line_to_output_file
-    write_lines_to_output_file
-);
 use DPStore::Utils::SeqIDNomenclature qw(
-    check_for_file
     lookup_names_for_interpro_accs
-    parse_hgnc_all_file
-    parse_hgnc_all_file_entry
-    parse_hgnc_core_file
-    parse_mgi_hmd_human_phenotype_file
     parse_mgi_interpro_domains_report_file
     parse_mgi_interpro_report_file
     parse_mgi_interpro_report_file_entry
     parse_mgi_list_2_file
-    parse_mgi_mouse_human_orthology_file
-    parse_mgi_mouse_human_orthology_file_entry
-    parse_mgi_mouse_human_sequence_file
-    parse_mgi_mouse_human_sequence_file_entry
-    parse_mgi_synonym_file
-    parse_mim2gene
-    parse_synonyms_from_hgnc_all_file
+);
+use GeneNomenclatureUtils::TabFileParser qw(
+    parse_tab_delimited_file_to_array
+    show_perldoc
 );
 use Getopt::Long;
 use Data::Dumper;

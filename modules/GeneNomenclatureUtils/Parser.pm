@@ -24,7 +24,7 @@ use DPStore::Utils::SeqIDNomenclature qw(
     check_for_file
     check_or_translate_ids_in_file
 );
-use DPStore::Utils::TabFileParser qw(
+use GeneNomenclatureUtils::TabFileParser qw(
     convert_case_by_mode
     parse_file_by_column_to_hash_with_validation
 );

@@ -30,14 +30,12 @@ use strict;
 use warnings;
 use Carp;
 use Data::Dumper;
-use DPStore::Utils qw(
-    show_perldoc
-);
 use DPStore::Utils::SeqIDNomenclature qw(
     parse_mgi_synonym_file
 );
-use DPStore::Utils::TabFileParser qw(
+use GeneNomenclatureUtils::TabFileParser qw(
     parse_tab_delimited_file_to_array
+    show_perldoc
 );
 
 use Getopt::Long;

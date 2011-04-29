@@ -46,10 +46,10 @@ use strict;
 use warnings;
 use Carp;
 use Data::Dumper;
-use DPStore::Utils qw(
+use DPStore::Utils::Counts;
+use GeneNomenclatureUtils::TabFileParser qw(
     show_perldoc
 );
-use DPStore::Utils::Counts;
 use Getopt::Long;
 use LWP::Simple;
 use MedlineCacheDB;

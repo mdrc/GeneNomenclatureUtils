@@ -2,7 +2,7 @@
 
 =pod
 
-=head1 NAME - DPStore::Utils::ListComparator
+=head1 NAME - GeneNomenclatureUtils::ListComparator
 
 =head1 DESCRIPTION
 
@@ -12,7 +12,7 @@ webmaster@genes2cognition.org
 
 =cut
 
-package DPStore::Utils::ListComparator;
+package GeneNomenclatureUtils::ListComparator;
 
 use strict;
 use warnings;
@@ -20,7 +20,7 @@ use Carp;
 use Config::IniFiles;
 use Data::Dumper;
 use Exporter;
-use DPStore::Utils::TabFileParser qw(
+use GeneNomenclatureUtils::TabFileParser qw(
     clean_array_elements_of_whitespace
     close_data_files
     open_data_file

@@ -27,30 +27,11 @@ Common taxonomy IDs
 use strict;
 use warnings;
 use Carp;
-use DPStore::Utils qw(
-    show_perldoc
-);
-use DPStore::Utils::TabFileParser qw(
-    clean_array_elements_of_whitespace
-    clean_line_of_trailing_whitespace
-    clean_tab_delimited_file
+use GeneNomenclatureUtils::TabFileParser qw(
     close_data_files
-    close_output_files
-    confirm_keys_are_present
     open_data_file
-    open_output_file
-    output_array_of_arrays
-    output_hash_of_arrays
-    output_tab_delimited_txt_from_hash_of_arrays
-    parse_tab_delimited_file_to_array
-    parse_tab_delimited_file_to_hash_keyed_by_column
     read_next_line_from_data_file
-    set_tabfileparser_clobber
-    set_tabfile_parser_path_root
-    write_line_to_output_file
-    write_line_to_output_file
-    find_keys_in_two_hashes
-    find_keys_not_in_second_hash
+    show_perldoc
 );
 use Getopt::Long;
 
@@ -80,6 +61,7 @@ use Getopt::Long;
             $count++;
         }
     }
+    close_data_files();
         
     print STDERR "$count genes for $tax_id\n";
 }

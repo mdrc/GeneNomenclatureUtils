@@ -28,7 +28,7 @@ use strict;
 use warnings;
 use Carp;
 use Getopt::Long;
-use DPStore::Utils::TabFileParser qw (
+use GeneNomenclatureUtils::TabFileParser qw(
     clean_array_elements_of_whitespace
     clean_line_of_trailing_whitespace
     clean_tab_delimited_file
@@ -45,7 +45,8 @@ use DPStore::Utils::TabFileParser qw (
     read_next_line_from_data_file 
     set_tabfileparser_clobber
     set_tabfile_parser_path_root
-    write_line_to_output_file );   
+    write_line_to_output_file
+);   
 
 {
     print STDERR "\n$0\n", '=' x length($0), "\n\n";

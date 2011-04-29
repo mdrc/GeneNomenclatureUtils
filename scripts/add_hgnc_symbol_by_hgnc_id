@@ -37,7 +37,7 @@ HGNC IDs, reporting which ones were not found.
 use strict;
 use warnings;
 use Carp;
-use DPStore::Utils qw(
+use GeneNomenclatureUtils::TabFileParser qw(
     show_perldoc
 );
 use DPStore::Utils::SeqIDNomenclature qw(

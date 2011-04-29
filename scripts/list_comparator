@@ -131,18 +131,16 @@ GeneNomenclatureUtils/docs/example_list_comparator_output.txt
 use strict;
 use warnings;
 use Carp;
-use DPStore::Utils::ListComparator qw(
+use GeneNomenclatureUtils::ListComparator qw(
     do_list_comparison
     dump_lists
     get_all_list_names
     parse_list_config
 );
-use DPStore::Utils::TabFileParser qw(
+use GeneNomenclatureUtils::TabFileParser qw(
     output_array_of_arrays
-); 
-use DPStore::Utils qw(
     show_perldoc
-);
+); 
 use Getopt::Long;
 
 {

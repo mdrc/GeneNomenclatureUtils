@@ -32,14 +32,12 @@ use strict;
 use warnings;
 use Carp;
 use Data::Dumper;
-use DPStore::Utils qw(
-    show_perldoc
-);
-use DPStore::Utils::TabFileParser qw(
-    parse_tab_delimited_file_to_array
-);
 use DPStore::Utils::Spreadsheet qw(
     write_excel_from_table
+);
+use GeneNomenclatureUtils::TabFileParser qw(
+    parse_tab_delimited_file_to_array
+    show_perldoc
 );
 use Getopt::Long;
 

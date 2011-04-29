@@ -29,7 +29,7 @@ my $debug;
 
 @ISA = ('Exporter');
 @EXPORT_OK = qw(
-    show_perldoc
+    _show_perldoc
 );    
 
 
@@ -40,7 +40,7 @@ afer a two second delay, then confesses.
 
 =cut
 
-sub show_perldoc {
+sub _show_perldoc {
     my ( $text ) = shift(@_);
     
     $text = "HELP:" unless $text;

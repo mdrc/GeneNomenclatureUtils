@@ -26,9 +26,6 @@ by MGI ID, firstly from SwissProt then TrEMBL, then RefSeq
 use strict;
 use warnings;
 use Carp;
-use DPStore::Utils qw(
-    show_perldoc
-);
 use DPStore::Utils::Counts;
 use DPStore::Utils::SeqIDNomenclature qw(
     get_swissprot_or_trembl_acc
@@ -38,7 +35,7 @@ use DPStore::Utils::SeqIDNomenclature qw(
     parse_mgi_swissprot_trembl
     
 );
-use DPStore::Utils::TabFileParser qw(
+use GeneNomenclatureUtils::TabFileParser qw(
     clean_array_elements_of_whitespace
     clean_line_of_trailing_whitespace
     clean_tab_delimited_file
@@ -55,11 +52,9 @@ use DPStore::Utils::TabFileParser qw(
     read_next_line_from_data_file 
     set_tabfileparser_clobber
     set_tabfile_parser_path_root
+    show_perldoc
     write_line_to_output_file
     write_lines_to_output_file
-);
-use DPStore::Utils qw(
-    show_perldoc
 );
 use Getopt::Long;
 use Data::Dumper;

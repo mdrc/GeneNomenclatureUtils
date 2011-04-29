@@ -1,13 +1,34 @@
 ### Execute these from the GeneNomenclatureUtils/scripts directory
 
-# MOUSE
+# MOUSE - employing MGI files
 
 ./check_mgi_ids --file=../data/my_list_of_genes_2.txt --mgi_id_column=1 --output_column=2 --skip_title
 
 ./check_mgi_symbols --file=../data/my_list_of_genes_1.txt --mgi_symbol_column=1 --output_column=1 --skip_title
 
+./add_approved_name_by_mgi_id --file=../data/my_list_of_genes_2.txt --mgi_id_column=1 --output_column=4 --skip_title
 
-# RAT
+./add_mgi_id_by_mgi_symbol --file=../data/my_list_of_genes_1.txt --mgi_symbol_column=1 --output_column=1 --skip_title
+
+./add_mgi_symbol_by_mgi_id --file=../data/my_list_of_genes_2.txt --mgi_id_column=1 --output_column=4 --skip_title
+
+ ./add_ortho_gene_id_by_mgi_id --file=../example_output/example_7_output.txt --mgi_id_column=1 --output_column=2 --skip_title --output_attrib=human_entrez_gene_id
+ 
+ ./add_synonyms_by_mgi_id --file=../data/my_list_of_genes_2.txt --mgi_id_column=1 --output_column=4 --skip_title
+
+./add_uniprot_acc_by_mgi_id --file=../data/my_list_of_genes_2.txt --mgi_id_column=1 --output_column=4 --skip_title
+
+./combine_by_mgi_id_column --file=../data/my_list_of_genes_2.txt --file=../data/my_list_of_genes_2.txt --mgi_id_column=1
+
+./generate_interpro_report_from_mgi_id --file=../example_output/example_12_output.txt --mgi_id_column=1 --skip_title --output_mode=by_abundance
+
+./get_mgi_alleles_by_mgi_id --file=../example_output/example_7_output.txt --mgi_id_column=1 --skip_title
+
+./get_prot_seqs_by_mgi_id --file=../example_output/example_7_output.txt --mgi_id_column=1 --skip_titl
+
+
+
+## RAT - employing RGD files
 
 ./add_ortho_gene_id_by_rgd_id --file=../data/my_list_of_genes_3.txt --rgd_id_column=1 --output_column=1 --skip_title --output_attrib=mouse_ortholog_symbol
 
@@ -18,3 +39,101 @@
 ./check_rgd_ids --file=../data/my_list_of_genes_3.txt --rgd_id_column=1 --output_column=1 --skip_title
 
 ./check_rgd_symbols --file=../data/my_list_of_genes_3.txt --rgd_symbol_column=2 --output_column=1 --skip_title
+
+./check_hgnc_ids --file=../data/my_list_of_genes_4.txt --hgnc_id_column=1 --skip_title --output_column=3
+
+
+
+# LIST COMPARISON
+
+./list_comparator --config_file=example_list_config.ini --include_all
+
+
+
+## HGNC - employing HGNC files
+
+./add_hgnc_id_by_hgnc_symbol --file=../data/my_list_of_genes_4.txt --hgnc_symbol_column=2 --skip_title --output_column=3
+
+./add_hgnc_symbol_by_hgnc_id --file=../data/my_list_of_genes_4.txt --hgnc_id_column=1 --skip_title --output_column=3
+
+./add_mgi_id_by_hgnc_id --file=../data/my_list_of_genes_4.txt --hgnc_id_column=1 --skip_title --output_column=3
+
+
+
+## OMIM
+
+./add_omim_by_entrez_gene_id --file=../example_output/example_8_output.txt --entrez_gene_id_column=2 --skip_title --mode=phenotitle --output_column=3
+
+
+
+## Entrez Gene / NCBI
+
+./check_entrez_gene_ids --file=../data/my_list_of_genes_5.txt --entrez_gene_id_column=1 --skip_title --tax_id=9606 --output_column=3
+
+./extract_entrez_gene_info_by_tax_id --tax_id=9606
+
+./extract_from_ncbi_gene2_accession --tax_id=10090
+
+
+
+### UniProt
+
+NOT TESTED ./check_uniprot_accs
+NOT TESTED ./check_uniprot_id
+
+ ./parse_uniprot_accs
+ 
+
+
+## Other
+
+./generate_pubmed_disease_searches_from_gene_nomenclature_ids --file=../example_output/example_5_output.txt --mgi_id_column=2 --hgnc_id_column=3 --mode=disease --skip_title
+
+
+
+## MEDLINE / PubMed
+
+./medline_cache_create_db_tables --config_file=medline_cache_db.ini
+
+./medline_cache_requester --config_file=medline_cache_db.ini --file=../data/my_list_of_pubmed_ids.txt --pubmed_id_column=1
+
+./medline_cache_pubmed_fetcher --config_file=medline_cache_db.ini
+
+./medline_cache_dump --config_file=medline_cache_db.ini --file=../data/my_list_of_pubmed_ids.txt --pubmed_id_column=1
+
+
+
+## GeneNomenclatureUtils/scripts/txt/
+
+txt/add_row_numbers --file=../data/my_list_of_genes_5.txt --output_column=1 --skip_title
+
+txt/categorise_by_column --file=../data/my_list_of_genes_5.txt --column=1 --value=2902 --positive=yes --negative=no --output_column=1 --skip_title
+ 
+txt/compare_columns_output_differences --file1=../data/my_list_of_genes_2.txt --file1_column=1 --file2=../data/my_list_of_genes_2.txt --file2_column=1 --mode=common
+
+txt/count_column_occurrences --file=../data/my_list_of_genes_4.txt --column=1 --skip_title
+
+txt/count_distinct_values_in_column --file=../data/my_list_of_genes_4.txt --column=1
+
+txt/count_row_occurrences --file=../data/my_list_of_genes_5.txt --columns=3,4 --value=yes --output_column=1 --skip_title
+
+txt/count_rows_and_columns --file=../data/my_list_of_genes_5.txt --has_title
+
+txt/dump_column_as_unique --file=../data/my_list_of_genes_5.txt --skip_title --column=1
+
+txt/extract_from_file_by_column_numerical_range --file=../data/my_list_of_genes_6.txt --column=1 --skip_title --lower_bound=1 --upper_bound=2
+
+txt/extract_from_file_by_id_column --data_file=../data/my_list_of_genes_1.txt --data_file_id_column=1 --ids_file=../data/my_list_of_genes_2.txt --ids_file_column=2 --skip_title
+
+txt/filter_by_column --file=../data/my_list_of_genes_6.txt --column=1 --skip_title --value=2
+
+txt/pad_tabs_to_column_width --file=../data/my_list_of_genes_6.txt --width=6
+
+txt/rearrange_and_cut_columns --file=../data/my_list_of_genes_2.txt --columns=2,1
+
+txt/remove_trailing_whitespace --file=../data/my_list_of_genes_1.txt
+
+txt/sort_file_by_column --file=../data/my_list_of_genes_2.txt --column=3 --ascending --mode=string --skip_title
+
+txt/txt_file_format_sniffer --file=../data/my_list_of_genes_1.txt
+

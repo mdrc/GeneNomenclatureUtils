@@ -43,7 +43,7 @@ use warnings;
 use Config::IniFiles;
 use Carp;
 use Getopt::Long;
-use DPStore::Utils qw(
+use GeneNomenclatureUtils::TabFileParser qw(
     show_perldoc
 );
 use MedlineCacheDB;

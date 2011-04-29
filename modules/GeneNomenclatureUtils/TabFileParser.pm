@@ -1,8 +1,8 @@
-### release
+### nomenclature
 
 =pod
 
-=head1 NAME - DPStore::Utils::TabFileParser
+=head1 NAME - GeneNomenclatureUtils::TabFileParser
 
 =head1 DESCRIPTION
 
@@ -12,7 +12,7 @@ webmaster@genes2cognition.org
 
 =cut
 
-package DPStore::Utils::TabFileParser;
+package GeneNomenclatureUtils::TabFileParser;
 
 use strict;
 use warnings;
@@ -33,6 +33,8 @@ use vars qw{ @ISA @EXPORT_OK };
     close_output_files
     confirm_keys_are_present
     convert_case_by_mode
+    find_keys_in_two_hashes
+    find_keys_not_in_second_hash
     get_tab_file_geometry
     open_data_file
     open_output_file
@@ -46,12 +48,37 @@ use vars qw{ @ISA @EXPORT_OK };
     read_next_line_from_data_file 
     set_tabfileparser_clobber
     set_tabfile_parser_path_root
+    show_perldoc
     write_line_to_output_file
     write_lines_to_output_file
-    find_keys_in_two_hashes
-    find_keys_not_in_second_hash
     verify_cell
 );
+
+=head2 show_perldoc
+
+Outputs the passed txt to STDERR, followed by the POD of the program,
+afer a two second delay, then confesses.
+
+=cut
+
+sub show_perldoc {
+    my ( $text ) = shift(@_);
+    
+    $text = "HELP:" unless $text;
+    chomp($text);
+    print STDERR "\n$text\n\n";
+    sleep 2;
+
+    my @perldoc = `perldoc -T $0`;
+    foreach my $line (@perldoc) {
+        print STDERR $line;
+    }
+    unless ($text eq 'HELP:') {
+        confess "\n" , $text;
+    } else {
+        die 'Exiting';
+    }
+}
 
 =head2 convert_case_by_mode 
 

@@ -33,10 +33,8 @@ Skips column cells with values, 'MGI ID' or 'NOT_FOUND'
 use strict;
 use warnings;
 use Carp;
-use DPStore::Utils qw(
-    show_perldoc
-);
-use DPStore::Utils::TabFileParser qw(
+use Data::Dumper;
+use GeneNomenclatureUtils::TabFileParser qw(
     clean_array_elements_of_whitespace
     clean_line_of_trailing_whitespace
     clean_tab_delimited_file
@@ -53,11 +51,11 @@ use DPStore::Utils::TabFileParser qw(
     read_next_line_from_data_file 
     set_tabfileparser_clobber
     set_tabfile_parser_path_root
+    show_perldoc
     write_line_to_output_file
     write_lines_to_output_file
 );
 use Getopt::Long;
-use Data::Dumper;
 
 {
     print STDERR "\n$0\n", '=' x length($0), "\n\n";

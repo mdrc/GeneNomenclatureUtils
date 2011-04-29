@@ -1,0 +1,5 @@
+Entrez Gene	Symbol	Expt 1	Expt2
+2902	GRIN1	yes	yes
+23043	TNIK	no	no
+1740	DLG2	yes	no
+1848	DUSP6	no	yes

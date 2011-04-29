@@ -35,7 +35,7 @@ became secondary.
 use strict;
 use warnings;
 use Carp;
-use DPStore::Utils qw(
+use GeneNomenclatureUtils::TabFileParser qw(
     show_perldoc
 );
 

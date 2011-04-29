@@ -19,7 +19,7 @@ use Config::IniFiles;
 use Data::Dumper;
 use Exporter;
 use File::stat;
-use DPStore::Utils::TabFileParser qw(
+use GeneNomenclatureUtils::TabFileParser qw(
     clean_array_elements_of_whitespace
     close_data_files
     open_data_file
