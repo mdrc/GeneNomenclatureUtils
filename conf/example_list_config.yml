@@ -1,5 +1,5 @@
 skipwords: NOT_FOUND
-id_match: '^MGI:\d+$'
+id_match: mgi_id
 
 
 lists:

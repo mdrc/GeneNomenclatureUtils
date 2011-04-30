@@ -20,6 +20,10 @@ use Carp;
 use Config::IniFiles;
 use Data::Dumper;
 use Exporter;
+use GeneNomenclatureUtils::SeqIDNomenclature qw(
+    can_validate_id_type
+    validate_id_type
+);
 use GeneNomenclatureUtils::TabFileParser qw(
     clean_array_elements_of_whitespace
     close_data_files
@@ -234,9 +238,12 @@ my $debug;
 
         
         ### ID Match regular expression
-        my $id_match = $cfg->{id_match}
+        my $id_type = $cfg->{id_match}
             or confess "'id_match: ' not set";
-        print "ID match: $id_match\n" unless $quiet;
+        unless (can_validate_id_type($id_type)) {
+            confess "Don't understand id_type '$id_type'";
+        }
+        print "ID match: $id_type\n" unless $quiet;
 
         ### Skip words
         my $skipwords = parse_skip_words($cfg, $quiet);
@@ -281,7 +288,7 @@ my $debug;
             }
 
             my $ids = load_list_ids_file($params, $name, $skipwords
-                , $id_match, $unionlist, $quiet);
+                , $id_type, $unionlist, $quiet);
             $lists->{$name}->{ids}           = $ids;
             $lists->{$name}->{file}          = $file;
             $lists->{$name}->{column}        = $column;
@@ -323,7 +330,7 @@ sub parse_skip_words {
 }
 
 sub load_list_ids_file {
-    my ( $params, $name, $skipwords, $id_match, $unionlist, $quiet ) = @_;
+    my ( $params, $name, $skipwords, $id_type, $unionlist, $quiet ) = @_;
     
     my $ids = {};
     
@@ -355,11 +362,12 @@ sub load_list_ids_file {
             print STDERR "Duplicate: $id\n";
             $duplicate_count++;
         } else {
-            if ($id =~ /$id_match/) {
+            if (validate_id_type($id_type, $id, 'not_fatal', 'quiet')) {
                 $ids->{$id}++;
                 $unionlist->{$id}++;
             } else {
-                print STDERR "Invalid: $id\n";
+                print STDERR "Invalid ID: '$id' doesn't match id_type: '$id_type' with /";
+                print STDERR can_validate_id_type($id_type), "/\n";
                 $invalid_count++;
             }
         }
