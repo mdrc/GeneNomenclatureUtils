@@ -52,7 +52,7 @@ our $debug;
     my $parsers;
 
     sub _configure {
-        my $config_file = check_for_file('DPStoreConfDir', 'parser_definitions.yml');
+        my $config_file = check_for_file('GeneNomenclatureUtilsConf', 'parser_definitions.yml');
         $parsers        = LoadFile($config_file);
         
         unless ($parsers->{files} and ref($parsers->{files}) eq 'HASH') {

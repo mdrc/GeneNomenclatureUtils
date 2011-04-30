@@ -24,7 +24,7 @@ last static freeze:
 
 4) Set environment variables
 
-    DPStoreConfDir
+    GeneNomenclatureUtilsConf
 
         Directory to find configuration files, point this to the package
         directory: GeneNomenclatureUtils/conf

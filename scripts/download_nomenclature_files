@@ -55,7 +55,7 @@ my $failed_decompress = {};
         show_perldoc("'$dir' is not a directory");
     }
     unless ($file_list) {
-        $file_list = $ENV{DPStoreConfDir} .'/GeneNomenclatureUtils_download_urls.txt';
+        $file_list = $ENV{GeneNomenclatureUtilsConf} .'/GeneNomenclatureUtils_download_urls.txt';
     }
     unless (-e $file_list) {
         show_perldoc("Cannot read '$file_list'");

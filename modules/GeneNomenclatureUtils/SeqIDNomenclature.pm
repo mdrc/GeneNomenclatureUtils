@@ -72,7 +72,7 @@ our $debug;
     my $regex_for_ids;
     sub _init_validate_id_types {
         my $config_file = check_for_file(
-            'DPStoreConfDir', 'id_type_definitions.yml');
+            'GeneNomenclatureUtilsConf', 'id_type_definitions.yml');
         $regex_for_ids = LoadFile($config_file);
     }
     

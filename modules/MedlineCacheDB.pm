@@ -24,12 +24,12 @@ use DBI;
 sub new {
     my ( $self, $config_file ) = @_;
 
-    unless ($ENV{DPStoreConfDir}) {
-        show_perldoc('Must set $ENV{DPStoreConfDir}');
+    unless ($ENV{GeneNomenclatureUtilsConf}) {
+        show_perldoc('Must set $ENV{GeneNomenclatureUtilsConf}');
     }
     
     my $cfg = new Config::IniFiles(
-        -file => $ENV{DPStoreConfDir} . '/' .$config_file
+        -file => $ENV{GeneNomenclatureUtilsConf} . '/' .$config_file
     );
 
     my $db   = $cfg->val('MEDLINE DB', 'db')

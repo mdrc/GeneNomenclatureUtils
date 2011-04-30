@@ -163,12 +163,12 @@ use Getopt::Long;
     if ($comparison and $include_all) {
         show_perldoc("Must specify ONE of --compare or --include_all");
     }
-    unless ($ENV{DPStoreConfDir}) {
-        show_perldoc('Must set $DPStoreConfDir');
+    unless ($ENV{GeneNomenclatureUtilsConf}) {
+        show_perldoc('Must set $GeneNomenclatureUtilsConf');
     }
 
     foreach my $file (@config_files) {
-        parse_list_config($ENV{DPStoreConfDir} . '/' . $file);
+        parse_list_config($ENV{GeneNomenclatureUtilsConf} . '/' . $file);
     }
     
     if ($include_all) {
