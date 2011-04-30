@@ -80,13 +80,13 @@ GeneNomenclatureUtils/conf
 
 Compare the example lists:
 
-./list_comparator --config_file=example_list_config.ini --include_all
+./list_comparator --config_file=example_list_config.yml --include_all
 
 
 ./list_comparator
 =================
 
-CONFIG FILE: GeneNomenclatureUtils/conf/example_list_config.ini
+CONFIG FILE: GeneNomenclatureUtils/conf/example_list_config.yml
 ID match: ^MGI:\d+$
 SKIPWORDS : NOT_FOUND
 

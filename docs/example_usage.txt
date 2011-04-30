@@ -211,7 +211,7 @@ COMMENT: Inspect the output file it should contain 5 MEDLINE records
 
 EXAMPLE 21 - Compare two lists of gene identifiers
 
-COMMAND: ./list_comparator --config_file=example_list_config.ini --include_all > ../example_output/example_21_output.txt
+COMMAND: ./list_comparator --config_file=example_list_config.yml --include_all > ../example_output/example_21_output.txt
 COMMENT: Inspect the output file, once should see two files were parsed and
          compared, and the comparision starts thus:
          

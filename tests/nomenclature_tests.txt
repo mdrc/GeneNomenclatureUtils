@@ -45,7 +45,7 @@
 
 # LIST COMPARISON
 
-./list_comparator --config_file=example_list_config.ini --include_all
+./list_comparator --config_file=example_list_config.yml --include_all
 
 
 
