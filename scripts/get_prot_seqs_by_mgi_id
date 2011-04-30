@@ -1,5 +1,5 @@
 #!/usr/local/bin/perl
-### dev
+### nomenclature
 
 =pod
 
@@ -27,34 +27,17 @@ use strict;
 use warnings;
 use Carp;
 use GeneNomenclatureUtils::Counts;
+use GeneNomenclatureUtils::Parser;
 use GeneNomenclatureUtils::SeqIDNomenclature qw(
     get_swissprot_or_trembl_acc
     parse_hmd_human_sequence_file
     parse_hmd_human_sequence_file_entry
-    parse_mgi_list_2_file
     parse_mgi_swissprot_trembl
-    
+    validate_id_type
 );
 use GeneNomenclatureUtils::TabFileParser qw(
-    clean_array_elements_of_whitespace
-    clean_line_of_trailing_whitespace
-    clean_tab_delimited_file
-    close_data_files
-    close_output_files
-    confirm_keys_are_present
-    open_data_file
-    open_output_file
-    output_array_of_arrays
-    output_hash_of_arrays
-    output_tab_delimited_txt_from_hash_of_arrays
     parse_tab_delimited_file_to_array
-    parse_tab_delimited_file_to_hash_keyed_by_column
-    read_next_line_from_data_file 
-    set_tabfileparser_clobber
-    set_tabfile_parser_path_root
     show_perldoc
-    write_line_to_output_file
-    write_lines_to_output_file
 );
 use Getopt::Long;
 use Data::Dumper;
@@ -80,11 +63,18 @@ my $counts;
     }
 
     my ($mgi_swiss, $mgi_trembl) = parse_mgi_swissprot_trembl();
-    my ($parsed_by_mgi_symbol, $parsed_by_mgi_id) = parse_mgi_list_2_file();
+   
+    ### Parse MGI file, MRK_List2.rpt, by MGI ID, 
+    my $parser = GeneNomenclatureUtils::Parser->new(
+        'MGI_dir', 'MRK_List2.rpt', 'mgi_accession_id');
+    $parser->add_filter('type', 'nomatch', 'Gene'); #Excludes type !~ /Gene/  
+    $parser->parse;
+    $parser->output_attribute('symbol');
+    
     my $hmd_human_sequence = parse_hmd_human_sequence_file();
     
     initialise_counts();
-    do_file($file, $mgi_column, $skip_title, $parsed_by_mgi_id
+    do_file($file, $mgi_column, $skip_title, $parser
         , $hmd_human_sequence);
     
     END {
@@ -108,8 +98,7 @@ sub initialise_counts {
 
 
 sub do_file {
-    my ( $file, $mgi_column, $skip_title, $parsed_by_mgi_id
-        , $hmd_human_sequence ) = @_;
+    my ( $file, $mgi_column, $skip_title, $parser, $hmd_human_sequence ) = @_;
 
     my $entries = parse_tab_delimited_file_to_array($file);
     if ($skip_title) {
@@ -123,14 +112,14 @@ sub do_file {
         my $line = join("\t", @$entry);
         
         my $mgi_id     = $entry->[$mgi_column - 1];
-        unless ($mgi_id and $mgi_id =~ /^MGI:\d+/) {
-            confess "Bad MGI ID on '$line'\n";
+        unless ($mgi_id and validate_id_type('mgi_id', $mgi_id, 'not_fatal', 'quiet')) {
+            print STDERR "Bad MGI ID on '$line'\n";
         }
         
         my $prot_seq;
         
         my ($acc, $mode) = get_swissprot_or_trembl_acc($mgi_id);
-        my $symbol = $parsed_by_mgi_id->{$mgi_id};
+        my $symbol = $parser->lookup($mgi_id);
         unless ($symbol) {
             $counts->increment_mgi_symbol_not_found;
             $symbol = 'UNKNOWN';

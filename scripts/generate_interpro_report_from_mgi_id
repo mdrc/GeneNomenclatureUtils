@@ -28,19 +28,19 @@ matches, either 'by_gene' or 'by_abundance'
 use strict;
 use warnings;
 use Carp;
+use GeneNomenclatureUtils::Parser;
 use GeneNomenclatureUtils::SeqIDNomenclature qw(
     lookup_names_for_interpro_accs
     parse_mgi_interpro_domains_report_file
     parse_mgi_interpro_report_file
     parse_mgi_interpro_report_file_entry
-    parse_mgi_list_2_file
+    validate_id_type
 );
 use GeneNomenclatureUtils::TabFileParser qw(
     parse_tab_delimited_file_to_array
     show_perldoc
 );
 use Getopt::Long;
-use Data::Dumper;
 
 {
     print STDERR "\n$0\n", '=' x length($0), "\n\n";
@@ -71,27 +71,33 @@ sub do_file {
     
     my $interpro_by_mgi_id    = parse_mgi_interpro_report_file();
     my $interpro_accs_to_name = parse_mgi_interpro_domains_report_file();
-    
-    my ($parsed_by_mgi_symbol, $parsed_by_mgi_id, $approved_name_by_mgi_id)
-        = parse_mgi_list_2_file();
+
+    ### Parse the MGI file: MRK_List2.rpt by MGI ID
+    my $parser = GeneNomenclatureUtils::Parser->new(
+        'MGI_dir', 'MRK_List2.rpt', 'mgi_accession_id');
+    $parser->add_filter('type', 'nomatch', 'Gene'); #Excludes type !~ /Gene/  
+    $parser->parse;
+    $parser->output_attribute('symbol');
    
     my $entries = parse_tab_delimited_file_to_array($file);
     shift(@$entries) if $skip_title;
     
-    ### Loop over the MGI IDs
     
     my $genes_seen = {};
     my $genes_seen_without_matches = {};
     
     my $ipr_accs_seen    = {};
     my $genes_by_ipr_acc = {};
+    
+    ### Loop over the MGI IDs
     foreach my $entry (@$entries) {
     
         ### Mouse symbol, synonyms, name
         my $mgi_id = $entry->[$mgi_column - 1];
         next unless ($mgi_id);
-        unless ($mgi_id =~ /^MGI:\d+/) {
-            print STDERR "Not checking '$mgi_id'";
+        
+        unless (validate_id_type('mgi_id', $mgi_id, 'not_fatal', 'quiet')) {
+            print STDERR "Not checking '$mgi_id'\n";
         }
         
         my $interpro_hits = $interpro_by_mgi_id->{$mgi_id}; 
@@ -144,7 +150,8 @@ sub do_file {
             my $genes_string = '';
             foreach my $mgi_id (@{$genes_by_ipr_acc->{$ipr_acc}}) {
 
-                my $symbol = $parsed_by_mgi_id->{$mgi_id};
+                my $symbol = $parser->lookup($mgi_id)
+                    or confess "Couldn't lookup '$mgi_id'\n";
                 $genes_string .= "$symbol\t";
             }
             chop($genes_string);
@@ -161,7 +168,7 @@ sub do_file {
     
     foreach my $mgi_id (keys(%$genes_seen_without_matches)) {
     
-        my $symbol = $parsed_by_mgi_id->{$mgi_id};
+        my $symbol = $parser->lookup($mgi_id);
         if ($symbol) {
             print STDERR "  $symbol\t$mgi_id\n";
         } else {

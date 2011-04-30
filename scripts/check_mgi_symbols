@@ -39,14 +39,10 @@ check.
 use strict;
 use warnings;
 use Carp;
-use GeneNomenclatureUtils::SeqIDNomenclature qw(
-    check_or_translate_ids_in_file
-    parse_mgi_list_2_file
-);   
+use GeneNomenclatureUtils::Parser;
 use GeneNomenclatureUtils::TabFileParser qw(
     show_perldoc
 );
-
 use Getopt::Long;
 
 {
@@ -59,19 +55,29 @@ use Getopt::Long;
         "output_column=i"     => \$output_column,
         "skip_title"          => \$skip_title,
     ) or show_perldoc();
-    show_perldoc("Must set --file") unless $file;
+
+    ### Check we have the correct parameters
+    unless ($file) {
+        show_perldoc('Must set --file');
+    }
     unless ($mgi_symbol_column and $mgi_symbol_column >= 1) {
         show_perldoc("Must set --rgd_id_column >= 1");
     }
-    
     unless ($output_column and $output_column >= 1) {
         show_perldoc("Must set --output_column >= 1");
     }
 
-    ### Parse nomenclature file(s)
-    my ($parsed_by_mgi_symbol, $parsed_by_mgi_id) = parse_mgi_list_2_file();
-    
-    ### Do the check
-    check_or_translate_ids_in_file($file, $parsed_by_mgi_symbol, 'MGI SYMBOL CHECK'
-        , 'mgi_symbol', $mgi_symbol_column, $output_column, $skip_title);
+    ### Setup parser
+    my $parser = GeneNomenclatureUtils::Parser->new(
+        'MGI_dir', 'MRK_List2.rpt', 'symbol');
+    $parser->add_filter('type', 'nomatch', 'Gene'); #Excludes type !~ /Gene/  
+    $parser->parse;
+
+    ### Output attributes
+    $parser->output_attribute('symbol'); #Parser needs one specified
+    $parser->file_process_mode('check');
+
+    ### Convert
+    $parser->process_file($file, $mgi_symbol_column, $output_column
+        , $skip_title,  'MGI SYMBOL CHECK');
 }

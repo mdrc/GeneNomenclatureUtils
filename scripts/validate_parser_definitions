@@ -1,0 +1,40 @@
+#!/software/bin/perl
+### nomenclature
+=pod
+
+=head1 NAME - validate_parser_definitions
+
+=head1 COMMAND LINE PARAMETERS
+
+Required parameters - NONE
+
+=head1 DESCRIPTION
+
+Checks the nomenclature file parser definitions present in
+parser_definitions.yml which is found in the configuration
+direcotry pointed to by the environment variable:
+GeneNomencalatureUtilsConf
+
+By default this will be
+GeneNomencalatureUtils/conf
+
+Example command line
+
+./validate_parser_definitions
+
+Run each time new parser definitions are added to check they
+are correct. Any errors in YAML format or the attributes
+specified will be reported.
+
+=head1 AUTHOR - mike_croning@hotmail.com
+
+=cut 
+
+use strict;
+use warnings;
+use Carp;
+use GeneNomenclatureUtils::ColumnParser;
+
+{
+    GeneNomenclatureUtils::ColumnParser::_configure();
+}

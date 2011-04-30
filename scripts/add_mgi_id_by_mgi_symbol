@@ -40,16 +40,11 @@ This will prepend a column to the file with the requested IDs.
 use strict;
 use warnings;
 use Carp;
+use GeneNomenclatureUtils::Parser;
 use GeneNomenclatureUtils::TabFileParser qw(
     show_perldoc
 );
-use GeneNomenclatureUtils::SeqIDNomenclature qw(
-    check_or_translate_ids_in_file
-    parse_mgi_list_2_file
-);
 use Getopt::Long;
-use Data::Dumper;
-
 
 {
     print STDERR "\n$0\n", '=' x length($0), "\n\n";
@@ -72,11 +67,18 @@ use Data::Dumper;
     unless ($output_column and $output_column >= 1) {
         show_perldoc('Must set --output_column >= 1');
     }
-    
-    ### Parse nomenclature files
-    my ($parsed_by_mgi_symbol) = parse_mgi_list_2_file();
-    
-    ### Do the translation
-    check_or_translate_ids_in_file($file, $parsed_by_mgi_symbol, 'MGI ID'
-        , 'mgi_symbol', $mgi_column, $output_column, $skip_title, 'translate');
+
+    ### Setup parser
+    my $parser = GeneNomenclatureUtils::Parser->new(
+        'MGI_dir', 'MRK_List2.rpt', 'symbol');
+    $parser->add_filter('type', 'nomatch', 'Gene');    
+    $parser->parse;
+
+    ### Output attributes
+    $parser->output_attribute('mgi_accession_id');
+    $parser->file_process_mode('translate');
+
+    ### Convert
+    $parser->process_file($file, $mgi_column, $output_column
+        , $skip_title,  'MGI ID');
 }

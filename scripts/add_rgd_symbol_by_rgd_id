@@ -39,9 +39,6 @@ reporting which ones are not matched in the RGD file.
 use strict;
 use warnings;
 use Carp;
-use GeneNomenclatureUtils::SeqIDNomenclature qw(
-    check_or_translate_ids_in_file
-);   
 use GeneNomenclatureUtils::Parser;
 use GeneNomenclatureUtils::TabFileParser qw(
     show_perldoc

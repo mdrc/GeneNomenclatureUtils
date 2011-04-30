@@ -11,6 +11,9 @@ Required parameters
   --file                    file to check
   --column                  column to analyse (>=1)
   
+Optional parameters
+  --skip_title              skip title row
+
 =head1 DESCRIPTION
 
 Counts the distinct values in the specified column of the tab-delimited
@@ -32,25 +35,33 @@ use Getopt::Long;
 
 {
     print STDERR "\n$0\n", '=' x length($0), "\n\n";
-    my ($file, $column_num);
+    my ($file, $column_num, $skip_title);
+    
+    ### Command line parsing
     GetOptions(
-        "file=s"       => \$file,
-        "column=i"     => \$column_num
+        "file=s"      => \$file,
+        "column=i"    => \$column_num,
+        "skip_title"  => \$skip_title
     ) or show_perldoc();
+    
     show_perldoc("Must set --file") unless $file;
-    unless (defined($column_num) and $column_num >= 1) {
+    unless ($column_num and $column_num >= 1) {
         show_perldoc("Must set --column (>=1)");
     }
-    print STDERR "Assumes a column title line\n";
-    sleep 2;
 
     my $data = parse_tab_delimited_file_to_array($file, 'clean');
-    my $titles = shift(@$data);
+    
+    my $titles;
+    if ($skip_title) {
+        print STDERR "Skipping title row\n";
+        $titles = shift(@$data);
+        print join("\t", @$titles), "\n";
+    }
 
     my $contents = {};
     print "\n";
     print "Column number: $column_num\n";
-    print "Column title : '", $titles->[$column_num-1], "'\n";
+    print "Column title : '", $titles->[$column_num-1], "'\n" if $skip_title;
     
     foreach my $row (@$data) {
         my $content = $row->[$column_num-1];
@@ -64,12 +75,12 @@ use Getopt::Long;
    
     print "\nDistinct values: ", scalar(keys(%$contents)), "\n";
     
-    print "\nDuplicates\n";
+    print "\nDuplicates:\n";
     
     my $duplicate_count = 0;
     foreach my $key (keys(%$contents)) {
         if ($contents->{$key} > 1) {
-            print $key, ' ' x (20 - length($key)), ' - ';
+            print "  $key", ' ' x (20 - length($key)), ' - ';
             print $contents->{$key}, "\n"; 
             
             $duplicate_count++;

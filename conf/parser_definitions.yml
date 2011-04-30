@@ -21,7 +21,7 @@ files:
         line_pattern: '^#|^GENE_RGD_ID'
         line_pattern_match_type: nomatch
         
-        columns:    
+        columns:        
             1:  {name: gene_rgd_id, mandatory: yes, validate: rgd_id}
             2:  {name: symbol, mandatory: yes, validate: rgd_symbol}
             3:  {name: name, mandatory: yes}
@@ -60,3 +60,31 @@ files:
             36: {name: splice_symbol}
             37: {name: gene_type}
             38: {name: ensembl_id, validate: ensembl_rat_gene_id, split: ;}
+
+    MGI_dir_MRK_List2.rpt:
+        line_pattern: '^MGI:'
+        line_pattern_match_type: match
+
+        columns:        
+            1:  {name: mgi_accession_id, mandatory: yes, validate: mgi_id}
+            2:  {name: chr}
+            3:  {name: cm_position}
+            4:  {name: symbol, mandatory: yes, validate: mgi_symbol}
+            5:  {name: status}
+            6:  {name: name, mandatory: yes}
+            7:  {name: type, mandatory: yes}
+
+    HGNC_dir_hgnc_core_data.txt:
+        line_pattern: '^\d+'
+        line_pattern_match_type: match
+
+        columns:
+            1:  {name: hgnc_id, mandatory: yes, validate: hgnc_id}
+            2:  {name: approved_symbol, mandatory: yes, validate: hgnc_symbol}
+            3:  {name: approved_name, mandatory: yes}
+            4:  {name: status}
+            5:  {name: previous_symbols, split: ', '}
+            6:  {name: aliases, split: ', '}
+            7:  {name: chromosome}
+            8:  {name: accession_numbers, split: ', '}
+            9:  {name: refseq_ids, split: ', '}
