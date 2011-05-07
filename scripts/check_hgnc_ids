@@ -40,12 +40,10 @@ use Carp;
 use GeneNomenclatureUtils::Parser;
 use GeneNomenclatureUtils::SeqIDNomenclature qw(
     check_or_translate_ids_in_file
-    parse_hgnc_core_file
 );   
 use GeneNomenclatureUtils::TabFileParser qw(
     show_perldoc
 );
-
 use Getopt::Long;
 
 {
@@ -76,6 +74,8 @@ use Getopt::Long;
     
     #Excludes status !~ /Approved/      
     $parser->add_filter('status', 'nomatch', 'Approved'); 
+
+    #Deal with HGNC download omits 'HGNC:' from IDs
     $parser->prepend_key('HGNC:');
     $parser->prepend_attribute('hgnc_id', 'HGNC:');
     $parser->parse;
