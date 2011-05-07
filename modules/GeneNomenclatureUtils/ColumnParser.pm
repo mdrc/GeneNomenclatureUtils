@@ -202,6 +202,9 @@ sub parse_row_to_named_attributes {
         my $mandatory       = $attribute->{mandatory};
         my $id_type         = $attribute->{id_type};
         my $split           = $attribute->{split};
+        
+        my $prepend         = $attribute->{prepend};
+        my $postpend        = $attribute->{postpend};
 
         my $value           = $row->[$column_num - 1];        
 
@@ -228,6 +231,15 @@ sub parse_row_to_named_attributes {
 
                 if ($id_type) {
                     foreach my $id (@{$parsed->{$attrib_name}}) {
+                    
+                        #Pre and post pend if requested
+                        if ($prepend) {
+                            $id = $prepend . $id;
+                        }
+                        if ($postpend) {
+                            $id .= $postpend;
+                        }
+                        
                         unless (validate_id_type($id_type, $id, $warn)) {
 
                             print STDERR "Validation error for '$id' (col: $column_num) as '$id_type'\n";
@@ -238,7 +250,16 @@ sub parse_row_to_named_attributes {
                     }
                 }
             } else {
-                $parsed->{$attrib_name} = $value;
+
+                #Pre and post pend if requested
+                if ($prepend) {
+                    $value = $prepend . $value;
+                }
+                if ($postpend) {
+                    $value .= $postpend;
+                }
+            
+                $parsed->{$attrib_name} = $value; 
                 if ($id_type) {
                     unless (validate_id_type($id_type, $value, $warn)) {
                         print STDERR "Validation error for '$value' (col: $column_num) as '$id_type'\n";

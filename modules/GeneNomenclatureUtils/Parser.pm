@@ -148,6 +148,8 @@ sub parse {
             , $allow_duplicates
             , $filters
             , $self->convert_case
+            , $self->prepend_key
+            , $self->postpend_key
     );
 
     $self->{_parsed}          = $parsed;
@@ -547,6 +549,43 @@ sub file_spec {
     return $self->{_file_spec};
 }
 
+=head2 prepend_key
+
+Get/set method for the string to prepend to a key
+during parse
+
+  $parser->prepend_key('HGNC:');
+
+=cut
+
+sub prepend_key {
+    my ( $self, $string ) = @_;
+    
+    if ($string) {
+        $self->{_prepend_key} = $string;
+    }
+    return $self->{_prepend_key};
+}
+
+=head2 postpend_key
+
+Get/set method for the string to postpend to a key
+during parse
+
+  $parser->postpend_key('_NEW');
+
+=cut
+
+sub postpend_key {
+    my ( $self, $string ) = @_;
+    
+    if ($string) {
+        $self->{_postpend_key} = $string;
+    }
+    return $self->{_postpend_key};
+}
+
+
 =head2 parsed_by
 
 Get/set method for the name of the column/attribute to be
@@ -686,6 +725,36 @@ sub get_attribute {
     return $self->{_valid_attribs}->{$attribute};  
 }
 
+=head2 prepend_attribute
+
+=cut 
+
+sub prepend_attribute {
+    my ( $self, $attribute_name, $string ) = @_;
+    
+    $attribute_name = $self->validate_attribute_name($attribute_name);
+    my $attribute   = $self->get_attribute($attribute_name);
+    if ($string) {
+        $attribute->{prepend} = $string;
+    }
+    return $attribute->{prepend};
+}
+
+=head2 postpend_attribute
+
+=cut 
+
+sub postpend_attribute {
+    my ( $self, $attribute_name, $string ) = @_;
+    
+    $attribute_name = $self->validate_attribute_name($attribute_name);
+    my $attribute   = $self->get_attribute($attribute_name);
+    if ($string) {
+        $attribute->{postpend} = $string;
+    }
+    return $attribute->{postpend};
+}
+
 =head2 validate_attribute_name
 
 Validates the passed attribute name, throwing a fatal error if was not
@@ -693,13 +762,15 @@ specified in the file parser, found in: parser_definitions.yml
 
   $parser->validate_attribute_name('symbol');
 
+Returns the name of the passed attribute (lower-cased) if successful, 
+
 =cut
 
 sub validate_attribute_name {
     my ( $self, $attribute ) = @_;
     
     unless ($attribute) {
-        confess "Must pass an attribute to check";
+        confess "Must pass an attribute name to check";
     }
     $attribute = lc($attribute);
     

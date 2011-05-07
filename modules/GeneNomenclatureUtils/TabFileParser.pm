@@ -154,8 +154,8 @@ sub _filter_fields {
 sub parse_file_by_column_to_hash_with_validation {
     my ( $file, $column_num, $regex_for_column, $regex_for_line
         , $regex_type, $split_by, $attrib_name, $allow_duplicate_ids
-        , $filters, $convert_key_case ) = @_;
-
+        , $filters, $convert_key_case, $pre_pend, $post_pend ) = @_;
+    
     print STDERR "DUPLICATES : ";
     if ($allow_duplicate_ids) {
         unless ($allow_duplicate_ids =~ /^allow$|^delete$/) {
@@ -170,7 +170,7 @@ sub parse_file_by_column_to_hash_with_validation {
     if ($attrib_name) {
         print STDERR "($attrib_name)";
     }
-    print "\n";
+    print STDERR "\n";
     
     my $parsed_by_column          = {};
     my $line_count                = 0;
@@ -240,6 +240,16 @@ sub parse_file_by_column_to_hash_with_validation {
         }
         
         foreach my $final_id (@ids) {
+            
+            ### Do we need to transform the ID?
+            if ($pre_pend) {
+                $final_id = $pre_pend . $final_id;
+            }
+            if ($post_pend) {
+                $final_id .= $post_pend;
+            } 
+        
+            ### Validation
             if ($regex_for_column) {
                 unless ($final_id =~ /$regex_for_column/) {
                     confess "Error validating ID '$final_id' with '$regex_for_column'";

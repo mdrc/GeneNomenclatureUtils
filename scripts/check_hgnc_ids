@@ -37,6 +37,7 @@ check.
 use strict;
 use warnings;
 use Carp;
+use GeneNomenclatureUtils::Parser;
 use GeneNomenclatureUtils::SeqIDNomenclature qw(
     check_or_translate_ids_in_file
     parse_hgnc_core_file
@@ -57,20 +58,33 @@ use Getopt::Long;
         "output_column=i"     => \$output_column,
         "skip_title"          => \$skip_title,
     ) or show_perldoc();
-    show_perldoc("Must set --file") unless $file;
+
+    ### Check we have the correct parameters
+    unless ($file) {
+        show_perldoc('Must set --file');
+    }
     unless ($hgnc_id_column and $hgnc_id_column >= 1) {
         show_perldoc("Must set --hgnc_id_column >= 1");
     }
-    
     unless ($output_column and $output_column >= 1) {
         show_perldoc("Must set --output_column >= 1");
     }
-    
-    ### Parse nomenclature file(s)
-    my ($parsed_by_symbol, $parsed_by_hgnc_id, $approved_name_by_hgnc_id)
-        = parse_hgnc_core_file();
 
-    ### Do the check
-    check_or_translate_ids_in_file($file, $parsed_by_hgnc_id, 'HGNC ID CHECK'
-        , 'hgnc_id', $hgnc_id_column, $output_column, $skip_title);
+    ### Setup parser
+    my $parser = GeneNomenclatureUtils::Parser->new(
+        'HGNC_dir', 'hgnc_core_data.txt', 'hgnc_id');
+    
+    #Excludes status !~ /Approved/      
+    $parser->add_filter('status', 'nomatch', 'Approved'); 
+    $parser->prepend_key('HGNC:');
+    $parser->prepend_attribute('hgnc_id', 'HGNC:');
+    $parser->parse;
+
+    ### Output attributes
+    $parser->output_attribute('hgnc_id'); #Parser needs one specified
+    $parser->file_process_mode('check');
+
+    ### Convert
+    $parser->process_file($file, $hgnc_id_column, $output_column
+        , $skip_title,  'HGNC ID CHECK');
 }
