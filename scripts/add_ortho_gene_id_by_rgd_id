@@ -35,13 +35,10 @@ use strict;
 use warnings;
 use Carp;
 use Data::Dumper;
+use GeneNomenclatureUtils::Parser;
 use GeneNomenclatureUtils::TabFileParser qw(
     show_perldoc
 );
-use GeneNomenclatureUtils::SeqIDNomenclature qw(
-    check_or_translate_ids_in_file
-);
-use GeneNomenclatureUtils::Parser;
 use Getopt::Long;
 
 {

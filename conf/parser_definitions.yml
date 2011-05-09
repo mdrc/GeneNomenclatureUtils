@@ -74,6 +74,36 @@ files:
             6:  {name: name, mandatory: yes}
             7:  {name: type, mandatory: yes}
 
+    MGI_dir_HMD_HGNC_Accession.rpt:
+        line_pattern: '^MGI:'
+        line_pattern_match_type: match
+
+        columns:
+            1:  {name: mgi_accession_id, mandatory: yes, validate: mgi_id}
+            2:  {name: mouse_marker_symbol, mandatory: yes, validate: mgi_symbol}
+            3:  {name: mouse_marker_name, mandatory: yes}
+            4:  {name: mouse_entrez_gene_id, validate: entrez_gene_id}
+            5:  {name: hgnc_id, validate: hgnc_id}
+            6:  {name: hgnc_human_marker_symbol, mandatory: yes, validate: hgnc_symbol}
+            7:  {name: human_entrez_gene_id, validate: entrez_gene_id}
+
+    MGI_dir_MGI_PhenotypicAllele.rpt:
+        line_pattern: '^MGI:'
+        line_pattern_match_type: match
+
+        columns:
+            1:  {name: mgi_allele_accession_id, mandatory: yes, validate: mgi_id}
+            2:  {name: allele_symbol, mandatory: yes}
+            3:  {name: allele_name, mandatory: yes}
+            4:  {name: allele_type, mandatory: yes}
+            5:  {name: pubmed_id, validate: pubmed_id}
+            6:  {name: mgi_marker_accession_id, mandatory: yes, validate: mgi_id}
+            7:  {name: marker_symbol, mandatory: yes, validate: mgi_symbol}
+            8:  {name: marker_refseq_id, validate: refseq_protein_id}
+            9:  {name: marker_ensembl_id, validate: ensembl_mouse_gene_id}
+            10: {name: high-level_mammalian_phenotype_id, split: ','}
+            11: {name: synonyms, split: '\|'}
+
     HGNC_dir_hgnc_core_data.txt:
         line_pattern: '^\d+'
         line_pattern_match_type: match

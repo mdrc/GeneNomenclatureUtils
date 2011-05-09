@@ -27,29 +27,9 @@ of the tab-delimited file
 use strict;
 use warnings;
 use Carp;
+use GeneNomenclatureUtils::Parser;
 use GeneNomenclatureUtils::TabFileParser qw(
-    clean_array_elements_of_whitespace
-    clean_line_of_trailing_whitespace
-    clean_tab_delimited_file
-    close_data_files
-    close_output_files
-    confirm_keys_are_present
-    open_data_file
-    open_output_file
-    output_array_of_arrays
-    output_hash_of_arrays
-    output_tab_delimited_txt_from_hash_of_arrays
-    parse_tab_delimited_file_to_array
-    parse_tab_delimited_file_to_hash_keyed_by_column
-    read_next_line_from_data_file 
-    set_tabfileparser_clobber
-    set_tabfile_parser_path_root
     show_perldoc
-    write_line_to_output_file
-    write_lines_to_output_file
-);
-use GeneNomenclatureUtils::SeqIDNomenclature qw(
-    check_for_file
 );
 use Getopt::Long;
 use Data::Dumper;
@@ -64,71 +44,29 @@ use Data::Dumper;
         "output_column=i"       => \$output_column,
         "skip_title"            => \$skip_title,
     ) or show_perldoc();
-    show_perldoc("Must set --file") unless $file;
+    
+    ### Check we have the correct parameters
+    unless ($file) {
+        show_perldoc('Must set --file');
+    }
     unless ($hgnc_column and $hgnc_column >= 1) {
         show_perldoc("Must set --hgnc_id_column >= 1");
     }
-    
     unless ($output_column and $output_column >= 1) {
         show_perldoc("Must set --output_column >= 1");
     }
     
-    do_file($file, $hgnc_column, $output_column, $skip_title);
-}
-
-sub do_file {
-    my ( $file, $hgnc_column, $output_column, $skip_title ) = @_;
+    ### Setup parser
+    my $parser = GeneNomenclatureUtils::Parser->new(
+        'MGI_dir', 'HMD_HGNC_Accession.rpt', 'hgnc_id');
+    $parser->duplicates('delete'); ### Remove ambiguous hgnc_id -> mgi_id
+    $parser->parse;
     
-    unless ($ENV{'MGI_dir'}) {
-        confess 'Must set $MGI_dir';
-    }
-    my $nomen_file = $ENV{'MGI_dir'} . '/HMD_HGNC_Accession.rpt';
-    unless (-f $nomen_file) {
-        confess "Can't read 'HMD_HGNC_Accession.rpt'";
-    }
-    print STDERR "Parsing: $nomen_file\n";
-    my $mapping = parse_tab_delimited_file_to_hash_keyed_by_column($nomen_file, 5, 'allow');
-    print STDERR scalar(keys(%$mapping)), " HGNC: ids parsed\n";
-
+    ### Output attributes
+    $parser->output_attribute('mgi_accession_id');
+    $parser->file_process_mode('translate');
     
-    my $entries = parse_tab_delimited_file_to_array($file);
-    if ($skip_title) {
-        my $titles = shift(@$entries);
-        
-        splice (@$titles, $output_column - 1, 0, 'MGI ID');
-        print join("\t", @$titles), "\n";
-    }
-   
-    ### Loop over the HGNC ids
-    
-    my $found             = 0;
-    my $not_found         = 0;
-    my $nothing_to_lookup = 0;
-    
-    foreach my $entry (@$entries) {
-    
-        my $output = 'NOT_FOUND';
-        my $hgnc_id = $entry->[$hgnc_column - 1];
-        unless ($hgnc_id) {
-            $nothing_to_lookup++;
-            next;
-        }
-        
-        my $map = $mapping->{$hgnc_id};
-        if ($map) {
-            $output = $map->[0];
-            $found++
-        } else {
-            $not_found++;
-            print STDERR "Not found: '$hgnc_id'";
-        }
-        
-        splice (@$entry, $output_column - 1, 0, $output);
-        print join("\t", @$entry), "\n";
-    }
-    
-    print STDERR "\n";
-    print STDERR "Found           : $found\n";
-    print STDERR "Not found       : $not_found\n";
-    print STDERR "Nothing to check: $nothing_to_lookup\n";
+    ### Convert
+    $parser->process_file($file, $hgnc_column, $output_column
+        , $skip_title,  'MGI ID');
 }

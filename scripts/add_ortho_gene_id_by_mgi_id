@@ -36,48 +36,36 @@ gene symbols
 use strict;
 use warnings;
 use Carp;
+use Data::Dumper;
+use GeneNomenclatureUtils::Parser;
 use GeneNomenclatureUtils::TabFileParser qw(
-    clean_array_elements_of_whitespace
-    clean_line_of_trailing_whitespace
-    clean_tab_delimited_file
-    close_data_files
-    close_output_files
-    confirm_keys_are_present
-    open_data_file
-    open_output_file
-    output_array_of_arrays
-    output_hash_of_arrays
-    output_tab_delimited_txt_from_hash_of_arrays
-    parse_tab_delimited_file_to_array
-    parse_tab_delimited_file_to_hash_keyed_by_column
-    read_next_line_from_data_file 
-    set_tabfileparser_clobber
-    set_tabfile_parser_path_root
     show_perldoc
-    write_line_to_output_file
-    write_lines_to_output_file
-);
-use GeneNomenclatureUtils::SeqIDNomenclature qw(
-    check_for_file
-    parse_mgi_mouse_human_orthology_file
-    parse_mgi_mouse_human_orthology_file_entry
 );
 use Getopt::Long;
-use Data::Dumper;
 
 {
     print STDERR "\n$0\n", '=' x length($0), "\n\n";
     my ($file, $mgi_id_column, $output_column, $skip_title
-        , $test, $output_attrib);
+        , $output_attrib, $help);
         
     GetOptions(
         "file=s"            => \$file,
         "mgi_id_column=i"   => \$mgi_id_column,
         "output_column=i"   => \$output_column,
         "skip_title"        => \$skip_title,
-        "test"              => \$test,
-        "output_attrib=s"   => \$output_attrib
+        "output_attrib=s"   => \$output_attrib,
+        "help"              => \$help
     ) or show_perldoc();
+    
+    my $parser = GeneNomenclatureUtils::Parser->new(
+        'MGI_dir', 'HMD_HGNC_Accession.rpt', 'mgi_accession_id');
+     
+    ### Check we have the correct parameters
+    if ($help) {
+        print STDERR "Set --output_attrib to one of: "
+            , join(", ", sort {$a cmp $b} keys(%{$parser->attributes})). "\n";
+        exit;
+    }
     unless ($file) {
         show_perldoc('Must set --file');
     }    
@@ -90,94 +78,18 @@ use Data::Dumper;
     unless ($output_attrib) {
         show_perldoc('Must set --output_attrib');
     }
-    $output_attrib = validate_output_attrib($output_attrib);
     
-    do_file($file, $mgi_id_column, $output_column, $skip_title
-        , $test, $output_attrib);
-}
+    $parser->duplicates('delete'); ### Remove ambiguous mgi_id
+    $parser->parse;
 
-sub validate_output_attrib {
-    my ( $attrib ) = @_;
-    
-    $attrib = lc($attrib);
-    
-    my $valid = {
-          mouse_entrez_gene_id => 1
-        , human_hgnc_id        => 1
-        , human_gene_symbol    => 1
-        , human_entrez_gene_id => 1 
-    };
-    
-    unless ($valid->{$attrib}) {
-        confess "Invalid: '$attrib'\n Choose one of:",
-        Dumper($valid), "\n";
-    }
-    return $attrib;
-}
+    ### Output attributes
+    $parser->output_attribute($output_attrib);
+    $parser->file_process_mode('translate');
 
-sub do_file {
-    my ( $file, $mgi_id_column, $output_column, $skip_title
-        , $test, $output_attrib ) = @_;
+    my $column_title = uc($output_attrib);
+    $column_title =~ tr/_/ /;
     
-    ### Parse nomenclature files
-    my ($parsed_by_mgi_id
-        , $parsed_by_hgnc_symbol
-        ) = parse_mgi_mouse_human_orthology_file('allow');
-
-    if ($test) {
-        my $val = 'MGI:1888986';
-        print STDERR "TESTING: with '$val'\n";
-        print STDERR "RESULT : ", Dumper($parsed_by_mgi_id->{$val}), "\n\n";
-    }
-
-    my $entries = parse_tab_delimited_file_to_array($file);
-    if ($skip_title) {
-        my $titles = shift(@$entries);
-        
-        splice (@$titles, $output_column - 1, 0, $output_attrib);
-        print join("\t", @$titles), "\n";
-    }
-   
-    ### Loop over the MGI IDs
-    
-    my $found             = 0;
-    my $not_found         = 0;
-    my $nothing_to_lookup = 0;
-    
-    foreach my $entry (@$entries) {
-    
-        ### Mouse symbol, synonyms, name
-        
-        my $output = 'NOT_FOUND';
-        $entry->[$mgi_id_column - 1] =~ s/\r//g;
-        
-        my $mgi_id = $entry->[$mgi_id_column - 1];
-        if ($test) {
-            print STDERR "Need to lookup: '$mgi_id'\n";
-            next;
-        }
-        
-        unless ($mgi_id) {
-            $nothing_to_lookup++;
-            next;
-        }
-        
-        my $data = $parsed_by_mgi_id->{$mgi_id};
-        if ($data) {
-            my $parsed = parse_mgi_mouse_human_orthology_file_entry($data);
-            $output = $parsed->{$output_attrib};
-            $found++
-        } else {
-            $not_found++;
-            print STDERR "Not found: '$mgi_id'\n";
-        }
-        
-        splice (@$entry, $output_column - 1, 0, $output);
-        print join("\t", @$entry), "\n";
-    }
-    
-    print STDERR "\n";
-    print STDERR "Found           : $found\n";
-    print STDERR "Not found       : $not_found\n";
-    print STDERR "Nothing to check: $nothing_to_lookup\n";
+    ### Convert
+    $parser->process_file($file, $mgi_id_column, $output_column
+        , $skip_title, $column_title);
 }
